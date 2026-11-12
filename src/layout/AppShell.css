@@ -1,0 +1,18 @@
+.shell {
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  height: 100%;
+  overflow: hidden;
+  background: var(--color-bg-app);
+}
+
+.shell__content {
+  flex: 1;
+  min-height: 0;
+  overflow-y: auto;
+  overscroll-behavior-y: contain;
+  -webkit-overflow-scrolling: touch;
+  /* Ekstra luft nederst (96 px i Figma), så sidste element kan rulles fri af menuen. */
+  padding-bottom: calc(96px + max(20px, var(--safe-bottom)));
+}
