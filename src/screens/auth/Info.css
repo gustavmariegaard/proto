@@ -1,0 +1,57 @@
+.info__header {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  flex-shrink: 0;
+}
+
+.info__h1 {
+  flex: 1;
+  min-width: 0;
+  font: 700 22px/28px var(--font-title) !important;
+  letter-spacing: -0.3px;
+}
+
+.info__muted { color: var(--color-text-secondary); }
+
+.info__list {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+.info__card {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  padding: 16px;
+  border: 1px solid var(--color-border-default);
+  border-radius: var(--radius-xl);
+  background: var(--color-bg-surface);
+}
+
+.info__card-title,
+.info__title-row {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+
+/* Kun et glimt af teksten, der toner ud */
+.info__fade {
+  height: 40px;
+  overflow: hidden;
+  -webkit-mask-image: linear-gradient(to bottom, #000 10px, transparent 40px);
+  mask-image: linear-gradient(to bottom, #000 10px, transparent 40px);
+}
+
+.info__more { margin-left: -20px; }
+
+.info__article {
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+}
+
+.info__article--legal { gap: 14px; }
+.info__article--legal section { display: flex; flex-direction: column; gap: 14px; }

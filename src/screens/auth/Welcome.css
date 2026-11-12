@@ -1,0 +1,53 @@
+/* Netværksgrafikken ligger bag alt andet og hænger fast i bunden */
+.welcome__bg {
+  position: fixed;
+  left: 0;
+  bottom: 0;
+  width: 100%;
+  height: auto;
+  pointer-events: none;
+  z-index: 0;
+}
+
+#root .welcome { isolation: isolate; }
+.welcome .auth__body > *:not(.welcome__bg),
+.welcome .auth__footer { position: relative; z-index: 1; }
+
+.welcome__logo { line-height: 0; }
+
+.welcome__title {
+  font: 700 26px/32px var(--font-title);
+  letter-spacing: -0.3px;
+}
+
+.welcome__points {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.welcome__point {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  min-height: 44px;
+  text-decoration: none;
+  border-radius: var(--radius-md);
+}
+
+.welcome__how { margin-left: -20px; }
+
+.welcome__terms {
+  font: 400 12px/16px var(--font-body);
+  color: var(--color-text-secondary);
+}
+
+.welcome__terms a {
+  color: var(--color-text-primary);
+  /* Større trykflade uden at flytte teksten */
+  padding: 12px 0;
+  margin: -12px 0;
+}
