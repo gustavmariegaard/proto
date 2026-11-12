@@ -1,0 +1,151 @@
+/* ---------- Fælles skærm-ramme (Opret, Del, Rapportér) ---------- */
+.modal-screen {
+  display: flex;
+  flex-direction: column;
+  height: 100%;
+  background: var(--color-bg-app);
+}
+
+.modal-screen__content {
+  flex: 1;
+  min-height: 0;
+  overflow-x: hidden;
+  overflow-y: auto;
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: 14px;
+  padding: 4px 20px calc(24px + var(--safe-bottom));
+}
+
+.modal-screen__content > * { flex-shrink: 0; }
+.modal-screen__muted { color: var(--color-text-secondary); }
+.modal-screen__full { width: 100%; }
+
+/* ---------- Kontakt ---------- */
+.toggle {
+  position: relative;
+  flex-shrink: 0;
+  width: 48px;
+  height: 28px;
+  border-radius: var(--radius-pill);
+  background: var(--color-action-off);
+  transition: background-color 0.15s ease;
+}
+
+.toggle::after {
+  content: '';
+  position: absolute;
+  top: 3px;
+  left: 3px;
+  width: 22px;
+  height: 22px;
+  border-radius: 50%;
+  background: var(--color-bg-surface);
+  transition: transform 0.15s ease;
+}
+
+.toggle--on { background: var(--color-action-primary); }
+.toggle--on::after { transform: translateX(20px); }
+
+/* ---------- Liste med kontakter ---------- */
+.toggle-list {
+  width: 100%;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+  overflow: hidden;
+  border: 1px solid var(--color-border-default);
+  border-radius: var(--radius-xl);
+  background: var(--color-bg-surface);
+}
+
+.toggle-list li + li { border-top: 1px solid var(--color-border-default); }
+
+.toggle-list__row {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  width: 100%;
+  min-height: 44px;
+  padding: 14px 16px;
+  text-align: left;
+  color: var(--color-text-primary);
+}
+
+.toggle-list__row:focus-visible { outline: 2px solid var(--color-text-primary); outline-offset: -4px; border-radius: var(--radius-lg); }
+
+.toggle-list__text {
+  flex: 1;
+  min-width: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+
+.toggle-list__hint { color: var(--color-text-secondary); }
+
+/* ---------- Valgknap ---------- */
+.radio-dot {
+  position: relative;
+  flex-shrink: 0;
+  border-radius: 50%;
+  border: 2px solid var(--color-border-strong);
+  background: var(--color-bg-surface);
+}
+
+.radio-dot--on { border-color: var(--color-text-primary); }
+
+.radio-dot--on::after {
+  content: '';
+  position: absolute;
+  inset: 0;
+  margin: auto;
+  width: 50%;
+  height: 50%;
+  border-radius: 50%;
+  background: var(--color-text-primary);
+}
+
+/* ---------- Valgbart kort (Send til, Rapportér) ---------- */
+.choice {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  width: 100%;
+  min-height: 44px;
+  padding: 8px 14px;
+  text-align: left;
+  color: var(--color-text-primary);
+  border: 1px solid var(--color-border-default);
+  border-radius: var(--radius-lg);
+  background: var(--color-bg-surface);
+  transition: background-color 0.15s ease, border-color 0.15s ease;
+}
+
+.choice--on {
+  background: var(--color-accent-verified-bg);
+  border-color: var(--color-accent-verified-text);
+}
+
+.choice:focus-visible { outline: none; box-shadow: var(--focus-ring); }
+
+.choice__text {
+  flex: 1;
+  min-width: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+
+.choice__hint { color: var(--color-text-secondary); }
+
+.choice-list {
+  width: 100%;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+}
