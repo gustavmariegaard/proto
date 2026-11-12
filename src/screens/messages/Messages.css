@@ -333,3 +333,14 @@
 /* Indholdet ruller, så elementerne må ikke klemmes sammen */
 .msg-content > * { flex-shrink: 0; }
 img.msg-photo { display: block; object-fit: cover; }
+
+/* "End-to-end-krypteret" øverst i samtalen */
+.msg-e2e {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 6px 12px;
+  border-radius: var(--radius-sm);
+  background: var(--color-accent-note-bg);
+  color: var(--color-accent-note-text);
+}

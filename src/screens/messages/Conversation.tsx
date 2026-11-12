@@ -80,6 +80,13 @@ export function Conversation() {
         role="log"
         aria-label={`Beskeder med ${thread.name}`}
       >
+        {/* Som i WhatsApp: krypteringen står øverst i hver samtale */}
+        <div className="msg-center-row">
+          <p className="msg-e2e t-caption">
+            <Icon name="lock" size={14} />
+            End-to-end-krypteret
+          </p>
+        </div>
         {isCircle && thread.disappearing && (
           <div className="msg-center-row">
             <Tag>Beskeder forsvinder efter 24 timer</Tag>
@@ -88,7 +95,6 @@ export function Conversation() {
         {thread.messages.map((m) => (
           <Message key={m.id} message={m} showSender sender={senderOf(m.from)} />
         ))}
-        {isCircle && <p className="t-caption msg-muted msg-center">End-to-end-krypteret</p>}
       </div>
 
       <form
