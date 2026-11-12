@@ -28,3 +28,9 @@
     transform: translateZ(0);
   }
 }
+
+@media (min-width: 600px) and (min-height: 700px) {
+  html[data-dark],
+  html[data-dark] body { background: var(--color-bg-subtle); }
+  html[data-dark] #root { background: var(--ink-900); }
+}

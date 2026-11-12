@@ -24,6 +24,7 @@ import { NewCircle } from './screens/messages/NewCircle';
 import { Flicks } from './screens/flicks/Flicks';
 import { NewFlick } from './screens/flicks/NewFlick';
 import { SessionProvider, useSession } from './state/session';
+import { useThemeColor } from './state/useThemeColor';
 import { Discover } from './screens/discover/Discover';
 import { Market } from './screens/market/Market';
 import { Events } from './screens/events/Events';
@@ -45,6 +46,12 @@ import { Collection } from './screens/profile/Collection';
 import { CollectionViewer } from './screens/profile/CollectionViewer';
 import { CollectionEdit } from './screens/profile/CollectionEdit';
 import { Interests } from './screens/profile/Interests';
+
+/** Mørk statuslinje og baggrund på de mørke skærme */
+function ThemeColor() {
+  useThemeColor();
+  return null;
+}
 
 /** Mere-fanen: Hjem bagved med Mere-arket ovenpå. */
 function MoreRoute() {
@@ -74,6 +81,7 @@ export default function App() {
     <SessionProvider>
       <MomentsProvider>
       <BrowserRouter basename={import.meta.env.BASE_URL}>
+        <ThemeColor />
         <Routes>
           {/* Trin 2: velkomst, log ind og oprettelse */}
           <Route element={<GuestOnly />}>

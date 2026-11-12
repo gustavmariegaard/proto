@@ -97,3 +97,10 @@ a {
     font-size: 16px !important;
   }
 }
+
+/* Mørke skærme (Flicks, Moments): ingen hvid kant rundt om appen */
+html[data-dark],
+html[data-dark] body,
+html[data-dark] #root {
+  background: var(--ink-900);
+}
