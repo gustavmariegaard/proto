@@ -4,7 +4,7 @@ import { Chip } from '../../components/Chip';
 import { MomentBubble } from '../../components/MomentBubble';
 import { PostCard } from '../../components/PostCard';
 import { SegmentedControl } from '../../components/SegmentedControl';
-import { people, posts } from '../../data/sample';
+import { img, people, posts } from '../../data/sample';
 import { useMoments } from '../../state/moments';
 import { useSession } from '../../state/session';
 import { InterestsSheet } from './InterestsSheet';
@@ -57,10 +57,15 @@ export function Home() {
         </ul>
       )}
 
-      <h2 className="t-heading-s">Moments</h2>
       <ul className="home__moments" aria-label="Moments">
         <li>
-          <MomentBubble name="Dig" state="add" onClick={() => navigate('/flicks/ny')} />
+          <MomentBubble
+            name="Dig"
+            fullName={profile.name || 'Dig'}
+            state="add"
+            src={profile.avatar ?? img('mig.jpg')}
+            onClick={() => navigate('/flicks/ny')}
+          />
         </li>
         {order.map((id) => {
           const p = people[id]!;

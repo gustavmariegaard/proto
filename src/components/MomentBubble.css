@@ -32,3 +32,28 @@
 }
 
 .moment:active .moment__ring { transform: scale(0.96); }
+
+.moment__wrap { position: relative; display: inline-flex; }
+
+/* Eget billede: ingen ring, bare billedet */
+.moment__wrap:has(.moment__plus) .moment__ring--add {
+  border: 2px solid transparent;
+}
+
+/* Plus nederst til højre på dit eget billede */
+.moment__plus {
+  position: absolute;
+  right: -2px;
+  bottom: -2px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 26px;
+  height: 26px;
+  border-radius: 50%;
+  background: var(--color-action-primary);
+  color: var(--color-text-on-action);
+  border: 3px solid var(--color-bg-app);
+}
+
+.moment__plus svg path { stroke-width: 2.5; }
