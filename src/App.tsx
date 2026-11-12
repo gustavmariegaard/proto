@@ -9,7 +9,6 @@ import { LogIn } from './screens/auth/LogIn';
 import { ProfileSetup } from './screens/auth/ProfileSetup';
 import { Welcome } from './screens/auth/Welcome';
 import { Welcomed } from './screens/auth/Welcomed';
-import { Placeholder } from './screens/Placeholder';
 import { Showcase } from './screens/Showcase';
 import { Home } from './screens/home/Home';
 import { MomentViewer } from './screens/home/MomentViewer';
@@ -40,6 +39,12 @@ import { FindFolk } from './screens/more/FindFolk';
 import { Groups, GroupActivity } from './screens/more/Groups';
 import { Pages } from './screens/more/Pages';
 import { NewGroup, NewPage } from './screens/more/Create';
+import { Profile } from './screens/profile/Profile';
+import { PhotoView } from './screens/profile/PhotoView';
+import { Collection } from './screens/profile/Collection';
+import { CollectionViewer } from './screens/profile/CollectionViewer';
+import { CollectionEdit } from './screens/profile/CollectionEdit';
+import { Interests } from './screens/profile/Interests';
 
 /** Mere-fanen: Hjem bagved med Mere-arket ovenpå. */
 function MoreRoute() {
@@ -113,6 +118,11 @@ export default function App() {
             <Route path="grupper/ny" element={<NewGroup />} />
             <Route path="sider" element={<Pages />} />
             <Route path="sider/ny" element={<NewPage />} />
+            <Route path="profil/billede/:id" element={<PhotoView />} />
+            <Route path="profil/samling/:id" element={<Collection />} />
+            <Route path="profil/samling/:id/vis" element={<CollectionViewer />} />
+            <Route path="profil/samling/:id/rediger" element={<CollectionEdit />} />
+            <Route path="profil/interesser" element={<Interests />} />
             <Route element={<AppShell />}>
               <Route index element={<Home />} />
               <Route path="komponenter" element={<Showcase />} />
@@ -120,7 +130,7 @@ export default function App() {
               <Route path="torvet" element={<Market />} />
               <Route path="begivenheder" element={<Events />} />
               <Route path="mere" element={<MoreRoute />} />
-              <Route path="profil" element={<Placeholder title="Profil" />} />
+              <Route path="profil" element={<Profile />} />
             </Route>
           </Route>
           <Route path="*" element={<Navigate to="/" replace />} />
