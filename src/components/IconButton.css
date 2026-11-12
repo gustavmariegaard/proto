@@ -1,0 +1,37 @@
+.icon-btn {
+  position: relative;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+  width: 44px;
+  height: 44px;
+  border-radius: var(--radius-pill);
+  border: 1px solid transparent;
+  color: var(--color-text-primary);
+}
+
+.icon-btn--outline {
+  background: var(--color-bg-surface);
+  border-color: var(--color-border-default);
+}
+
+.icon-btn--filled {
+  background: var(--color-action-primary);
+  color: var(--color-text-on-action);
+}
+
+.icon-btn:active { transform: scale(0.94); }
+.icon-btn:focus-visible { outline: none; box-shadow: var(--focus-ring); }
+
+/* Ulæst-prik: 10 px, 29 px fra venstre og 8 px fra toppen (Figma) */
+.icon-btn__dot {
+  position: absolute;
+  left: 29px;
+  top: 8px;
+  width: 10px;
+  height: 10px;
+  border-radius: 50%;
+  background: var(--color-accent-highlight);
+  border: 2px solid var(--color-bg-app);
+}

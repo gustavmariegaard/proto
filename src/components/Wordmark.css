@@ -1,0 +1,27 @@
+/* Mål fra Figma ved 26 px: prikken er 5 × 5 px, 1 px fra venstre og 5 px fra toppen af i'et. */
+.wordmark {
+  display: inline-flex;
+  align-items: flex-end;
+  font-family: var(--font-title);
+  font-weight: 700;
+  line-height: normal;
+  letter-spacing: -0.02em;
+  color: var(--color-text-primary);
+  white-space: nowrap;
+}
+
+.wordmark__i {
+  position: relative;
+}
+
+.wordmark__i::after {
+  content: '';
+  position: absolute;
+  left: 50%;
+  top: 0.19em;
+  width: 0.192em;
+  height: 0.192em;
+  transform: translateX(-50%);
+  border-radius: 50%;
+  background: var(--color-accent-highlight);
+}
