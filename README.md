@@ -1,32 +1,42 @@
-# React + TypeScript + Vite
+# ciircle – prototype
 
-This template provides a minimal setup to get React working in Vite with HMR and some Oxlint rules.
+Mobil-først web-app (PWA) til test af det sociale netværk ciircle.
+Design: Figma-filen er den eneste kilde til udseende.
 
-Currently, two official plugins are available:
+## Kør den lokalt
 
-- [@vitejs/plugin-react](https://github.com/vitejs/vite-plugin-react/blob/main/packages/plugin-react) uses [Oxc](https://oxc.rs)
-- [@vitejs/plugin-react-swc](https://github.com/vitejs/vite-plugin-react/blob/main/packages/plugin-react-swc) uses [SWC](https://swc.rs/)
-
-## React Compiler
-
-The React Compiler is not enabled on this template because of its impact on dev & build performances. To add it, see [this documentation](https://react.dev/learn/react-compiler/installation).
-
-## Expanding the Oxlint configuration
-
-If you are developing a production application, we recommend enabling type-aware lint rules by installing `oxlint-tsgolint` and editing `.oxlintrc.json`:
-
-```json
-{
-  "$schema": "./node_modules/oxlint/configuration_schema.json",
-  "plugins": ["react", "typescript", "oxc"],
-  "options": {
-    "typeAware": true
-  },
-  "rules": {
-    "react/rules-of-hooks": "error",
-    "react/only-export-components": ["warn", { "allowConstantExport": true }]
-  }
-}
+```bash
+npm install
+npm run dev
 ```
 
-See the [Oxlint rules documentation](https://oxc.rs/docs/guide/usage/linter/rules) for the full list of rules and categories.
+Åbn adressen, der vises i terminalen. På en computer vises appen i en iPhone-ramme.
+
+## Mapper
+
+```
+public/
+  img/                 ← læg egne billeder her (ellers grå pladsholdere)
+  favicon.svg          ← logoet fra Figma
+  icon-*.png           ← app-ikoner til hjemmeskærmen
+scripts/
+  make-icons.mjs       ← laver app-ikonerne ud fra logoet
+src/
+  styles/
+    tokens.css         ← farver, afstande, radier og typografi fra Figma
+    global.css         ← skrifttyper, nulstilling og frirum øverst
+    preview.css        ← iPhone-rammen på computer
+  components/          ← fælles byggeklodser (knap, chip, avatar, opslag …)
+  layout/AppShell.tsx  ← fast topbar, rullende indhold og flydende bundmenu
+  screens/             ← skærmene (én fil pr. skærm)
+  data/sample.ts       ← eksempeldata (ingen server endnu)
+  App.tsx              ← hvilke adresser viser hvilke skærme
+```
+
+## Trin
+
+1. ✅ Opsætning, tokens og fælles komponenter
+2. Velkomst, log ind og oprettelse af profil
+3. Hjem (Venner / Interesser), Moments og kommentarer som ark
+4. Opret, Flicks og Beskeder (Alle, Personer, Cirkler)
+5. Profil og Mere (Begivenheder, Grupper, Sider, Gemt, Torvet)
