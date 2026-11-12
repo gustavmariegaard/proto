@@ -1,6 +1,6 @@
 /*
  * Kun på computer: vis appen i en iPhone-ramme (390 × 844),
- * med 48 px frirum øverst og 34 px til hjem-stregen nederst,
+ * med lidt luft øverst og 34 px til hjem-stregen nederst,
  * så den ser ud som på telefonen. Påvirker ikke telefoner.
  */
 @media (min-width: 600px) and (min-height: 700px) {
@@ -17,7 +17,7 @@
   }
 
   #root {
-    --safe-top: 48px;
+    --safe-top: 12px;
     --safe-bottom: 34px;
     width: 390px;
     height: min(844px, calc(100vh - 32px));

@@ -104,7 +104,7 @@
   position: absolute;
   left: 12px;
   right: 20px;
-  bottom: calc(max(20px, var(--safe-bottom)) + 80px);
+  bottom: calc(var(--tabbar-bottom) + 80px);
   display: flex;
   flex-direction: column;
   gap: 16px;
@@ -163,7 +163,7 @@
 .flick__hint {
   position: absolute;
   left: 50%;
-  bottom: calc(max(20px, var(--safe-bottom)) + 194px);
+  bottom: calc(var(--tabbar-bottom) + 194px);
   transform: translateX(-50%);
   display: flex;
   flex-direction: column;

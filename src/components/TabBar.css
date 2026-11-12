@@ -1,12 +1,12 @@
 /*
- * Pillen er 64 px høj, 16 px fra skærmens kanter og 20 px fra bunden
- * (eller over iPhonens hjem-streg, hvis den fylder mere).
+ * Pillen er 64 px høj og 16 px fra skærmens kanter. Den ligger lavt,
+ * så indholdet får mest mulig plads (se --tabbar-bottom i tokens.css).
  */
 .tabbar {
   position: absolute;
   left: var(--space-16);
   right: var(--space-16);
-  bottom: max(20px, var(--safe-bottom));
+  bottom: var(--tabbar-bottom);
   z-index: 20;
 }
 

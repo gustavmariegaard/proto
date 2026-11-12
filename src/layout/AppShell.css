@@ -14,5 +14,5 @@
   overscroll-behavior-y: contain;
   -webkit-overflow-scrolling: touch;
   /* Ekstra luft nederst (96 px i Figma), så sidste element kan rulles fri af menuen. */
-  padding-bottom: calc(96px + max(20px, var(--safe-bottom)));
+  padding-bottom: calc(88px + var(--tabbar-bottom));
 }

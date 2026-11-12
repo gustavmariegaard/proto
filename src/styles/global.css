@@ -3,16 +3,9 @@
 @import './tokens.css';
 
 /*
- * Frirum øverst til iPhone-kameraet (48 px i Figma).
- * Når appen er lagt på hjemmeskærmen, fylder den hele skærmen,
- * så vi bruger mindst 48 px. I Safari med adresselinje giver
- * telefonen selv luften, så der bruger vi telefonens egen værdi.
+ * Luft øverst: telefonen giver selv den rigtige afstand til kamera og
+ * statuslinje via env(safe-area-inset-top). Vi lægger ikke noget ekstra oveni.
  */
-@media (display-mode: standalone) {
-  :root {
-    --safe-top: max(env(safe-area-inset-top, 0px), 48px);
-  }
-}
 
 *,
 *::before,
