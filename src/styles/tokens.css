@@ -1,0 +1,107 @@
+/*
+ * Designtokens fra Figma (siden Foundations).
+ * Primitiver bruges kun via de semantiske roller nedenfor.
+ * Skift en værdi her, så slår den igennem i hele appen.
+ */
+:root {
+  /* ---------- Primitiver ---------- */
+  --white: #ffffff;
+  --gray-50: #f7f7f7;
+  --gray-100: #f2f2f2;
+  --gray-150: #ededed;
+  --gray-200: #e6e6e6;
+  --gray-300: #c8c8c8;
+  --ink-400: #b3b3b3;
+  --ink-600: #666666;
+  --ink-700: #333333;
+  --ink-900: #171717;
+  --green-100: #e8fef6;
+  --green-200: #cffcea;
+  --green-300: #a8f9db;
+  --green-500: #21f1a8;
+  --green-700: #0b7a57;
+  --green-900: #05392a;
+
+  /* ---------- Baggrund ---------- */
+  --color-bg-app: var(--white);
+  --color-bg-surface: var(--white);
+  --color-bg-subtle: var(--gray-100);
+  --color-bg-sunken: var(--gray-50);
+
+  /* ---------- Streger ---------- */
+  --color-border-default: var(--gray-200);
+  --color-border-strong: var(--gray-300);
+
+  /* ---------- Tekst ---------- */
+  --color-text-primary: var(--ink-900);
+  --color-text-secondary: var(--ink-600);
+  --color-text-on-action: var(--white);
+  --color-text-on-highlight: var(--ink-900);
+
+  /* ---------- Handling ---------- */
+  --color-action-primary: var(--ink-900);
+  --color-action-off: var(--ink-400);
+
+  /* ---------- Accent ---------- */
+  --color-accent-highlight: var(--green-500);
+  --color-accent-verified-bg: var(--green-300);
+  --color-accent-verified-text: var(--ink-900);
+  --color-accent-note-bg: var(--green-100);
+  --color-accent-note-text: var(--green-900);
+
+  /* ---------- Avatarer ---------- */
+  --color-avatar-sand-bg: var(--green-200);
+  --color-avatar-sand-fg: var(--green-700);
+  --color-avatar-blue-bg: var(--gray-150);
+  --color-avatar-blue-fg: var(--ink-900);
+  --color-avatar-sage-bg: var(--gray-100);
+  --color-avatar-sage-fg: var(--ink-700);
+  --color-avatar-rose-bg: var(--gray-200);
+  --color-avatar-rose-fg: var(--ink-700);
+
+  /* ---------- Afstande ---------- */
+  --space-4: 4px;
+  --space-8: 8px;
+  --space-12: 12px;
+  --space-16: 16px;
+  --space-20: 20px;
+  --space-24: 24px;
+  --space-32: 32px;
+
+  /* ---------- Radier ---------- */
+  --radius-sm: 10px;
+  --radius-md: 14px;
+  --radius-lg: 18px;
+  --radius-xl: 22px;
+  --radius-sheet: 28px;
+  --radius-pill: 999px;
+
+  /* ---------- Skrifttyper ---------- */
+  --font-title: 'Bricolage Grotesque Variable', 'Bricolage Grotesque', system-ui, sans-serif;
+  --font-body: 'Figtree Variable', 'Figtree', system-ui, sans-serif;
+
+  /* ---------- Skygger ---------- */
+  --shadow-tabbar: 0 6px 18px rgba(0, 0, 0, 0.14);
+
+  /* ---------- Layout ---------- */
+  --safe-top: env(safe-area-inset-top, 0px);
+  --safe-bottom: env(safe-area-inset-bottom, 0px);
+  --appbar-height: 72px;
+  --tabbar-height: 88px;
+  --focus-ring: 0 0 0 3px var(--color-bg-app), 0 0 0 5px var(--color-text-primary);
+}
+
+/*
+ * Typografi (tekst-stilarter fra Figma).
+ * Brug klasserne i markup: <h1 class="t-title-xl">.
+ */
+.t-title-xl { font: 700 26px/32px var(--font-title); letter-spacing: -0.3px; }
+.t-title-l  { font: 700 22px/28px var(--font-title); letter-spacing: -0.3px; }
+.t-heading-m { font: 700 17px/22px var(--font-body); }
+.t-heading-s { font: 700 15px/20px var(--font-body); }
+.t-body     { font: 400 15px/22px var(--font-body); }
+.t-body-s   { font: 400 14px/20px var(--font-body); }
+.t-label    { font: 600 14px/20px var(--font-body); }
+.t-caption  { font: 400 12px/16px var(--font-body); }
+.t-caption-strong { font: 600 12px/16px var(--font-body); }
+.t-micro    { font: 600 11px/14px var(--font-body); }
