@@ -1,4 +1,4 @@
-import { useCallback, useEffect, useRef, useState } from 'react';
+import { useCallback, useEffect, useLayoutEffect, useRef, useState } from 'react';
 import { Navigate, useNavigate, useParams } from 'react-router-dom';
 import { Avatar } from '../../components/Avatar';
 import { Icon } from '../../components/Icon';
@@ -104,35 +104,32 @@ function Viewer({ personId }: { personId: string }) {
         <button type="button" className="moment-view__tap moment-view__tap--next" aria-label="Næste" onClick={tap(next)} />
       </div>
 
+      {/* Den grønne ramme løber rundt langs skærmens kant (ciircles signatur fra Figma) */}
+      <EdgeProgress
+        key={`${personId}-${index}`}
+        paused={paused}
+        duration={DURATION}
+        onDone={next}
+      />
+
       <div className="moment-full__top">
-        {/* Én streg pr. moment. Den aktive fyldes op og skifter, når den er fuld. */}
-        <ol className="moment-full__bars" aria-label={`Moment ${index + 1} af ${own.length}`}>
+        <ol className="moment-view__dots" aria-label={`Moment ${index + 1} af ${own.length}`}>
           {own.map((m, i) => (
-            <li key={m.id} className={i < index ? 'is-done' : undefined}>
-              {i === index && (
-                <span
-                  key={`${personId}-${index}`}
-                  className="moment-full__fill"
-                  style={{ animationDuration: `${DURATION}ms`, animationPlayState: paused ? 'paused' : 'running' }}
-                  onAnimationEnd={next}
-                />
-              )}
-            </li>
+            <li key={m.id} className={i === index ? 'is-active' : undefined} />
           ))}
         </ol>
-        <div className="moment-full__head">
-          <div className="moment-full__who">
-            <Avatar name={person.fullName} tone={person.tone} size="S" src={person.avatarSrc} />
-            <span className="t-heading-s">{person.name}</span>
-            <span className="t-caption moment-view__time">{current.time}</span>
-          </div>
-          <button type="button" className="moment-view__close" aria-label="Luk" onClick={close}>
-            <Icon name="close" />
-          </button>
-        </div>
+        <button type="button" className="moment-view__close" aria-label="Luk" onClick={close}>
+          <Icon name="close" />
+        </button>
       </div>
 
       <div className="moment-full__spacer" />
+
+      <div className="moment-view__who moment-full__who">
+        <Avatar name={person.fullName} tone={person.tone} size="S" src={person.avatarSrc} />
+        <span className="t-heading-s">{person.name}</span>
+        <span className="t-caption moment-view__time">{current.time}</span>
+      </div>
 
       <form
         className="moment-view__reply"
@@ -163,5 +160,47 @@ function Viewer({ personId }: { personId: string }) {
         </button>
       </form>
     </div>
+  );
+}
+
+/**
+ * Fremdrift som en ramme langs skærmens kant. Starter øverst i midten og
+ * løber med uret hele vejen rundt. Står stille, når `paused` er sand.
+ */
+function EdgeProgress({ paused, duration, onDone }: { paused: boolean; duration: number; onDone: () => void }) {
+  const ref = useRef<SVGSVGElement>(null);
+  const [size, setSize] = useState({ w: 390, h: 844 });
+
+  useLayoutEffect(() => {
+    const el = ref.current;
+    if (!el) return;
+    const measure = () => setSize({ w: el.clientWidth, h: el.clientHeight });
+    measure();
+    const ro = new ResizeObserver(measure);
+    ro.observe(el);
+    return () => ro.disconnect();
+  }, []);
+
+  const inset = 3; // halv stregbredde + lidt luft
+  const r = 44; // følger hjørnerne på nyere iPhones
+  const { w, h } = size;
+  const x0 = inset;
+  const y0 = inset;
+  const x1 = w - inset;
+  const y1 = h - inset;
+  const ri = r - inset;
+  const d = `M ${w / 2} ${y0} H ${x1 - ri} A ${ri} ${ri} 0 0 1 ${x1} ${y0 + ri} V ${y1 - ri} A ${ri} ${ri} 0 0 1 ${x1 - ri} ${y1} H ${x0 + ri} A ${ri} ${ri} 0 0 1 ${x0} ${y1 - ri} V ${y0 + ri} A ${ri} ${ri} 0 0 1 ${x0 + ri} ${y0} Z`;
+
+  return (
+    <svg ref={ref} className="moment-edge" viewBox={`0 0 ${w} ${h}`} preserveAspectRatio="none" aria-hidden="true">
+      <path d={d} className="moment-edge__track" />
+      <path
+        d={d}
+        pathLength={100}
+        className="moment-view__bar moment-edge__bar"
+        style={{ animationDuration: `${duration}ms`, animationPlayState: paused ? 'paused' : 'running' }}
+        onAnimationEnd={onDone}
+      />
+    </svg>
   );
 }

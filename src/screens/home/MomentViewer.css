@@ -268,63 +268,47 @@
 .moment-full__top {
   position: relative;
   z-index: 3;
-  padding: calc(var(--safe-top) + 8px) 12px 0 16px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  height: 44px;
+  margin-top: calc(var(--safe-top) + 10px);
+  padding: 0 14px 0 24px;
   pointer-events: none;
 }
 
 .moment-full__top button { pointer-events: auto; }
 
-.moment-full__bars {
-  display: flex;
-  gap: 4px;
-  margin: 0 4px 0 0;
-  padding: 0;
-  list-style: none;
-}
-
-.moment-full__bars li {
-  position: relative;
-  flex: 1;
-  height: 3px;
-  border-radius: 2px;
-  overflow: hidden;
-  background: rgba(255, 255, 255, 0.35);
-}
-
-.moment-full__bars li.is-done { background: var(--color-accent-highlight); }
-
-.moment-full__fill {
-  position: absolute;
-  inset: 0;
-  background: var(--color-accent-highlight);
-  transform-origin: left center;
-  transform: scaleX(0);
-  animation-name: moment-fill;
-  animation-timing-function: linear;
-  animation-fill-mode: forwards;
-}
-
-@keyframes moment-fill {
-  to { transform: scaleX(1); }
-}
-
-.moment-full__head {
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  margin-top: 8px;
-}
+.moment-full__spacer { flex: 1; pointer-events: none; }
 
 .moment-full__who {
-  display: flex;
-  align-items: center;
-  gap: 10px;
+  z-index: 3;
+  margin: 0 0 18px;
   text-shadow: 0 1px 2px rgba(0, 0, 0, 0.4);
+  pointer-events: none;
 }
-
-.moment-full__spacer { flex: 1; pointer-events: none; }
 
 .moment-view--full .moment-view__reply {
   z-index: 3;
   margin-top: 0;
 }
+
+/* Fremdriftsrammen langs skærmens kant */
+.moment-edge {
+  position: absolute;
+  inset: 0;
+  z-index: 4;
+  width: 100%;
+  height: 100%;
+  fill: none;
+  pointer-events: none;
+}
+
+.moment-edge__track {
+  stroke: var(--color-text-on-action);
+  stroke-opacity: 0.22;
+  stroke-width: 2;
+  vector-effect: non-scaling-stroke;
+}
+
+.moment-edge__bar { vector-effect: non-scaling-stroke; }

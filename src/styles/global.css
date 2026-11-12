@@ -111,3 +111,38 @@ html:has(.flicks, .newflick, .moment-view, .cviewer) body,
 html:has(.flicks, .newflick, .moment-view, .cviewer) #root {
   background: var(--ink-900);
 }
+
+/*
+ * Mørke fuldskærmsvisninger ligger fast ovenpå alt og maler en mørk flade,
+ * der rækker ud over skærmens kanter. Så skinner der ikke noget hvidt
+ * igennem bag statuslinjen, hjem-stregen eller Safaris adresselinje.
+ */
+.flicks,
+.newflick,
+.moment-view {
+  position: fixed !important;
+  inset: 0;
+  height: auto !important;
+  z-index: 30;
+}
+
+.flicks::before,
+.newflick::before,
+.moment-view::before {
+  content: '';
+  position: fixed;
+  inset: -200px;
+  z-index: -1;
+  background: var(--ink-900);
+  pointer-events: none;
+}
+
+/* På computeren (iPhone-rammen) holder vi os inden for rammen */
+@media (min-width: 600px) and (min-height: 700px) {
+  .flicks,
+  .newflick,
+  .moment-view { position: absolute !important; }
+  .flicks::before,
+  .newflick::before,
+  .moment-view::before { position: absolute; inset: 0; }
+}
