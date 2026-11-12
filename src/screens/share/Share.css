@@ -1,0 +1,81 @@
+/* Del og Del · Eget opslag */
+
+.share__preview {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  width: 100%;
+  padding: 12px 14px;
+  border: 1px solid var(--color-border-default);
+  border-radius: var(--radius-lg);
+  background: var(--color-bg-surface);
+}
+
+.share__preview-text {
+  flex: 1;
+  min-width: 0;
+  display: -webkit-box;
+  -webkit-line-clamp: 2;
+  -webkit-box-orient: vertical;
+  overflow: hidden;
+}
+
+.share__chips {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+}
+
+/* ---------- Eget opslag ---------- */
+.share__compose {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  width: 100%;
+  padding: 14px;
+  border: 1px solid var(--color-border-default);
+  border-radius: var(--radius-xl);
+  background: var(--color-bg-surface);
+}
+
+.share__compose-row {
+  display: flex;
+  align-items: flex-start;
+  gap: 10px;
+}
+
+.share__note {
+  flex: 1;
+  min-width: 0;
+  min-height: 44px;
+  padding: 11px 0 0;
+  border: 0;
+  resize: none;
+  background: transparent;
+  color: var(--color-text-primary);
+  font: 400 15px/22px var(--font-body);
+  outline: none;
+}
+
+.share__note::placeholder { color: var(--color-text-secondary); opacity: 1; }
+.share__note:focus-visible { box-shadow: 0 2px 0 var(--color-text-primary); }
+
+@media (pointer: coarse) {
+  .share__note { font-size: 16px; }
+}
+
+.share__quote {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  padding: 12px;
+  border: 1px solid var(--color-border-default);
+  border-radius: var(--radius-lg);
+  background: var(--color-bg-sunken);
+}
+
+.share__quote-head {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
