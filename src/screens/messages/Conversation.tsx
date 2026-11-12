@@ -6,7 +6,10 @@ import { Icon } from '../../components/Icon';
 import { IconButton } from '../../components/IconButton';
 import { Tag } from '../../components/Tag';
 import '../../components/PageHeader.css';
-import type { ChatMessage } from '../../data/messages';
+import { contacts, type ChatMessage } from '../../data/messages';
+import { img } from '../../data/sample';
+import type { AvatarTone } from '../../components/Avatar';
+import { useSession } from '../../state/session';
 import { useKeyboardViewport } from './hooks';
 import { markRead, sendMessage, useThread } from './store';
 import './Messages.css';
@@ -15,6 +18,7 @@ import './Messages.css';
 export function Conversation() {
   const { id } = useParams();
   const thread = useThread(id);
+  const { profile } = useSession();
   const [text, setText] = useState('');
   const screenRef = useRef<HTMLDivElement>(null);
   const listRef = useRef<HTMLDivElement>(null);
@@ -42,6 +46,15 @@ export function Conversation() {
     sendMessage(thread.id, t);
     setText('');
     inputRef.current?.focus({ preventScroll: true });
+  };
+
+  /** Hvem sendte beskeden? Bruges til profilbilledet ud for hver besked. */
+  const senderOf = (from: string): Sender => {
+    if (from === 'me') return { name: profile.name || 'Dig', tone: 'blue', src: profile.avatar ?? img('mig.jpg') };
+    const contact = contacts.find((c) => c.name === from || c.name.split(' ')[0] === from);
+    if (contact) return { name: contact.name, tone: contact.tone, src: contact.avatarSrc };
+    if (!isCircle) return { name: thread.name, tone: thread.tone, src: thread.avatarSrc };
+    return { name: from, tone: knownFaces[from] ? 'sage' : 'sand', src: knownFaces[from] };
   };
 
   return (
@@ -73,7 +86,7 @@ export function Conversation() {
           </div>
         )}
         {thread.messages.map((m) => (
-          <Message key={m.id} message={m} showSender={isCircle} />
+          <Message key={m.id} message={m} showSender={isCircle} sender={senderOf(m.from)} />
         ))}
         {isCircle && <p className="t-caption msg-muted msg-center">End-to-end-krypteret</p>}
       </div>
@@ -114,8 +127,22 @@ export function Conversation() {
   );
 }
 
-function Message({ message, showSender }: { message: ChatMessage; showSender: boolean }) {
+type Sender = { name: string; tone: AvatarTone; src?: string };
+
+/** Personer i cirklerne, der ikke er i kontaktlisten, men har et billede */
+const knownFaces: Record<string, string> = { Mor: img('person-b.jpg') };
+
+function Message({ message, showSender, sender }: { message: ChatMessage; showSender: boolean; sender: Sender }) {
   const out = message.from === 'me';
+  return (
+    <div className={['msg-line', out && 'msg-line--out'].filter(Boolean).join(' ')}>
+      <Avatar name={sender.name} tone={sender.tone} src={sender.src} size="S" />
+      <MessageBody message={message} showSender={showSender} out={out} />
+    </div>
+  );
+}
+
+function MessageBody({ message, showSender, out }: { message: ChatMessage; showSender: boolean; out: boolean }) {
   return (
     <div className={['msg-row', out && 'msg-row--out'].filter(Boolean).join(' ')}>
       {showSender && <p className="t-micro msg-muted">{out ? 'Dig' : message.from}</p>}

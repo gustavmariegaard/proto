@@ -251,6 +251,18 @@
 
 .msg-row--out { align-items: flex-end; }
 
+/* Profilbillede ud for hver besked: til venstre for andres, til højre for dine egne */
+.msg-line {
+  display: flex;
+  align-items: flex-end;
+  gap: 8px;
+  flex-shrink: 0;
+}
+
+.msg-line--out { flex-direction: row-reverse; }
+.msg-line .msg-row { min-width: 0; flex: 1; }
+.msg-line .msg-bubble { max-width: calc(100% - 44px); }
+
 /* Message bubble (Figma 7:93): tekst 230 px bred + 14 px luft i siderne */
 .msg-bubble {
   width: 258px;
