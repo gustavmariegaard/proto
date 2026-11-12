@@ -20,9 +20,14 @@ export function TopBar({ unreadMessages = true, unreadNotifications = true }: To
         <Wordmark />
       </Link>
       <div className="topbar__actions">
-        <IconButton icon="search" label="Søg" />
+        <IconButton icon="search" label="Søg" onClick={() => navigate('/soeg')} />
         <IconButton icon="chat" label="Beskeder" dot={unreadMessages} onClick={() => navigate('/beskeder')} />
-        <IconButton icon="bell" label="Notifikationer" dot={unreadNotifications} />
+        <IconButton
+          icon="bell"
+          label="Notifikationer"
+          dot={unreadNotifications}
+          onClick={() => navigate('/notifikationer')}
+        />
       </div>
     </header>
   );

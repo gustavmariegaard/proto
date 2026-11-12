@@ -60,7 +60,7 @@ export function Home() {
       <h2 className="t-heading-s">Moments</h2>
       <ul className="home__moments" aria-label="Moments">
         <li>
-          <MomentBubble name="Dig" state="add" onClick={() => navigate('/opret')} />
+          <MomentBubble name="Dig" state="add" onClick={() => navigate('/flicks/ny')} />
         </li>
         {order.map((id) => {
           const p = people[id]!;
