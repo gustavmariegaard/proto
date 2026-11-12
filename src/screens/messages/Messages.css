@@ -1,0 +1,323 @@
+/* ---------- Skærm ---------- */
+
+.msg-screen {
+  display: flex;
+  flex-direction: column;
+  height: 100%;
+  background: var(--color-bg-app);
+}
+
+/* Samtaler ligger fast, så skrivefeltet kan følge tastaturet (se useKeyboardViewport). */
+.msg-screen--chat {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  height: 100%;
+  overflow: hidden;
+}
+
+.msg-content {
+  flex: 1;
+  min-height: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+  padding: 4px 20px calc(24px + var(--safe-bottom));
+  overflow-x: hidden;
+  overflow-y: auto;
+  overscroll-behavior-y: contain;
+  -webkit-overflow-scrolling: touch;
+}
+
+.msg-screen--chat .msg-content { padding-bottom: 24px; }
+
+.msg-muted { color: var(--color-text-secondary); }
+.msg-center { text-align: center; }
+.msg-center-row { display: flex; justify-content: center; }
+
+.msg-ellipsis {
+  max-width: 100%;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+/* ---------- Faner og lister ---------- */
+
+.msg-tabs,
+.msg-chips {
+  display: flex;
+  gap: 8px;
+}
+
+.msg-chips { flex-wrap: wrap; }
+
+.msg-list {
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+/* Kort-række (List row i Figma): hvid, 1 px kant, radius 18 */
+.msg-card {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  width: 100%;
+  padding: 12px 14px;
+  border: 1px solid var(--color-border-default);
+  border-radius: var(--radius-lg);
+  background: var(--color-bg-surface);
+  color: var(--color-text-primary);
+  text-align: left;
+  text-decoration: none;
+}
+
+.msg-card:focus-visible { outline: none; box-shadow: var(--focus-ring); }
+
+.msg-card__text {
+  flex: 1;
+  min-width: 0;
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: 2px;
+}
+
+.msg-card__text--circle { gap: 3px; }
+
+.msg-thread:active,
+.msg-pick:active { background: var(--color-bg-sunken); }
+
+.msg-thread__meta {
+  flex-shrink: 0;
+  display: flex;
+  flex-direction: column;
+  align-items: flex-end;
+  gap: 6px;
+}
+
+.msg-thread__dot {
+  width: 10px;
+  height: 10px;
+  border-radius: 50%;
+}
+
+.msg-thread__dot--on { background: var(--color-accent-highlight); }
+
+/* Ikonfelt i "Ny cirkel"-rækken: 44 px, radius 14 */
+.msg-tile {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+  width: 44px;
+  height: 44px;
+  border-radius: var(--radius-md);
+  background: var(--color-avatar-blue-bg);
+  color: var(--color-text-primary);
+}
+
+/* ---------- Vælg personer ---------- */
+
+.msg-pick--on,
+.msg-pick--on:active {
+  background: var(--color-accent-verified-bg);
+  border-color: var(--color-accent-verified-text);
+}
+
+.msg-radio {
+  position: relative;
+  flex-shrink: 0;
+  width: 24px;
+  height: 24px;
+  border: 1.5px solid var(--color-border-strong);
+  border-radius: 50%;
+}
+
+.msg-radio--on {
+  border: 2px solid var(--color-text-primary);
+  background: var(--color-bg-surface);
+}
+
+.msg-radio--on::after {
+  content: '';
+  position: absolute;
+  inset: 4px;
+  border-radius: 50%;
+  background: var(--color-text-primary);
+}
+
+.msg-to {
+  flex-wrap: wrap;
+  row-gap: 8px;
+}
+
+.msg-to__input {
+  flex: 1;
+  min-width: 120px;
+  height: 44px;
+  padding: 0;
+  border: 0;
+  background: transparent;
+  color: var(--color-text-primary);
+  font: 400 14px/20px var(--font-body);
+  outline: none;
+}
+
+.msg-to__input::placeholder { color: var(--color-text-secondary); opacity: 1; }
+.msg-to:focus-within { border-color: var(--color-text-primary); }
+
+/* ---------- Til/fra ---------- */
+
+.msg-toggle-row {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  min-height: 44px;
+  padding: 14px 16px;
+  border: 1px solid var(--color-border-default);
+  border-radius: var(--radius-xl);
+  background: var(--color-bg-surface);
+  cursor: pointer;
+}
+
+.msg-toggle {
+  position: relative;
+  flex-shrink: 0;
+  width: 48px;
+  height: 28px;
+  margin: 0;
+  border-radius: var(--radius-pill);
+  background: var(--color-action-off);
+  -webkit-appearance: none;
+  appearance: none;
+  cursor: pointer;
+  transition: background-color 0.15s ease;
+}
+
+.msg-toggle::after {
+  content: '';
+  position: absolute;
+  top: 3px;
+  left: 3px;
+  width: 22px;
+  height: 22px;
+  border-radius: 50%;
+  background: var(--white);
+  transition: transform 0.15s ease;
+}
+
+.msg-toggle:checked { background: var(--color-action-primary); }
+.msg-toggle:checked::after { transform: translateX(20px); }
+.msg-toggle:focus-visible { outline: none; box-shadow: var(--focus-ring); }
+
+/* ---------- Samtale ---------- */
+
+.msg-chat__title {
+  flex: 1;
+  min-width: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+
+.msg-chat__list {
+  flex: 1;
+  min-height: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  padding: 12px 20px 16px;
+  overflow-x: hidden;
+  overflow-y: auto;
+  overscroll-behavior-y: contain;
+  -webkit-overflow-scrolling: touch;
+}
+
+.msg-chat__list--circle { padding-top: 8px; }
+
+.msg-row {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: 3px;
+  flex-shrink: 0;
+}
+
+.msg-row--out { align-items: flex-end; }
+
+/* Message bubble (Figma 7:93): tekst 230 px bred + 14 px luft i siderne */
+.msg-bubble {
+  width: 258px;
+  max-width: 85%;
+  padding: 10px 14px;
+  border-radius: 16px;
+  overflow-wrap: anywhere;
+  white-space: pre-wrap;
+}
+
+.msg-bubble--in { background: var(--color-bg-subtle); color: var(--color-text-primary); }
+.msg-bubble--out { background: var(--color-action-primary); color: var(--color-text-on-action); }
+
+/* Billede: grå pladsholder, 180 × 120 */
+.msg-photo {
+  width: 180px;
+  height: 120px;
+  border-radius: 16px;
+  background: var(--color-bg-subtle);
+}
+
+.msg-voice {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 8px 14px 8px 8px;
+  border-radius: 16px;
+  background: var(--color-bg-subtle);
+}
+
+.msg-voice__play {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 36px;
+  height: 36px;
+  border-radius: var(--radius-pill);
+  background: var(--color-action-primary);
+  color: var(--color-text-on-action);
+}
+
+/* ---------- Skrivefelt ---------- */
+
+.msg-composer {
+  flex-shrink: 0;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 10px 12px max(18px, var(--safe-bottom));
+  border-top: 1px solid var(--color-border-default);
+  background: var(--color-bg-surface);
+}
+
+/* Når tastaturet er fremme, er der ingen hjemmelinje at tage hensyn til */
+.msg-screen[data-keyboard] .msg-composer { padding-bottom: 10px; }
+
+.msg-composer__field {
+  flex: 1;
+  min-width: 0;
+}
+
+.msg-composer .icon-btn:disabled { opacity: 0.4; cursor: default; transform: none; }
+
+@media (pointer: coarse) {
+  .msg-to__input { font-size: 16px; }
+}
+
+/* Indholdet ruller, så elementerne må ikke klemmes sammen */
+.msg-content > * { flex-shrink: 0; }
+img.msg-photo { display: block; object-fit: cover; }
