@@ -1,0 +1,90 @@
+.comments {
+  display: flex;
+  flex-direction: column;
+  gap: 18px;
+  margin: 0;
+  padding: 16px 20px;
+  list-style: none;
+}
+
+.comment {
+  display: flex;
+  align-items: flex-start;
+  gap: 12px;
+}
+
+.comment--reply { padding-left: 44px; }
+
+.comment__text {
+  flex: 1;
+  min-width: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+
+.comment__name {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  white-space: nowrap;
+}
+
+.comment__muted,
+.comment__actions { color: var(--color-text-secondary); }
+
+.comment__actions {
+  display: flex;
+  gap: 16px;
+}
+
+/* "Svar" er lille tekst, men trykfladen er 44 px høj */
+.comment__actions button {
+  position: relative;
+  font: inherit;
+  color: inherit;
+}
+
+.comment__actions button::after {
+  content: '';
+  position: absolute;
+  inset: -14px -10px;
+}
+
+.comment__like {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 2px;
+  min-width: 44px;
+  min-height: 44px;
+  margin: -2px -12px 0 0;
+  color: var(--color-text-primary);
+}
+
+.comment__like .t-caption { color: var(--color-text-secondary); }
+.comment__like--on svg { color: var(--ink-700); }
+
+.comments__composer {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.comments__field {
+  flex: 1;
+  min-width: 0;
+  height: 44px;
+  padding: 0 16px;
+  border: 1px solid var(--color-border-strong);
+  border-radius: 22px;
+  background: var(--color-bg-surface);
+  color: var(--color-text-primary);
+  font: 400 14px/20px var(--font-body);
+  outline: none;
+}
+
+@media (pointer: coarse) { .comments__field { font-size: 16px; } }
+.comments__field::placeholder { color: var(--color-text-secondary); }
+.comments__field:focus,
+.comments__field:focus-visible { outline: none; border-color: var(--color-text-primary); box-shadow: 0 0 0 1px var(--color-text-primary); }
