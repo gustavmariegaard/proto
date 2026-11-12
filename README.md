@@ -45,6 +45,6 @@ src/
 
 1. ✅ Opsætning, tokens og fælles komponenter
 2. ✅ Velkomst, log ind og oprettelse af profil
-3. Hjem (Venner / Interesser), Moments og kommentarer som ark
+3. ✅ Hjem (Venner / Interesser), Moments og kommentarer som ark
 4. Opret, Flicks og Beskeder (Alle, Personer, Cirkler)
 5. Profil og Mere (Begivenheder, Grupper, Sider, Gemt, Torvet)
