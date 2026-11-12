@@ -7,7 +7,7 @@ import { MomentBubble } from '../components/MomentBubble';
 import { PostCard } from '../components/PostCard';
 import { SegmentedControl } from '../components/SegmentedControl';
 import { Wordmark } from '../components/Wordmark';
-import { moments, posts } from '../data/sample';
+import { posts } from '../data/sample';
 import './Showcase.css';
 
 /*
@@ -80,15 +80,14 @@ export function Showcase() {
       <Section title="Moments">
         <div className="showcase__row showcase__row--scroll">
           <MomentBubble name="Dig" state="add" />
-          {moments.map((m) => (
-            <MomentBubble key={m.name} name={m.name} state={m.state} tone={m.tone} />
-          ))}
+          <MomentBubble name="Mette" state="new" tone="blue" />
+          <MomentBubble name="Anna" state="seen" tone="sand" />
         </div>
       </Section>
 
       <Section title="Opslag">
         <div className="showcase__stack">
-          {posts.map((p) => (
+          {posts.slice(0, 2).map((p) => (
             <PostCard key={p.id} post={p} />
           ))}
         </div>

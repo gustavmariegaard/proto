@@ -11,6 +11,10 @@ import { Welcome } from './screens/auth/Welcome';
 import { Welcomed } from './screens/auth/Welcomed';
 import { Placeholder } from './screens/Placeholder';
 import { Showcase } from './screens/Showcase';
+import { Home } from './screens/home/Home';
+import { MomentViewer } from './screens/home/MomentViewer';
+import { PostDetail } from './screens/home/PostDetail';
+import { MomentsProvider } from './state/moments';
 import { SessionProvider, useSession } from './state/session';
 
 /** Sender folk, der ikke er logget ind, til velkomstskærmen. */
@@ -28,6 +32,7 @@ function GuestOnly() {
 export default function App() {
   return (
     <SessionProvider>
+      <MomentsProvider>
       <BrowserRouter basename={import.meta.env.BASE_URL}>
         <Routes>
           {/* Trin 2: velkomst, log ind og oprettelse */}
@@ -46,8 +51,12 @@ export default function App() {
 
           {/* Selve appen med topbar og bundmenu */}
           <Route element={<RequireLogin />}>
+            {/* Trin 3: fuldskærm uden bundmenu */}
+            <Route path="moment/:personId" element={<MomentViewer />} />
+            <Route path="opslag/:id" element={<PostDetail />} />
             <Route element={<AppShell />}>
-              <Route index element={<Showcase />} />
+              <Route index element={<Home />} />
+              <Route path="komponenter" element={<Showcase />} />
               <Route path="flicks" element={<Placeholder title="Flicks" />} />
               <Route path="opret" element={<Placeholder title="Opret" />} />
               <Route path="opdag" element={<Placeholder title="Opdag" />} />
@@ -58,6 +67,7 @@ export default function App() {
           <Route path="*" element={<Navigate to="/" replace />} />
         </Routes>
       </BrowserRouter>
+      </MomentsProvider>
     </SessionProvider>
   );
 }
