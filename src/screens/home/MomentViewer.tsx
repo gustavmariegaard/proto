@@ -113,11 +113,16 @@ function Viewer({ personId }: { personId: string }) {
       />
 
       <div className="moment-full__top">
-        <ol className="moment-view__dots" aria-label={`Moment ${index + 1} af ${own.length}`}>
-          {own.map((m, i) => (
-            <li key={m.id} className={i === index ? 'is-active' : undefined} />
-          ))}
-        </ol>
+        {/* Prikkerne vises kun, når personen har mere end ét moment */}
+        {own.length > 1 ? (
+          <ol className="moment-view__dots" aria-label={`Moment ${index + 1} af ${own.length}`}>
+            {own.map((m, i) => (
+              <li key={m.id} className={i === index ? 'is-active' : undefined} />
+            ))}
+          </ol>
+        ) : (
+          <span />
+        )}
         <button type="button" className="moment-view__close" aria-label="Luk" onClick={close}>
           <Icon name="close" />
         </button>
