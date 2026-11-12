@@ -1,4 +1,4 @@
-import { useEffect, useId, useState } from 'react';
+import { useId } from 'react';
 import { Link } from 'react-router-dom';
 import type { AvatarTone } from '../../components/Avatar';
 import '../../components/Avatar.css';
@@ -83,9 +83,6 @@ export function matches(name: string, query: string) {
 /** Stiplet felt "Tilføj billede". Vælger et billede fra telefonen og viser det. */
 export function PhotoPicker({ value, onChange }: { value?: string; onChange: (url: string | undefined) => void }) {
   const id = useId();
-  useEffect(() => () => {
-    if (value) URL.revokeObjectURL(value);
-  }, [value]);
   return (
     <div className="more-photo">
       <input
@@ -149,10 +146,4 @@ export function ChoicePair<T extends string>({
       })}
     </div>
   );
-}
-
-/** Lille hjælper: tekstfelt-state. */
-export function useField(initial = '') {
-  const [value, setValue] = useState(initial);
-  return { value, onChange: (e: React.ChangeEvent<HTMLInputElement>) => setValue(e.target.value) } as const;
 }
