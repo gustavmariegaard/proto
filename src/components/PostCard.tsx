@@ -50,6 +50,7 @@ export function PostCard({ post, onComment }: PostCardProps) {
           icon={liked ? 'heart-filled' : 'heart'}
           label="Synes godt om"
           aria-pressed={liked}
+          className={liked ? 'post__liked' : undefined}
           onClick={() => setLiked((v) => !v)}
         />
         <IconButton icon="chat" label="Kommentér" onClick={onComment} />

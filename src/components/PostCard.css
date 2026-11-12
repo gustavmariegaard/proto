@@ -43,3 +43,6 @@
 .post__spacer { flex: 1; }
 
 .post__saved svg path { fill: currentColor; }
+
+/* Liket: udfyldt hjerte i ink-700 som i Figma */
+.post__liked { color: var(--ink-700); }

@@ -1,0 +1,28 @@
+.home {
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+  padding: 0 20px;
+}
+
+.home__chips,
+.home__moments {
+  display: flex;
+  gap: 8px;
+  margin: 0 -20px;
+  padding: 0 20px;
+  list-style: none;
+  overflow-x: auto;
+  scrollbar-width: none;
+}
+
+.home__chips::-webkit-scrollbar,
+.home__moments::-webkit-scrollbar { display: none; }
+
+.home__moments { gap: 12px; padding-bottom: 2px; }
+
+.home__posts {
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+}
