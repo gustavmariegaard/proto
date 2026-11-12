@@ -1,4 +1,4 @@
-import { useCallback, useEffect, useState } from 'react';
+import { useCallback, useEffect, useRef, useState } from 'react';
 import { Navigate, useNavigate, useParams } from 'react-router-dom';
 import { Avatar } from '../../components/Avatar';
 import { Icon } from '../../components/Icon';
@@ -26,7 +26,12 @@ function Viewer({ personId }: { personId: string }) {
   const navigate = useNavigate();
   const { markSeen } = useMoments();
   const [index, setIndex] = useState(0);
-  const [paused, setPaused] = useState(false);
+  // Pause, når man skriver et svar, eller holder fingeren på billedet
+  const [typing, setTyping] = useState(false);
+  const [held, setHeld] = useState(false);
+  const paused = typing || held;
+  const holdTimer = useRef<number | undefined>(undefined);
+  const wasHeld = useRef(false);
   const [liked, setLiked] = useState(false);
   const [reply, setReply] = useState('');
 
@@ -55,11 +60,27 @@ function Viewer({ personId }: { personId: string }) {
     if (person) markSeen(personId);
   }, [person, personId, markSeen]);
 
-  useEffect(() => {
-    if (paused) return;
-    const t = setTimeout(next, DURATION);
-    return () => clearTimeout(t);
-  }, [index, personId, paused, next]);
+  /* Hold fingeren nede = pause. Slip = fortsæt, hvor den slap. Et kort tryk skifter moment. */
+  const pressStart = () => {
+    wasHeld.current = false;
+    window.clearTimeout(holdTimer.current);
+    holdTimer.current = window.setTimeout(() => {
+      wasHeld.current = true;
+      setHeld(true);
+    }, 180);
+  };
+  const pressEnd = () => {
+    window.clearTimeout(holdTimer.current);
+    setHeld(false);
+  };
+  /** Ignorer klikket, der kommer, når man slipper efter at have holdt */
+  const tap = (go: () => void) => () => {
+    if (wasHeld.current) {
+      wasHeld.current = false;
+      return;
+    }
+    go();
+  };
 
   useEffect(() => {
     const onKey = (e: KeyboardEvent) => {
@@ -92,9 +113,16 @@ function Viewer({ personId }: { personId: string }) {
       </div>
 
       <div className="moment-view__stage">
-        <div className="moment-view__frame">
+        <div
+          className={['moment-view__frame', held && 'is-held'].filter(Boolean).join(' ')}
+          onPointerDown={pressStart}
+          onPointerUp={pressEnd}
+          onPointerCancel={pressEnd}
+          onPointerLeave={pressEnd}
+          onContextMenu={(e) => e.preventDefault()}
+        >
           <div className="moment-view__photo">
-            {current.image ? <img src={current.image} alt="" /> : null}
+            {current.image ? <img src={current.image} alt="" draggable={false} /> : null}
           </div>
           <svg className="moment-view__progress" viewBox={`0 0 ${W} ${H}`} aria-hidden="true">
             <path d={framePath} className="moment-view__track" />
@@ -104,11 +132,13 @@ function Viewer({ personId }: { personId: string }) {
               pathLength={100}
               className="moment-view__bar"
               style={{ animationDuration: `${DURATION}ms`, animationPlayState: paused ? 'paused' : 'running' }}
+              // Næste moment, når rammen er løbet hele vejen rundt
+              onAnimationEnd={next}
             />
           </svg>
           {/* Usynlige trykflader til forrige og næste */}
-          <button type="button" className="moment-view__tap moment-view__tap--prev" aria-label="Forrige" onClick={prev} />
-          <button type="button" className="moment-view__tap moment-view__tap--next" aria-label="Næste" onClick={next} />
+          <button type="button" className="moment-view__tap moment-view__tap--prev" aria-label="Forrige" onClick={tap(prev)} />
+          <button type="button" className="moment-view__tap moment-view__tap--next" aria-label="Næste" onClick={tap(next)} />
         </div>
       </div>
 
@@ -132,8 +162,8 @@ function Viewer({ personId }: { personId: string }) {
           aria-label={`Svar ${person.name}`}
           value={reply}
           onChange={(e) => setReply(e.target.value)}
-          onFocus={() => setPaused(true)}
-          onBlur={() => setPaused(false)}
+          onFocus={() => setTyping(true)}
+          onBlur={() => setTyping(false)}
           enterKeyHint="send"
         />
         <button

@@ -87,6 +87,11 @@
 /* Rammen holder Figmas forhold 331 : 576 og skrumper på små skærme */
 .moment-view__frame {
   position: relative;
+  /* Ingen markering eller billedmenu, når man holder fingeren nede */
+  -webkit-user-select: none;
+  user-select: none;
+  -webkit-touch-callout: none;
+  touch-action: manipulation;
   height: min(576px, 100%);
   max-width: 100%;
   aspect-ratio: 331 / 576;
@@ -201,3 +206,6 @@
 
 .moment-view__close:focus-visible,
 .moment-view__like:focus-visible { outline: 2px solid var(--color-text-on-action); outline-offset: 0; }
+
+/* Mens man holder: tonet lidt ned, så man kan se, at det står stille */
+.moment-view__frame.is-held .moment-view__photo { filter: brightness(0.92); }
