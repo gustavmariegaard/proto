@@ -24,7 +24,8 @@ Vil du prøve velkomst og oprettelse igen, så tryk **Log ud** under Mere.
 
 ```
 public/
-  img/                 ← læg egne billeder her (ellers grå pladsholdere)
+  img/                 ← læg egne billeder her
+  img/figma/           ← billederne fra Figma
   favicon.svg          ← logoet fra Figma
   icon-*.png           ← app-ikoner til hjemmeskærmen
 scripts/
@@ -46,5 +47,5 @@ src/
 1. ✅ Opsætning, tokens og fælles komponenter
 2. ✅ Velkomst, log ind og oprettelse af profil
 3. ✅ Hjem (Venner / Interesser), Moments og kommentarer som ark
-4. Opret, Flicks og Beskeder (Alle, Personer, Cirkler)
+4. ✅ Opret, Flicks og Beskeder (Alle, Personer, Cirkler)
 5. Profil og Mere (Begivenheder, Grupper, Sider, Gemt, Torvet)
