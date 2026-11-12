@@ -1,0 +1,19 @@
+.eid__box {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  margin: 0;
+  padding: 16px;
+  list-style: none;
+  border-radius: var(--radius-xl);
+  background: var(--color-bg-sunken);
+}
+
+.eid__box li {
+  display: flex;
+  align-items: flex-start;
+  gap: 10px;
+}
+
+.eid__box svg { flex-shrink: 0; }
+.eid__box span { padding-top: 2px; }

@@ -1,0 +1,74 @@
+.country__wrap {
+  position: relative;
+  flex: 1;
+  min-height: 160px;
+}
+
+.country__list {
+  position: absolute;
+  inset: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  margin: 0;
+  padding: 2px 2px 64px;
+  list-style: none;
+  overflow-y: auto;
+  overscroll-behavior-y: contain;
+}
+
+/* Hvid toning i bunden af listen */
+.country__wrap::after {
+  content: '';
+  position: absolute;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  height: 64px;
+  background: linear-gradient(to bottom, rgba(255, 255, 255, 0), var(--color-bg-app));
+  pointer-events: none;
+}
+
+.country__row {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  width: 100%;
+  padding: 14px 16px;
+  min-height: 52px;
+  text-align: left;
+  border: 1px solid var(--color-border-default);
+  border-radius: var(--radius-lg);
+  background: var(--color-bg-surface);
+}
+
+.country__row .t-label { flex: 1; }
+
+.country__row--on {
+  background: var(--color-accent-verified-bg);
+  border: 2px solid var(--color-accent-highlight);
+  padding: 13px 15px;
+}
+
+.country__row:focus-visible { outline: 2px solid var(--color-text-primary); outline-offset: 2px; }
+
+/* Radioknap, 22 px */
+.country__radio {
+  position: relative;
+  width: 22px;
+  height: 22px;
+  flex-shrink: 0;
+  border-radius: 50%;
+  border: 2px solid var(--color-border-strong);
+  background: var(--color-bg-surface);
+}
+
+.country__row--on .country__radio { border-color: var(--color-text-primary); }
+
+.country__row--on .country__radio::after {
+  content: '';
+  position: absolute;
+  inset: 3px;
+  border-radius: 50%;
+  background: var(--color-text-primary);
+}
