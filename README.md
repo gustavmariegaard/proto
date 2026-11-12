@@ -12,6 +12,14 @@ npm run dev
 
 Åbn adressen, der vises i terminalen. På en computer vises appen i en iPhone-ramme.
 
+## Test på iPhone
+
+Appen kan udgives automatisk på GitHub Pages, hver gang branchen `prototype` opdateres:
+https://gustavmariegaard.github.io/proto/ (kræver, at Pages er slået til i repoets indstillinger).
+
+Åbn linket i Safari → Del → **Føj til hjemmeskærm**.
+Vil du prøve velkomst og oprettelse igen, så tryk **Log ud** under Mere.
+
 ## Mapper
 
 ```
@@ -36,7 +44,7 @@ src/
 ## Trin
 
 1. ✅ Opsætning, tokens og fælles komponenter
-2. Velkomst, log ind og oprettelse af profil
+2. ✅ Velkomst, log ind og oprettelse af profil
 3. Hjem (Venner / Interesser), Moments og kommentarer som ark
 4. Opret, Flicks og Beskeder (Alle, Personer, Cirkler)
 5. Profil og Mere (Begivenheder, Grupper, Sider, Gemt, Torvet)
