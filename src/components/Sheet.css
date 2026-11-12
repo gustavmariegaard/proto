@@ -1,0 +1,92 @@
+.sheet-layer {
+  position: absolute;
+  inset: 0;
+  z-index: 50;
+  pointer-events: none;
+}
+
+#root { position: relative; }
+
+.sheet-layer__backdrop {
+  position: absolute;
+  inset: 0;
+  pointer-events: auto;
+  background: transparent;
+}
+
+.sheet-layer--dim .sheet-layer__backdrop {
+  background: rgba(0, 0, 0, 0.35);
+  animation: sheet-fade 0.2s ease;
+}
+
+.sheet {
+  position: absolute;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  display: flex;
+  flex-direction: column;
+  pointer-events: auto;
+  background: var(--color-bg-surface);
+  border-radius: 24px 24px 0 0;
+  box-shadow: 0 -4px 18px rgba(0, 0, 0, 0.16);
+  outline: none;
+  transition: height 0.25s ease, transform 0.2s ease;
+  animation: sheet-up 0.25s ease;
+}
+
+/* Halv: 480 af 844 px i Figma. Hel: 26 px under frirummet. */
+.sheet--half { height: min(calc(480px + var(--safe-bottom)), 62%); }
+.sheet--full { height: calc(100% - var(--safe-top) - 26px); }
+
+.sheet__handle {
+  display: flex;
+  justify-content: center;
+  align-items: flex-start;
+  width: 100%;
+  height: 27px;
+  padding-top: 12px;
+  flex-shrink: 0;
+  touch-action: none;
+  cursor: grab;
+}
+
+.sheet__bar {
+  width: 44px;
+  height: 5px;
+  border-radius: 3px;
+  background: var(--color-border-strong);
+}
+
+.sheet__handle:focus-visible { outline: none; }
+.sheet__handle:focus-visible .sheet__bar { box-shadow: 0 0 0 2px var(--color-bg-surface), 0 0 0 4px var(--color-text-primary); }
+
+.sheet__title {
+  flex-shrink: 0;
+  padding: 0 20px 12px;
+  text-align: center;
+  border-bottom: 1px solid var(--color-border-default);
+}
+
+.sheet__body {
+  flex: 1;
+  min-height: 0;
+  overflow-y: auto;
+  overscroll-behavior: contain;
+}
+
+.sheet__footer {
+  flex-shrink: 0;
+  border-top: 1px solid var(--color-border-default);
+  background: var(--color-bg-surface);
+  padding: 10px 20px max(30px, calc(var(--safe-bottom) + 8px));
+}
+
+@keyframes sheet-up {
+  from { transform: translateY(100%); }
+  to { transform: translateY(0); }
+}
+
+@keyframes sheet-fade {
+  from { opacity: 0; }
+}
