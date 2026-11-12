@@ -49,8 +49,15 @@ import { Interests } from './screens/profile/Interests';
 
 /** Mørk statuslinje og baggrund på de mørke skærme */
 function ThemeColor() {
-  useThemeColor();
-  return null;
+  const dark = useThemeColor();
+  // Safari på iPhone farver statuslinjen og adresselinjen efter faste flader,
+  // der rører skærmens kant. På mørke skærme lægger vi en mørk stribe begge steder.
+  return dark ? (
+    <>
+      <div className="edge-tint edge-tint--top" aria-hidden="true" />
+      <div className="edge-tint edge-tint--bottom" aria-hidden="true" />
+    </>
+  ) : null;
 }
 
 /** Mere-fanen: Hjem bagved med Mere-arket ovenpå. */

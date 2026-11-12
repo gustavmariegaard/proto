@@ -13,8 +13,8 @@ const DARK_COLOR = '#171717'; // --ink-900
  */
 export function useThemeColor() {
   const { pathname } = useLocation();
+  const dark = DARK.some((r) => r.test(pathname));
   useEffect(() => {
-    const dark = DARK.some((r) => r.test(pathname));
     document.documentElement.toggleAttribute('data-dark', dark);
     let meta = document.querySelector<HTMLMetaElement>('meta[name="theme-color"]');
     if (!meta) {
@@ -23,5 +23,6 @@ export function useThemeColor() {
       document.head.appendChild(meta);
     }
     meta.content = dark ? DARK_COLOR : LIGHT_COLOR;
-  }, [pathname]);
+  }, [dark]);
+  return dark;
 }
