@@ -1,0 +1,238 @@
+/* Torvet (Figma: Torvet og Torvet · Radius). Indholdet ligger i AppShell. */
+.market {
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+  padding: 0 20px;
+}
+
+.market__header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+}
+
+.market__muted { color: var(--color-text-secondary); }
+
+.market__radius {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  min-height: 44px;
+  max-width: 100%;
+  padding: 10px 12px 10px 14px;
+  border-radius: var(--radius-pill);
+  background: var(--color-bg-subtle);
+  color: var(--color-text-primary);
+  text-align: left;
+}
+
+.market__radius > span { white-space: nowrap; }
+.market__radius .market__muted { overflow: hidden; text-overflow: ellipsis; min-width: 0; }
+.market__radius svg { flex-shrink: 0; }
+.market__radius:focus-visible { outline: none; box-shadow: var(--focus-ring); }
+
+.market__chevron { transform: rotate(90deg); }
+
+.market__chips {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.market__info {
+  padding: 12px 14px;
+  border-radius: var(--radius-lg);
+  background: var(--color-accent-note-bg);
+  color: var(--color-accent-note-text);
+}
+
+.market__grid {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 14px 12px;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+/* ---------- Listing card ---------- */
+.listing {
+  display: flex;
+  flex-direction: column;
+  width: 100%;
+  height: 100%;
+  overflow: hidden;
+  border: 1px solid var(--color-border-default);
+  border-radius: var(--radius-lg);
+  background: var(--color-bg-surface);
+  color: var(--color-text-primary);
+  text-align: left;
+}
+
+.listing:focus-visible { outline: none; box-shadow: var(--focus-ring); }
+
+.listing__photo {
+  display: block;
+  width: 100%;
+  height: 112px;
+  object-fit: cover;
+  background: var(--color-bg-subtle);
+}
+
+.listing__info {
+  display: flex;
+  flex-direction: column;
+  gap: 3px;
+  padding: 10px 12px 12px;
+}
+
+.listing__km { color: var(--color-text-secondary); }
+
+/* ---------- Annonce-ark ---------- */
+.listing-detail {
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+  padding: 16px 20px 32px;
+}
+
+.listing-detail__photo {
+  display: block;
+  width: 100%;
+  height: 200px;
+  object-fit: cover;
+  border-radius: var(--radius-md);
+  background: var(--color-bg-subtle);
+}
+
+.listing-detail__seller {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+/* ---------- Radius-ark (ligger over bundmenuen) ---------- */
+.radius-layer {
+  position: absolute;
+  inset: 0;
+  z-index: 50;
+}
+
+.radius-layer__scrim {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  background: transparent;
+  cursor: default;
+}
+
+.radius {
+  position: absolute;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+  padding: 0 20px max(30px, calc(var(--safe-bottom) + 8px));
+  border-radius: 24px 24px 0 0;
+  background: var(--color-bg-surface);
+  box-shadow: 0 -4px 18px rgba(0, 0, 0, 0.16);
+  color: var(--color-text-primary);
+  outline: none;
+  animation: radius-up 0.25s ease;
+}
+
+.radius__handle {
+  display: flex;
+  justify-content: center;
+  align-self: stretch;
+  height: 44px;
+  margin-bottom: -23px;
+  padding-top: 12px;
+}
+
+.radius__bar {
+  width: 44px;
+  height: 5px;
+  border-radius: 3px;
+  background: var(--color-border-strong);
+}
+
+.radius__handle:focus-visible { outline: none; }
+.radius__handle:focus-visible .radius__bar { box-shadow: 0 0 0 2px var(--color-bg-surface), 0 0 0 4px var(--color-text-primary); }
+
+.radius__place {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  color: var(--color-text-secondary);
+}
+
+.radius__place svg { color: var(--color-text-primary); }
+
+.radius__value { text-align: center; }
+
+.radius__scale {
+  display: flex;
+  justify-content: space-between;
+  color: var(--color-text-secondary);
+}
+
+/* Skyder: 6 px bane, mint udfyldning, 30 px hvidt håndtag */
+.radius__slider {
+  --fill: 40%;
+  width: 100%;
+  height: 36px;
+  margin: 0;
+  background: transparent;
+  -webkit-appearance: none;
+  appearance: none;
+  cursor: pointer;
+}
+
+.radius__slider::-webkit-slider-runnable-track {
+  height: 6px;
+  border-radius: 3px;
+  background: linear-gradient(to right, var(--color-accent-highlight) var(--fill), var(--color-bg-subtle) var(--fill));
+}
+
+.radius__slider::-moz-range-track {
+  height: 6px;
+  border-radius: 3px;
+  background: linear-gradient(to right, var(--color-accent-highlight) var(--fill), var(--color-bg-subtle) var(--fill));
+}
+
+.radius__slider::-webkit-slider-thumb {
+  -webkit-appearance: none;
+  width: 30px;
+  height: 30px;
+  margin-top: -12px;
+  border: 2px solid var(--color-text-primary);
+  border-radius: 50%;
+  background: var(--color-bg-surface);
+  box-shadow: 0 2px 6px rgba(0, 0, 0, 0.18);
+}
+
+.radius__slider::-moz-range-thumb {
+  box-sizing: border-box;
+  width: 30px;
+  height: 30px;
+  border: 2px solid var(--color-text-primary);
+  border-radius: 50%;
+  background: var(--color-bg-surface);
+  box-shadow: 0 2px 6px rgba(0, 0, 0, 0.18);
+}
+
+.radius__slider:focus-visible { outline: none; }
+.radius__slider:focus-visible::-webkit-slider-thumb { box-shadow: var(--focus-ring); }
+.radius__slider:focus-visible::-moz-range-thumb { box-shadow: var(--focus-ring); }
+
+@keyframes radius-up {
+  from { transform: translateY(100%); }
+}
