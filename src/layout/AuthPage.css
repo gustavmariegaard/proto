@@ -4,7 +4,7 @@
   flex-direction: column;
   gap: var(--auth-gap);
   height: 100%;
-  padding: calc(var(--safe-top) + var(--auth-top)) 24px max(32px, calc(var(--safe-bottom) + 12px));
+  padding: calc(var(--safe-top) + max(var(--top-gap), var(--auth-top) - 24px)) 24px max(32px, calc(var(--safe-bottom) + 12px));
   background: var(--color-bg-app);
   overflow: hidden;
 }

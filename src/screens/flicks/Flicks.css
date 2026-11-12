@@ -31,7 +31,7 @@
 .flicks__top {
   position: absolute;
   z-index: 10;
-  top: calc(var(--safe-top) + 8px);
+  top: calc(var(--safe-top) + var(--top-gap));
   left: 20px;
   display: flex;
   gap: 8px;
