@@ -1,0 +1,304 @@
+/* ---------- Fælles ramme for Søg, Notifikationer, Gemt, Skaber og Indstillinger ---------- */
+
+.acc-screen {
+  display: flex;
+  flex-direction: column;
+  height: 100%;
+  background: var(--color-bg-app);
+}
+
+.acc-content {
+  flex: 1;
+  min-height: 0;
+  display: flex;
+  flex-direction: column;
+  align-items: stretch;
+  gap: 14px;
+  padding: 4px 20px calc(24px + var(--safe-bottom));
+  overflow-x: hidden;
+  overflow-y: auto;
+  overscroll-behavior-y: contain;
+  -webkit-overflow-scrolling: touch;
+}
+
+.acc-content > * { flex-shrink: 0; }
+
+.acc-muted { color: var(--color-text-secondary); }
+.acc-center { text-align: center; }
+
+.acc-list {
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.acc-chips {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+}
+
+.acc-row-between {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+}
+
+.acc-ellipsis {
+  max-width: 100%;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+/* Kort (List row): hvid, 1 px kant, radius 18 */
+.acc-card {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  width: 100%;
+  padding: 12px 14px;
+  border: 1px solid var(--color-border-default);
+  border-radius: var(--radius-lg);
+  background: var(--color-bg-surface);
+  color: var(--color-text-primary);
+  text-align: left;
+  text-decoration: none;
+}
+
+.acc-card:focus-visible { outline: none; box-shadow: var(--focus-ring); }
+
+.acc-card__text {
+  flex: 1;
+  min-width: 0;
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: 2px;
+}
+
+/* Større kort, radius 22 (Audience, Ads, Translation example) */
+.acc-panel {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: 10px;
+  width: 100%;
+  padding: 16px;
+  border: 1px solid var(--color-border-default);
+  border-radius: var(--radius-xl);
+  background: var(--color-bg-surface);
+}
+
+.acc-panel > .field { width: 100%; }
+
+/* ---------- Søg ---------- */
+
+.search-header {
+  flex-shrink: 0;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: calc(18px + var(--safe-top)) 12px 8px;
+  background: var(--color-bg-app);
+}
+
+.search-header__field {
+  flex: 1;
+  min-width: 0;
+}
+
+.search-header__field .field::-webkit-search-cancel-button { -webkit-appearance: none; appearance: none; }
+
+.search-post__thumb {
+  flex-shrink: 0;
+  width: 56px;
+  height: 56px;
+  border-radius: var(--radius-sm);
+  object-fit: cover;
+  background: var(--color-bg-subtle);
+}
+
+.search-post__text {
+  display: -webkit-box;
+  -webkit-line-clamp: 2;
+  -webkit-box-orient: vertical;
+  overflow: hidden;
+}
+
+/* ---------- Notifikationer ---------- */
+
+.notif {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  width: 100%;
+  padding: 14px;
+  border: 1px solid var(--color-border-default);
+  border-radius: var(--radius-xl);
+  background: var(--color-bg-surface);
+  color: var(--color-text-primary);
+  text-align: left;
+  text-decoration: none;
+}
+
+a.notif:focus-visible { outline: none; box-shadow: var(--focus-ring); }
+
+.notif__row {
+  display: flex;
+  align-items: flex-start;
+  gap: 12px;
+  width: 100%;
+}
+
+.notif__text {
+  flex: 1;
+  min-width: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 3px;
+}
+
+.notif__dot {
+  flex-shrink: 0;
+  width: 10px;
+  height: 10px;
+  border-radius: 50%;
+}
+
+.notif__dot--on { background: var(--color-accent-highlight); }
+
+.notif__buttons {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+}
+
+/* ---------- Gemt ---------- */
+
+.saved-tabs {
+  display: flex;
+  align-items: flex-end;
+  gap: 22px;
+  border-bottom: 1px solid var(--color-border-default);
+}
+
+.saved-tab {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 8px;
+  min-height: 44px;
+  padding-top: 8px;
+  color: var(--color-text-secondary);
+  font: 600 14px/20px var(--font-body);
+}
+
+.saved-tab::after {
+  content: '';
+  align-self: stretch;
+  height: 3px;
+  border-radius: 2px;
+  background: transparent;
+}
+
+.saved-tab--on { color: var(--color-text-primary); }
+.saved-tab--on::after { background: var(--color-accent-highlight); }
+.saved-tab:focus-visible { outline: 2px solid var(--color-text-primary); outline-offset: 2px; border-radius: 4px; }
+
+.masonry {
+  display: flex;
+  align-items: flex-start;
+  gap: 8px;
+}
+
+.masonry__col {
+  flex: 1 1 0;
+  min-width: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.masonry__item {
+  position: relative;
+  display: block;
+  width: 100%;
+  overflow: hidden;
+  border-radius: var(--radius-lg);
+  background: var(--color-bg-subtle);
+}
+
+.masonry__item img {
+  display: block;
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+
+.masonry__item:focus-visible { outline: none; box-shadow: var(--focus-ring); }
+
+.masonry__remove {
+  position: absolute;
+  top: 6px;
+  right: 6px;
+}
+
+/* ---------- Skaber og virksomhed ---------- */
+
+.stats {
+  display: flex;
+  gap: 8px;
+  width: 100%;
+}
+
+.stat {
+  flex: 1 1 0;
+  min-width: 0;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 2px;
+  padding: 12px 0;
+  border-radius: var(--radius-md);
+  background: var(--color-bg-sunken);
+}
+
+/* ---------- Indstillinger ---------- */
+
+.translation-example {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: 8px;
+  width: 100%;
+  padding: 14px;
+  border: 1px solid var(--color-border-default);
+  border-radius: var(--radius-xl);
+  background: var(--color-bg-surface);
+}
+
+.translation-example__who {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.age-note {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  padding: 14px;
+  border-radius: 16px;
+  background: var(--color-accent-note-bg);
+  color: var(--color-accent-note-text);
+}
+
+.acc-logout {
+  align-self: flex-start;
+  margin-top: 10px;
+}
