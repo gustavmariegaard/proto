@@ -15,6 +15,15 @@ import { Home } from './screens/home/Home';
 import { MomentViewer } from './screens/home/MomentViewer';
 import { PostDetail } from './screens/home/PostDetail';
 import { MomentsProvider } from './state/moments';
+import { Create } from './screens/create/Create';
+import { Share } from './screens/share/Share';
+import { Report } from './screens/share/Report';
+import { Messages } from './screens/messages/Messages';
+import { Conversation } from './screens/messages/Conversation';
+import { NewMessage } from './screens/messages/NewMessage';
+import { NewCircle } from './screens/messages/NewCircle';
+import { Flicks } from './screens/flicks/Flicks';
+import { NewFlick } from './screens/flicks/NewFlick';
 import { SessionProvider, useSession } from './state/session';
 
 /** Sender folk, der ikke er logget ind, til velkomstskærmen. */
@@ -54,11 +63,19 @@ export default function App() {
             {/* Trin 3: fuldskærm uden bundmenu */}
             <Route path="moment/:personId" element={<MomentViewer />} />
             <Route path="opslag/:id" element={<PostDetail />} />
+            {/* Trin 4: Opret, Del, Rapportér og Beskeder */}
+            <Route path="opret" element={<Create />} />
+            <Route path="opslag/:id/del" element={<Share />} />
+            <Route path="opslag/:id/rapporter" element={<Report />} />
+            <Route path="flicks" element={<Flicks />} />
+            <Route path="flicks/ny" element={<NewFlick />} />
+            <Route path="beskeder" element={<Messages />} />
+            <Route path="beskeder/ny" element={<NewMessage />} />
+            <Route path="beskeder/ny-cirkel" element={<NewCircle />} />
+            <Route path="beskeder/:id" element={<Conversation />} />
             <Route element={<AppShell />}>
               <Route index element={<Home />} />
               <Route path="komponenter" element={<Showcase />} />
-              <Route path="flicks" element={<Placeholder title="Flicks" />} />
-              <Route path="opret" element={<Placeholder title="Opret" />} />
               <Route path="opdag" element={<Placeholder title="Opdag" />} />
               <Route path="mere" element={<Placeholder title="Mere" showLogOut />} />
               <Route path="find-folk" element={<Placeholder title="Find folk" />} />

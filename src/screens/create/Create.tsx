@@ -139,7 +139,11 @@ export function Create() {
               role="tab"
               aria-selected={kind === k.value}
               className={['create__tab', kind === k.value && 'create__tab--on'].filter(Boolean).join(' ')}
-              onClick={() => setKind(k.value)}
+              onClick={() => {
+                // Flick åbner kameraet til en ny flick
+                if (k.value === 'flick') navigate('/flicks/ny');
+                else setKind(k.value);
+              }}
             >
               {k.label}
             </button>

@@ -19,7 +19,7 @@ export const people: Record<string, Person> = {
   peter: { name: 'Peter', fullName: 'Peter', tone: 'rose', avatarSrc: img('peter.jpg') },
   sofie: { name: 'Sofie', fullName: 'Sofie Holm', tone: 'sand', avatarSrc: img('person-d.jpg') },
   ahmed: { name: 'Ahmed', fullName: 'Ahmed Rahimi', tone: 'blue', avatarSrc: img('person-e.jpg') },
-  karen: { name: 'Karen', fullName: 'Karen Bech', tone: 'sage', avatarSrc: img('person-f.jpg') },
+  karen: { name: 'Karen', fullName: 'Karen Bech', tone: 'sage', avatarSrc: img('person-b.jpg') },
 };
 
 /* ---------- Moments ---------- */
@@ -109,7 +109,7 @@ export const posts: FeedPost[] = [
     id: 'p-karen',
     feed: 'venner',
     author: 'Karen Bech',
-    avatarSrc: img('person-f.jpg'),
+    avatarSrc: img('person-b.jpg'),
     tone: 'sage',
     meta: 'Til Naboerne · i går',
     text: 'Fællesspisning i gården på søndag klokken 17. Tag noget med til buffeten, så sørger vi for borde og stole.',
@@ -203,7 +203,7 @@ export const posts: FeedPost[] = [
     feed: 'interesser',
     topic: 'Kultur',
     author: 'Byens Bibliotek',
-    avatarSrc: img('person-b.jpg'),
+    avatarSrc: img('nyhavn.jpg'),
     tone: 'blue',
     meta: 'Kultur · Offentligt',
     text: 'Forfatteraften på tirsdag. Kom og hør, hvordan en roman bliver til, fra første idé til færdig bog.',
