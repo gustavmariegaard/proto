@@ -8,13 +8,6 @@ import './MomentViewer.css';
 
 const DURATION = 5000; // 5 sekunder pr. moment
 
-/* Rammen om billedet: 331 × 576 px med 36 px hjørner. Starter øverst i midten. */
-const W = 331;
-const H = 576;
-const R = 36;
-const S = 2; // halv stregbredde, så stregen ikke klippes
-const framePath = `M ${W / 2} ${S} H ${W - R} A ${R - S} ${R - S} 0 0 1 ${W - S} ${R} V ${H - R} A ${R - S} ${R - S} 0 0 1 ${W - R} ${H - S} H ${R} A ${R - S} ${R - S} 0 0 1 ${S} ${H - R} V ${R} A ${R - S} ${R - S} 0 0 1 ${R} ${S} Z`;
-
 /** Moment i fuld skærm. Tryk til højre for næste, til venstre for forrige. */
 export function MomentViewer() {
   const { personId = '' } = useParams();
@@ -96,57 +89,50 @@ function Viewer({ personId }: { personId: string }) {
   if (!person || !current) return <Navigate to="/" replace />;
 
   return (
-    <div className="moment-view" role="dialog" aria-label={`Moment fra ${person.name}`}>
-      <div className="moment-view__bg" aria-hidden="true">
-        {current.image && <img src={current.image} alt="" />}
+    <div className="moment-view moment-view--full" role="dialog" aria-label={`Moment fra ${person.name}`}>
+      {/* Billedet fylder hele skærmen. Tryk til siden skifter, hold nede = pause. */}
+      <div
+        className={['moment-full__photo', held && 'is-held'].filter(Boolean).join(' ')}
+        onPointerDown={pressStart}
+        onPointerUp={pressEnd}
+        onPointerCancel={pressEnd}
+        onPointerLeave={pressEnd}
+        onContextMenu={(e) => e.preventDefault()}
+      >
+        {current.image ? <img src={current.image} alt="" draggable={false} /> : null}
+        <button type="button" className="moment-view__tap moment-view__tap--prev" aria-label="Forrige" onClick={tap(prev)} />
+        <button type="button" className="moment-view__tap moment-view__tap--next" aria-label="Næste" onClick={tap(next)} />
       </div>
 
-      <div className="moment-view__top">
-        <ol className="moment-view__dots" aria-label={`Moment ${index + 1} af ${own.length}`}>
+      <div className="moment-full__top">
+        {/* Én streg pr. moment. Den aktive fyldes op og skifter, når den er fuld. */}
+        <ol className="moment-full__bars" aria-label={`Moment ${index + 1} af ${own.length}`}>
           {own.map((m, i) => (
-            <li key={m.id} className={i === index ? 'is-active' : undefined} />
+            <li key={m.id} className={i < index ? 'is-done' : undefined}>
+              {i === index && (
+                <span
+                  key={`${personId}-${index}`}
+                  className="moment-full__fill"
+                  style={{ animationDuration: `${DURATION}ms`, animationPlayState: paused ? 'paused' : 'running' }}
+                  onAnimationEnd={next}
+                />
+              )}
+            </li>
           ))}
         </ol>
-        <button type="button" className="moment-view__close" aria-label="Luk" onClick={close}>
-          <Icon name="close" />
-        </button>
-      </div>
-
-      <div className="moment-view__stage">
-        <div
-          className={['moment-view__frame', held && 'is-held'].filter(Boolean).join(' ')}
-          onPointerDown={pressStart}
-          onPointerUp={pressEnd}
-          onPointerCancel={pressEnd}
-          onPointerLeave={pressEnd}
-          onContextMenu={(e) => e.preventDefault()}
-        >
-          <div className="moment-view__photo">
-            {current.image ? <img src={current.image} alt="" draggable={false} /> : null}
+        <div className="moment-full__head">
+          <div className="moment-full__who">
+            <Avatar name={person.fullName} tone={person.tone} size="S" src={person.avatarSrc} />
+            <span className="t-heading-s">{person.name}</span>
+            <span className="t-caption moment-view__time">{current.time}</span>
           </div>
-          <svg className="moment-view__progress" viewBox={`0 0 ${W} ${H}`} aria-hidden="true">
-            <path d={framePath} className="moment-view__track" />
-            <path
-              key={`${personId}-${index}`}
-              d={framePath}
-              pathLength={100}
-              className="moment-view__bar"
-              style={{ animationDuration: `${DURATION}ms`, animationPlayState: paused ? 'paused' : 'running' }}
-              // Næste moment, når rammen er løbet hele vejen rundt
-              onAnimationEnd={next}
-            />
-          </svg>
-          {/* Usynlige trykflader til forrige og næste */}
-          <button type="button" className="moment-view__tap moment-view__tap--prev" aria-label="Forrige" onClick={tap(prev)} />
-          <button type="button" className="moment-view__tap moment-view__tap--next" aria-label="Næste" onClick={tap(next)} />
+          <button type="button" className="moment-view__close" aria-label="Luk" onClick={close}>
+            <Icon name="close" />
+          </button>
         </div>
       </div>
 
-      <div className="moment-view__who">
-        <Avatar name={person.fullName} tone={person.tone} size="S" src={person.avatarSrc} />
-        <span className="t-heading-s">{person.name}</span>
-        <span className="t-caption moment-view__time">{current.time}</span>
-      </div>
+      <div className="moment-full__spacer" />
 
       <form
         className="moment-view__reply"

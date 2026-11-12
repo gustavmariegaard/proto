@@ -209,3 +209,122 @@
 
 /* Mens man holder: tonet lidt ned, så man kan se, at det står stille */
 .moment-view__frame.is-held .moment-view__photo { filter: brightness(0.92); }
+
+/* =========================================================
+ * Moments i fuld skærm: billedet fylder hele skærmen,
+ * fremdriften er tynde streger øverst.
+ * ========================================================= */
+.moment-view--full {
+  padding: 0 0 max(24px, calc(var(--safe-bottom) + 8px));
+  background: var(--ink-900);
+}
+
+.moment-full__photo {
+  position: absolute;
+  inset: 0;
+  background: linear-gradient(160deg, #4a4a4a, var(--ink-700));
+  -webkit-user-select: none;
+  user-select: none;
+  -webkit-touch-callout: none;
+  touch-action: manipulation;
+}
+
+.moment-full__photo img {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  transition: filter 0.15s ease;
+}
+
+.moment-full__photo.is-held img { filter: brightness(0.9); }
+
+/* Mørk toning øverst og nederst, så tekst og knapper kan læses */
+.moment-full__photo::before,
+.moment-full__photo::after {
+  content: '';
+  position: absolute;
+  left: 0;
+  right: 0;
+  z-index: 1;
+  pointer-events: none;
+}
+
+.moment-full__photo::before {
+  top: 0;
+  height: calc(var(--safe-top) + 140px);
+  background: linear-gradient(to bottom, rgba(0, 0, 0, 0.55), rgba(0, 0, 0, 0));
+}
+
+.moment-full__photo::after {
+  bottom: 0;
+  height: 200px;
+  background: linear-gradient(to top, rgba(0, 0, 0, 0.6), rgba(0, 0, 0, 0));
+}
+
+.moment-full__photo .moment-view__tap { z-index: 2; }
+
+.moment-full__top {
+  position: relative;
+  z-index: 3;
+  padding: calc(var(--safe-top) + 8px) 12px 0 16px;
+  pointer-events: none;
+}
+
+.moment-full__top button { pointer-events: auto; }
+
+.moment-full__bars {
+  display: flex;
+  gap: 4px;
+  margin: 0 4px 0 0;
+  padding: 0;
+  list-style: none;
+}
+
+.moment-full__bars li {
+  position: relative;
+  flex: 1;
+  height: 3px;
+  border-radius: 2px;
+  overflow: hidden;
+  background: rgba(255, 255, 255, 0.35);
+}
+
+.moment-full__bars li.is-done { background: var(--color-accent-highlight); }
+
+.moment-full__fill {
+  position: absolute;
+  inset: 0;
+  background: var(--color-accent-highlight);
+  transform-origin: left center;
+  transform: scaleX(0);
+  animation-name: moment-fill;
+  animation-timing-function: linear;
+  animation-fill-mode: forwards;
+}
+
+@keyframes moment-fill {
+  to { transform: scaleX(1); }
+}
+
+.moment-full__head {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-top: 8px;
+}
+
+.moment-full__who {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  text-shadow: 0 1px 2px rgba(0, 0, 0, 0.4);
+}
+
+.moment-full__spacer { flex: 1; pointer-events: none; }
+
+.moment-view--full .moment-view__reply {
+  z-index: 3;
+  margin-top: 0;
+}
