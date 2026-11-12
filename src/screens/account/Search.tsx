@@ -140,7 +140,11 @@ export function Search() {
                       <span className="t-heading-s acc-ellipsis">{p.author}</span>
                       <span className="t-caption acc-muted search-post__text">{p.text}</span>
                     </span>
-                    {p.image && <img className="search-post__thumb" src={p.image} alt="" />}
+                    {typeof p.image === 'string' ? (
+                      <img className="search-post__thumb" src={p.image} alt="" />
+                    ) : (
+                      p.image && <span className="search-post__thumb" aria-hidden="true" />
+                    )}
                   </Link>
                 </li>
               ))}
