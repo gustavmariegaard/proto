@@ -1,0 +1,203 @@
+.moment-view {
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  height: 100%;
+  overflow: hidden;
+  color: var(--color-text-on-action);
+  background: var(--color-action-primary);
+  padding: var(--safe-top) 0 max(44px, calc(var(--safe-bottom) + 12px));
+}
+
+/* Sløret baggrund af billedet med et mørkt slør over (Figma: blur 30, 45 % slør) */
+.moment-view__bg {
+  position: absolute;
+  inset: -80px;
+  background: radial-gradient(circle at 30% 20%, #3a3a3a, var(--ink-900) 70%);
+}
+
+.moment-view__bg img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  filter: blur(30px);
+}
+
+.moment-view__bg::after {
+  content: '';
+  position: absolute;
+  inset: 0;
+  background: var(--color-action-primary);
+  opacity: 0.45;
+}
+
+.moment-view__top {
+  position: relative;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  height: 44px;
+  margin-top: 2px;
+  padding: 0 20px 0 24px;
+}
+
+.moment-view__dots {
+  display: flex;
+  gap: 6px;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.moment-view__dots li {
+  width: 8px;
+  height: 8px;
+  border-radius: 4px;
+  background: var(--color-text-on-action);
+  opacity: 0.5;
+  transition: width 0.2s ease;
+}
+
+.moment-view__dots li.is-active {
+  width: 22px;
+  opacity: 1;
+  background: var(--color-accent-highlight);
+}
+
+.moment-view__close {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 44px;
+  height: 44px;
+  border-radius: var(--radius-pill);
+  color: inherit;
+}
+
+.moment-view__stage {
+  position: relative;
+  flex: 1;
+  min-height: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 0 24px;
+}
+
+/* Rammen holder Figmas forhold 331 : 576 og skrumper på små skærme */
+.moment-view__frame {
+  position: relative;
+  height: min(576px, 100%);
+  max-width: 100%;
+  aspect-ratio: 331 / 576;
+}
+
+.moment-view__photo {
+  position: absolute;
+  inset: 8px;
+  overflow: hidden;
+  border-radius: 28px;
+  background: linear-gradient(160deg, #4a4a4a, var(--ink-700));
+}
+
+.moment-view__photo img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+
+.moment-view__progress {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  fill: none;
+  pointer-events: none;
+}
+
+.moment-view__track {
+  stroke: var(--color-text-on-action);
+  stroke-opacity: 0.28;
+  stroke-width: 2;
+}
+
+.moment-view__bar {
+  stroke: var(--color-accent-highlight);
+  stroke-width: 4;
+  stroke-linecap: round;
+  stroke-dasharray: 100 100;
+  stroke-dashoffset: 100;
+  animation-name: moment-progress;
+  animation-timing-function: linear;
+  animation-fill-mode: forwards;
+}
+
+@keyframes moment-progress {
+  to { stroke-dashoffset: 0; }
+}
+
+.moment-view__tap {
+  position: absolute;
+  top: 0;
+  bottom: 0;
+  width: 50%;
+}
+
+.moment-view__tap--prev { left: 0; width: 35%; }
+.moment-view__tap--next { right: 0; width: 65%; }
+.moment-view__tap:focus-visible { outline: 2px solid var(--color-accent-highlight); outline-offset: -6px; border-radius: 28px; }
+
+.moment-view__who {
+  position: relative;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 10px;
+  margin: 14px 0 0;
+  min-height: 36px;
+}
+
+.moment-view__time { opacity: 0.7; }
+
+.moment-view__reply {
+  position: relative;
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  margin-top: 38px;
+  padding: 0 12px 0 24px;
+}
+
+.moment-view__field {
+  flex: 1;
+  min-width: 0;
+  height: 48px;
+  padding: 0 18px;
+  border-radius: 24px;
+  border: 1px solid rgba(255, 255, 255, 0.25);
+  background: rgba(255, 255, 255, 0.18);
+  -webkit-backdrop-filter: blur(12px);
+  backdrop-filter: blur(12px);
+  color: var(--color-text-on-action);
+  font: 400 14px/20px var(--font-body);
+  outline: none;
+}
+
+@media (pointer: coarse) { .moment-view__field { font-size: 16px; } }
+.moment-view__field::placeholder { color: var(--color-text-on-action); opacity: 1; }
+.moment-view__field:focus,
+.moment-view__field:focus-visible { outline: none; border-color: var(--color-text-on-action); }
+
+.moment-view__like {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 44px;
+  height: 44px;
+  flex-shrink: 0;
+  border-radius: var(--radius-pill);
+  color: inherit;
+}
+
+.moment-view__close:focus-visible,
+.moment-view__like:focus-visible { outline: 2px solid var(--color-text-on-action); outline-offset: 0; }
