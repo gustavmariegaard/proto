@@ -81,7 +81,10 @@ export function Home() {
 
       <div className="home__posts">
         {shown.map((p) => (
-          <PostCard key={p.id} post={p} onComment={() => navigate(`/opslag/${p.id}?kommentarer`)} />
+          <PostCard key={p.id} post={p} onComment={() => navigate(`/opslag/${p.id}?kommentarer`)}
+            onShare={() => navigate(`/opslag/${p.id}/del`)}
+            onReport={() => navigate(`/opslag/${p.id}/rapporter`)}
+          />
         ))}
       </div>
 

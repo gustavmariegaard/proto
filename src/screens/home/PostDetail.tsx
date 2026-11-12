@@ -1,5 +1,5 @@
 import { useCallback } from 'react';
-import { Navigate, useParams, useSearchParams } from 'react-router-dom';
+import { Navigate, useNavigate, useParams, useSearchParams } from 'react-router-dom';
 import { PageHeader } from '../../components/PageHeader';
 import { PostCard } from '../../components/PostCard';
 import { posts } from '../../data/sample';
@@ -9,6 +9,7 @@ import { CommentsSheet } from './CommentsSheet';
 export function PostDetail() {
   const { id } = useParams();
   const [params, setParams] = useSearchParams();
+  const navigate = useNavigate();
   const post = posts.find((p) => p.id === id);
   const open = params.has('kommentarer');
   const close = useCallback(() => setParams({}, { replace: true }), [setParams]);
@@ -18,7 +19,12 @@ export function PostDetail() {
     <div style={{ display: 'flex', flexDirection: 'column', height: '100%' }}>
       <PageHeader title="Opslag" />
       <main style={{ flex: 1, overflowY: 'auto', padding: '4px 20px 32px' }}>
-        <PostCard post={post} onComment={() => setParams({ kommentarer: '' }, { replace: true })} />
+        <PostCard
+          post={post}
+          onComment={() => setParams({ kommentarer: '' }, { replace: true })}
+          onShare={() => navigate(`/opslag/${post.id}/del`)}
+          onReport={() => navigate(`/opslag/${post.id}/rapporter`)}
+        />
       </main>
       <CommentsSheet open={open} onClose={close} />
     </div>

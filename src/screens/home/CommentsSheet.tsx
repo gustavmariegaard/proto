@@ -67,7 +67,7 @@ export function CommentsSheet({ open, onClose }: Props) {
           const count = c.likes + (isLiked ? 1 : 0);
           return (
             <li key={c.id} className={['comment', c.isReply && 'comment--reply'].filter(Boolean).join(' ')}>
-              <Avatar name={c.author} tone={c.tone} />
+              <Avatar name={c.author} tone={c.tone} src={c.avatarSrc} />
               <div className="comment__text">
                 <p className="comment__name">
                   <span className="t-heading-s">{c.author}</span>

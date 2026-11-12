@@ -19,10 +19,12 @@ export type Post = {
 type PostCardProps = {
   post: Post;
   onComment?: () => void;
+  onShare?: () => void;
+  onReport?: () => void;
 };
 
 /** Opslag i feedet. Handlinger: kan lide, kommentér, del, rapportér og gem. */
-export function PostCard({ post, onComment }: PostCardProps) {
+export function PostCard({ post, onComment, onShare, onReport }: PostCardProps) {
   const [liked, setLiked] = useState(false);
   const [saved, setSaved] = useState(false);
 
@@ -54,8 +56,8 @@ export function PostCard({ post, onComment }: PostCardProps) {
           onClick={() => setLiked((v) => !v)}
         />
         <IconButton icon="chat" label="Kommentér" onClick={onComment} />
-        <IconButton icon="send" label="Del" />
-        <IconButton icon="flag" label="Rapportér" />
+        <IconButton icon="send" label="Del" onClick={onShare} />
+        <IconButton icon="flag" label="Rapportér" onClick={onReport} />
         <span className="post__spacer" />
         <IconButton
           icon="bookmark"
