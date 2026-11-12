@@ -1,0 +1,56 @@
+/*
+ * Pillen er 64 px høj, 16 px fra skærmens kanter og 20 px fra bunden
+ * (eller over iPhonens hjem-streg, hvis den fylder mere).
+ */
+.tabbar {
+  position: absolute;
+  left: var(--space-16);
+  right: var(--space-16);
+  bottom: max(20px, var(--safe-bottom));
+  z-index: 20;
+}
+
+.tabbar__pill {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  height: 64px;
+  margin: 0;
+  padding: 0 12px;
+  list-style: none;
+  background: var(--color-bg-surface);
+  border: 1px solid var(--color-border-default);
+  border-radius: 32px;
+  box-shadow: var(--shadow-tabbar);
+}
+
+.tabbar__tab {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 64px;
+  height: 52px;
+  color: var(--color-text-primary);
+  border-radius: var(--radius-pill);
+  outline: none;
+}
+
+.tabbar__holder {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 56px;
+  height: 40px;
+  border-radius: var(--radius-pill);
+  transition: background-color 0.15s ease;
+}
+
+.tabbar__tab.active .tabbar__holder {
+  background: var(--color-accent-verified-bg);
+}
+
+.tabbar__tab:focus-visible .tabbar__holder {
+  box-shadow: 0 0 0 2px var(--color-text-primary);
+}
+
+.tabbar__tab:active .tabbar__holder { transform: scale(0.94); }

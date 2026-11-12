@@ -1,0 +1,45 @@
+.post {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  padding: 14px 14px 8px;
+  border: 1px solid var(--color-border-default);
+  border-radius: var(--radius-xl);
+  background: var(--color-bg-surface);
+}
+
+.post__header {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.post__meta {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  min-width: 0;
+}
+
+.post__sub { color: var(--color-text-secondary); }
+
+.post__image {
+  display: block;
+  width: 100%;
+  height: 190px;
+  object-fit: cover;
+  border-radius: var(--radius-md);
+  background: var(--color-bg-subtle);
+}
+
+.post__actions {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  /* Gem-ikonet står helt ude ved kanten i Figma; trykfladen er stadig 44 px. */
+  margin-right: -10px;
+}
+
+.post__spacer { flex: 1; }
+
+.post__saved svg path { fill: currentColor; }
