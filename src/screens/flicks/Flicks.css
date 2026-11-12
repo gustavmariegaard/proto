@@ -1,0 +1,176 @@
+/*
+ * Flicks (Figma: Flicks, Flicks 2, Flicks 3, Flicks · Liket).
+ * Fuld skærm: billedet ligger bag alt. Ingen topbar, kun bundmenuen.
+ * Mål fra Figma-rammen 390 × 844 px.
+ */
+.flicks {
+  position: relative;
+  height: 100%;
+  overflow: hidden;
+  background: var(--ink-900);
+  color: var(--color-text-on-action);
+}
+
+/* Lodret feed: én flick pr. skærm */
+.flicks__feed {
+  position: absolute;
+  inset: 0;
+  overflow-y: auto;
+  overscroll-behavior: contain;
+  scroll-snap-type: y mandatory;
+  scrollbar-width: none;
+  -webkit-overflow-scrolling: touch;
+}
+
+.flicks__feed::-webkit-scrollbar { display: none; }
+.flicks__feed:focus-visible { outline: none; }
+
+/* ---------- Til dig / Cirkel ---------- */
+
+/* 56 px fra toppen i Figma = 48 px frirum + 8 px */
+.flicks__top {
+  position: absolute;
+  z-index: 10;
+  top: calc(var(--safe-top) + 8px);
+  left: 20px;
+  display: flex;
+  gap: 8px;
+}
+
+.flicks__mode {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  height: 44px;
+  padding: 0 var(--space-16);
+  border-radius: var(--radius-pill);
+  border: 1.5px solid var(--color-bg-surface);
+  color: var(--color-bg-surface);
+  font: 600 14px/20px var(--font-body);
+  white-space: nowrap;
+}
+
+.flicks__mode--on {
+  background: var(--color-bg-surface);
+  border: 1px solid var(--color-border-strong);
+  color: var(--color-text-primary);
+}
+
+.flicks__mode:focus-visible {
+  outline: 2px solid var(--color-accent-highlight);
+  outline-offset: 2px;
+}
+
+/* ---------- Én flick ---------- */
+
+.flick {
+  position: relative;
+  height: 100%;
+  overflow: hidden;
+  scroll-snap-align: start;
+  scroll-snap-stop: always;
+}
+
+/* Grå/mørke pladsholdere i stedet for fotos */
+.flick--dark {
+  background:
+    radial-gradient(ellipse 70% 45% at 45% 58%, #4a4a4a 0%, #2a2a2a 40%, transparent 75%),
+    linear-gradient(180deg, #050505 0%, #0d0d0d 55%, #3a3a3a 100%);
+}
+
+.flick--light {
+  background: linear-gradient(180deg, #c9c9c9 0%, #b0b0b0 40%, #7a7a7a 62%, #555555 100%);
+}
+
+.flick--mid {
+  background:
+    radial-gradient(ellipse 60% 40% at 50% 70%, #8a8a8a 0%, transparent 70%),
+    linear-gradient(170deg, #6a6a6a 0%, #4a4a4a 50%, #2f2f2f 100%);
+}
+
+.flick__photo {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+
+/*
+ * Knapper og tekstpanel nederst. Panelet ligger 16 px over bundmenuen
+ * (bundmenuen: 64 px høj, 20 px fra bunden). Knapperne 16 px over panelet.
+ */
+.flick__bottom {
+  position: absolute;
+  left: 12px;
+  right: 20px;
+  bottom: calc(max(20px, var(--safe-bottom)) + 80px);
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+}
+
+.flick__actions {
+  align-self: flex-end;
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+.flick__actions .icon-btn:focus-visible {
+  box-shadow: 0 0 0 2px var(--ink-900), 0 0 0 4px var(--color-accent-highlight);
+}
+
+/* Gemt: bogmærket fyldes ud */
+.flick__saved svg path { fill: currentColor; }
+
+.flick__caption {
+  margin-right: 32px;
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: 6px;
+  padding: 14px;
+  border-radius: var(--radius-lg);
+  background: rgba(10, 10, 10, 0.85);
+}
+
+.flick__reason {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  color: var(--color-accent-highlight);
+}
+
+.flick__friends { display: flex; }
+
+.flick__friend {
+  width: 24px;
+  height: 24px;
+  overflow: hidden;
+  border-radius: var(--radius-pill);
+  background: linear-gradient(135deg, var(--gray-300), var(--ink-600));
+}
+
+.flick__friend + .flick__friend { margin-left: -6px; }
+.flick__friend--sage { background: linear-gradient(135deg, var(--gray-200), var(--ink-700)); }
+.flick__friend img { width: 100%; height: 100%; object-fit: cover; }
+
+.flick__author { color: var(--color-text-on-action); }
+.flick__text { color: var(--color-bg-subtle); }
+
+/* "Swipe op": to pile, den øverste svag. Centreret, 18 px over panelet. */
+.flick__hint {
+  position: absolute;
+  left: 50%;
+  bottom: calc(max(20px, var(--safe-bottom)) + 194px);
+  transform: translateX(-50%);
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  color: var(--color-text-on-action);
+  pointer-events: none;
+}
+
+.flick__chevron { transform: rotate(-90deg); opacity: 0.9; }
+.flick__chevron--faint { opacity: 0.35; margin-bottom: -10px; }

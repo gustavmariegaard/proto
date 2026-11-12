@@ -1,0 +1,99 @@
+/*
+ * Kommentar-arket over en flick.
+ * Arket i Figma er 560 px højt (ikke 480 som på Hjem) og hinden er 50 % mørk.
+ * Det fælles Sheet-komponent tilpasses kun, når det indeholder Flick-kommentarer.
+ */
+.sheet--half:has(.fcomments) { height: min(calc(560px + var(--safe-bottom)), 72%); }
+.sheet-layer--dim:has(.fcomments) .sheet-layer__backdrop { background: rgba(10, 10, 10, 0.5); }
+
+.fcomments {
+  display: flex;
+  flex-direction: column;
+  gap: 18px;
+  margin: 0;
+  padding: 16px 20px;
+  list-style: none;
+}
+
+.fcomments--replies {
+  padding: 18px 0 0 56px;
+}
+
+.fcomment__row {
+  display: flex;
+  align-items: flex-start;
+  gap: 12px;
+}
+
+.fcomment__text {
+  flex: 1;
+  min-width: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+
+.fcomment__name {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  white-space: nowrap;
+}
+
+.fcomment__muted,
+.fcomment__actions { color: var(--color-text-secondary); }
+
+.fcomment__actions {
+  display: flex;
+  gap: 16px;
+}
+
+/* Lille tekst, men trykfladen er 44 px høj */
+.fcomment__actions button {
+  position: relative;
+  font: inherit;
+  color: inherit;
+}
+
+.fcomment__actions button::after {
+  content: '';
+  position: absolute;
+  inset: -14px -8px;
+}
+
+.fcomment__like {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 2px;
+  min-width: 44px;
+  min-height: 44px;
+  margin: -2px -12px 0 0;
+  color: var(--color-text-primary);
+}
+
+.fcomment__like .t-caption { color: var(--color-text-secondary); }
+
+.fcomments__composer {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.fcomments__field {
+  flex: 1;
+  min-width: 0;
+  height: 44px;
+  padding: 0 16px;
+  border: 1px solid var(--color-border-strong);
+  border-radius: 22px;
+  background: var(--color-bg-surface);
+  color: var(--color-text-primary);
+  font: 400 14px/20px var(--font-body);
+  outline: none;
+}
+
+@media (pointer: coarse) { .fcomments__field { font-size: 16px; } }
+.fcomments__field::placeholder { color: var(--color-text-secondary); }
+.fcomments__field:focus,
+.fcomments__field:focus-visible { outline: none; border-color: var(--color-text-primary); box-shadow: 0 0 0 1px var(--color-text-primary); }
