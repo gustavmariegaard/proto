@@ -273,3 +273,6 @@ input:focus-visible + .more-photo__drop { box-shadow: var(--focus-ring); }
 }
 
 .more-choice__item:focus-visible { outline: none; box-shadow: var(--focus-ring); }
+
+/* Tekst-knap i sidehovedet er et link */
+.page-header a.btn { text-decoration: none; }

@@ -1,4 +1,4 @@
-import { BrowserRouter, Navigate, Outlet, Route, Routes } from 'react-router-dom';
+import { BrowserRouter, Navigate, Outlet, Route, Routes, useNavigate } from 'react-router-dom';
 import { AppShell } from './layout/AppShell';
 import { About } from './screens/auth/About';
 import { Country } from './screens/auth/Country';
@@ -25,6 +25,32 @@ import { NewCircle } from './screens/messages/NewCircle';
 import { Flicks } from './screens/flicks/Flicks';
 import { NewFlick } from './screens/flicks/NewFlick';
 import { SessionProvider, useSession } from './state/session';
+import { Discover } from './screens/discover/Discover';
+import { Market } from './screens/market/Market';
+import { Events } from './screens/events/Events';
+import { EventDetail } from './screens/events/EventDetail';
+import { NewEvent } from './screens/events/NewEvent';
+import { Search } from './screens/account/Search';
+import { Notifications } from './screens/account/Notifications';
+import { Saved } from './screens/account/Saved';
+import { Creator } from './screens/account/Creator';
+import { Settings } from './screens/account/Settings';
+import { MoreSheet } from './screens/more/MoreSheet';
+import { FindFolk } from './screens/more/FindFolk';
+import { Groups, GroupActivity } from './screens/more/Groups';
+import { Pages } from './screens/more/Pages';
+import { NewGroup, NewPage } from './screens/more/Create';
+
+/** Mere-fanen: Hjem bagved med Mere-arket ovenpå. */
+function MoreRoute() {
+  const navigate = useNavigate();
+  return (
+    <>
+      <Home />
+      <MoreSheet open onClose={() => navigate('/')} />
+    </>
+  );
+}
 
 /** Sender folk, der ikke er logget ind, til velkomstskærmen. */
 function RequireLogin() {
@@ -73,12 +99,28 @@ export default function App() {
             <Route path="beskeder/ny" element={<NewMessage />} />
             <Route path="beskeder/ny-cirkel" element={<NewCircle />} />
             <Route path="beskeder/:id" element={<Conversation />} />
+            {/* Trin 5: Mere, begivenheder, søg og konto */}
+            <Route path="begivenheder/ny" element={<NewEvent />} />
+            <Route path="begivenheder/:id" element={<EventDetail />} />
+            <Route path="soeg" element={<Search />} />
+            <Route path="notifikationer" element={<Notifications />} />
+            <Route path="gemt" element={<Saved />} />
+            <Route path="skaber" element={<Creator />} />
+            <Route path="indstillinger" element={<Settings />} />
+            <Route path="find-folk" element={<FindFolk />} />
+            <Route path="grupper" element={<Groups />} />
+            <Route path="grupper/aktivitet" element={<GroupActivity />} />
+            <Route path="grupper/ny" element={<NewGroup />} />
+            <Route path="sider" element={<Pages />} />
+            <Route path="sider/ny" element={<NewPage />} />
             <Route element={<AppShell />}>
               <Route index element={<Home />} />
               <Route path="komponenter" element={<Showcase />} />
-              <Route path="opdag" element={<Placeholder title="Opdag" />} />
-              <Route path="mere" element={<Placeholder title="Mere" showLogOut />} />
-              <Route path="find-folk" element={<Placeholder title="Find folk" />} />
+              <Route path="opdag" element={<Discover />} />
+              <Route path="torvet" element={<Market />} />
+              <Route path="begivenheder" element={<Events />} />
+              <Route path="mere" element={<MoreRoute />} />
+              <Route path="profil" element={<Placeholder title="Profil" />} />
             </Route>
           </Route>
           <Route path="*" element={<Navigate to="/" replace />} />

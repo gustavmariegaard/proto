@@ -1,0 +1,195 @@
+/* ---------- Fuldskærm (Billede, Samling, Rediger, Interesser) ---------- */
+.pf-screen {
+  display: flex;
+  flex-direction: column;
+  height: 100%;
+  background: var(--color-bg-app);
+}
+
+.pf-screen__content {
+  flex: 1;
+  min-height: 0;
+  overflow-x: hidden;
+  overflow-y: auto;
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: 14px;
+  padding: 4px 20px calc(24px + var(--safe-bottom));
+}
+
+.pf-screen__content > * { flex-shrink: 0; }
+.pf-full { width: 100%; }
+
+/* ---------- Billede ---------- */
+.pf-detail__photo {
+  height: auto;
+  aspect-ratio: 350 / 437;
+  max-height: 60vh;
+  border-radius: var(--radius-xl);
+}
+
+.pf-author {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  min-width: 0;
+  max-width: 100%;
+}
+
+.pf-author__avatar {
+  flex-shrink: 0;
+  width: 36px;
+  height: 36px;
+  overflow: hidden;
+  border-radius: var(--radius-pill);
+  background: var(--color-avatar-blue-bg);
+}
+
+.pf-author__avatar img { width: 100%; height: 100%; object-fit: cover; display: block; }
+
+.pf-author__text {
+  display: flex;
+  flex-direction: column;
+  gap: 1px;
+  min-width: 0;
+}
+
+.pf-actions { display: flex; gap: 6px; }
+
+.pf-comments {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  width: 100%;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.pf-comment-form {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  width: 100%;
+}
+
+.pf-comment-form__field {
+  flex: 1;
+  min-width: 0;
+  height: 44px;
+  padding: 0 16px;
+  border: 1px solid var(--color-border-strong);
+  border-radius: var(--radius-pill);
+  background: var(--color-bg-surface);
+  color: var(--color-text-primary);
+  font: 400 14px/20px var(--font-body);
+}
+
+.pf-comment-form__field:focus-visible { outline: none; box-shadow: var(--focus-ring); }
+@media (pointer: coarse) { .pf-comment-form__field { font-size: 16px; } }
+
+/* ---------- Samling / Rediger ---------- */
+.pf-cover-tag {
+  position: absolute;
+  top: 8px;
+  left: 8px;
+}
+
+.pf-pick { padding: 0; border: 0; cursor: pointer; }
+.pf-pick--off img { opacity: 0.55; }
+
+/* Markering: 26 px rund, mint med flueben, ellers hvid med kant */
+.pf-check {
+  position: absolute;
+  top: 8px;
+  right: 8px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 26px;
+  height: 26px;
+  border-radius: 13px;
+  border: 2px solid var(--color-border-strong);
+  background: var(--color-bg-surface);
+  color: var(--color-text-primary);
+}
+
+.pf-check--on {
+  border-color: var(--color-accent-highlight);
+  background: var(--color-accent-highlight);
+}
+
+.pf-add-grid {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 8px;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.pf-add-grid__item {
+  aspect-ratio: 1;
+  padding: 0;
+  border: 0;
+  cursor: pointer;
+}
+
+/* ---------- Interesser ---------- */
+.pf-chips {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  width: 100%;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+/* ---------- Samling · Visning (bygger på MomentViewer.css) ---------- */
+.pf-viewer__bar {
+  stroke: var(--color-accent-highlight);
+  stroke-width: 4;
+  stroke-linecap: round;
+  stroke-dasharray: 100 100;
+}
+
+.pf-viewer__tap {
+  -webkit-touch-callout: none;
+  -webkit-user-select: none;
+  user-select: none;
+  touch-action: manipulation;
+}
+
+.pf-viewer .moment-view__photo img {
+  -webkit-user-select: none;
+  user-select: none;
+  pointer-events: none;
+}
+
+.pf-viewer__actions {
+  position: relative;
+  display: flex;
+  justify-content: center;
+  gap: 12px;
+  margin-top: 36px;
+  padding: 0 20px;
+}
+
+.pf-viewer__action {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  min-height: 46px;
+  padding: 12px 20px 12px 18px;
+  border-radius: 24px;
+  border: 1px solid rgba(255, 255, 255, 0.25);
+  background: rgba(255, 255, 255, 0.18);
+  -webkit-backdrop-filter: blur(12px);
+  backdrop-filter: blur(12px);
+  color: var(--color-text-on-action);
+  font: 600 14px/20px var(--font-body);
+}
+
+.pf-viewer__action:focus-visible { outline: 2px solid var(--color-text-on-action); outline-offset: 2px; }
