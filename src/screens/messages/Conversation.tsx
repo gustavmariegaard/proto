@@ -41,7 +41,7 @@ export function Conversation() {
     if (!t) return;
     sendMessage(thread.id, t);
     setText('');
-    inputRef.current?.focus();
+    inputRef.current?.focus({ preventScroll: true });
   };
 
   return (

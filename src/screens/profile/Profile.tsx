@@ -33,7 +33,7 @@ export function Profile() {
     e.preventDefault();
     const next = tabs[(index + dir + tabs.length) % tabs.length]!;
     selectTab(next.value);
-    document.getElementById(`pf-tab-${next.value}`)?.focus();
+    document.getElementById(`pf-tab-${next.value}`)?.focus({ preventScroll: true });
   };
 
   const photoTile = (id: string, height: number): Tile => {

@@ -30,7 +30,7 @@ export function Sheet({ open, onClose, title, initialSize = 'half', footer, dim,
     if (!open) return;
     setSize(initialSize);
     const previous = document.activeElement as HTMLElement | null;
-    ref.current?.focus();
+    ref.current?.focus({ preventScroll: true });
     const onKey = (e: KeyboardEvent) => e.key === 'Escape' && onClose();
     window.addEventListener('keydown', onKey);
     return () => {

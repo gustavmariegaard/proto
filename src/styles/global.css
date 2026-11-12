@@ -13,10 +13,23 @@
   box-sizing: border-box;
 }
 
+/*
+ * Appen fylder præcis skærmen og kan aldrig selv rulle som helhed.
+ * Det forhindrer iPhone i at "skubbe" hele siden op, når et ark,
+ * en menu eller et tekstfelt åbner. Kun indholdsområderne ruller.
+ */
 html,
-body,
+body {
+  position: fixed;
+  inset: 0;
+  height: 100%;
+  overflow: hidden;
+}
+
 #root {
   height: 100%;
+  overflow: hidden;
+  overflow: clip;
 }
 
 body {
@@ -73,5 +86,14 @@ a {
   *, *::before, *::after {
     transition-duration: 0.01ms !important;
     animation-duration: 0.01ms !important;
+  }
+}
+
+/* Ingen automatisk zoom på iPhone: tekstfelter skal være mindst 16 px på telefoner */
+@media (pointer: coarse) {
+  input,
+  textarea,
+  select {
+    font-size: 16px !important;
   }
 }

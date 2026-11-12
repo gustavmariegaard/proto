@@ -64,7 +64,7 @@ function RadiusSheet({ open, value, onClose, onApply }: RadiusSheetProps) {
     if (!open) return;
     setDraft(value);
     const previous = document.activeElement as HTMLElement | null;
-    ref.current?.focus();
+    ref.current?.focus({ preventScroll: true });
     const onKey = (e: KeyboardEvent) => e.key === 'Escape' && onClose();
     window.addEventListener('keydown', onKey);
     return () => {

@@ -5,6 +5,7 @@
   height: 100%;
   overflow: hidden;
   background: var(--color-bg-app);
+  overflow: clip;
 }
 
 .shell__content {

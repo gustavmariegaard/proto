@@ -30,7 +30,7 @@ export function FlickCommentsSheet({ open, onClose }: Props) {
 
   const reply = (name: string) => {
     setText(`@${name.split(' ')[0]} `);
-    inputRef.current?.focus();
+    inputRef.current?.focus({ preventScroll: true });
   };
 
   const renderComment = (c: FlickComment, isReply = false) => {

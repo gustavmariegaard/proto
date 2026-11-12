@@ -51,7 +51,7 @@ export function Create() {
 
   const publish = () => {
     if (!media && !text.trim()) {
-      textRef.current?.focus();
+      textRef.current?.focus({ preventScroll: true });
       return;
     }
     navigate('/', { replace: true });

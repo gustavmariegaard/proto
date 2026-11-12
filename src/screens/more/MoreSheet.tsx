@@ -29,7 +29,7 @@ export function MoreSheet({ open, onClose }: { open: boolean; onClose: () => voi
   useEffect(() => {
     if (!open) return;
     const previous = document.activeElement as HTMLElement | null;
-    ref.current?.focus();
+    ref.current?.focus({ preventScroll: true });
     const onKey = (e: KeyboardEvent) => e.key === 'Escape' && closeRef.current();
     window.addEventListener('keydown', onKey);
     return () => {

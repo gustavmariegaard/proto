@@ -21,7 +21,7 @@ export function FlickShareSheet({ open, onClose }: Props) {
     if (!open) return;
     setStatus('');
     const previous = document.activeElement as HTMLElement | null;
-    ref.current?.focus();
+    ref.current?.focus({ preventScroll: true });
     const onKey = (e: KeyboardEvent) => e.key === 'Escape' && onClose();
     window.addEventListener('keydown', onKey);
     return () => {

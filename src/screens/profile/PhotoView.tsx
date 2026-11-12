@@ -63,7 +63,7 @@ export function PhotoView() {
             aria-expanded={commenting}
             onClick={() => {
               setCommenting(true);
-              setTimeout(() => field.current?.focus(), 0);
+              setTimeout(() => field.current?.focus({ preventScroll: true }), 0);
             }}
           />
           <IconButton icon="send" label="Del" onClick={share} />

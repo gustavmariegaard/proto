@@ -9,6 +9,7 @@
   overflow: hidden;
   background: var(--ink-900);
   color: var(--color-text-on-action);
+  overflow: clip;
 }
 
 /* Lodret feed: én flick pr. skærm */

@@ -26,7 +26,7 @@ export function CommentsSheet({ open, onClose }: Props) {
 
   const reply = (name: string) => {
     setText(`@${name.split(' ')[0]} `);
-    inputRef.current?.focus();
+    inputRef.current?.focus({ preventScroll: true });
   };
 
   return (
