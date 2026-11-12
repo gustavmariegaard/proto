@@ -1,0 +1,22 @@
+.field {
+  display: block;
+  width: 100%;
+  height: 44px;
+  padding: 0 var(--space-16);
+  border: 1px solid var(--color-border-strong);
+  border-radius: var(--radius-pill);
+  background: var(--color-bg-surface);
+  color: var(--color-text-primary);
+  font: 400 14px/20px var(--font-body);
+  outline: none;
+  -webkit-appearance: none;
+  appearance: none;
+}
+
+/* På telefoner: 16 px, ellers zoomer iPhone ind, når man trykker i feltet */
+@media (pointer: coarse) {
+  .field { font-size: 16px; }
+}
+
+.field::placeholder { color: var(--color-text-secondary); opacity: 1; }
+.field:focus-visible { border-color: var(--color-text-primary); box-shadow: 0 0 0 1px var(--color-text-primary); }
