@@ -86,7 +86,7 @@ export function Conversation() {
           </div>
         )}
         {thread.messages.map((m) => (
-          <Message key={m.id} message={m} showSender={isCircle} sender={senderOf(m.from)} />
+          <Message key={m.id} message={m} showSender sender={senderOf(m.from)} />
         ))}
         {isCircle && <p className="t-caption msg-muted msg-center">End-to-end-krypteret</p>}
       </div>
