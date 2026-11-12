@@ -98,9 +98,16 @@ a {
   }
 }
 
-/* Mørke skærme (Flicks, Moments): ingen hvid kant rundt om appen */
+/*
+ * Mørke skærme (Flicks, Moments): ingen hvid kant rundt om appen,
+ * hverken ved statuslinjen eller rundt om Safaris adresselinje.
+ * :has() slår til, så snart skærmen er der – også før JavaScript når at reagere.
+ */
 html[data-dark],
 html[data-dark] body,
-html[data-dark] #root {
+html[data-dark] #root,
+html:has(.flicks, .newflick, .moment-view, .cviewer),
+html:has(.flicks, .newflick, .moment-view, .cviewer) body,
+html:has(.flicks, .newflick, .moment-view, .cviewer) #root {
   background: var(--ink-900);
 }
