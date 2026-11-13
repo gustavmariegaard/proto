@@ -1,0 +1,83 @@
+.interests {
+  display: flex;
+  flex-direction: column;
+  gap: 20px;
+  padding: 16px 20px 32px;
+}
+
+.interests__section {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+.interests__muted { color: var(--color-text-secondary); }
+
+.interests__chips {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.interests__chip {
+  gap: 6px;
+  padding: 0 12px 0 16px;
+}
+
+/* ---------- Trender lige nu ---------- */
+.interests__trending {
+  display: flex;
+  flex-direction: column;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.interests__trend {
+  display: flex;
+  align-items: center;
+  gap: 14px;
+  width: 100%;
+  min-height: 60px;
+  padding: 8px 0;
+  border-bottom: 1px solid var(--color-border-default);
+  text-align: left;
+}
+
+.interests__trending li:last-child .interests__trend { border-bottom: 0; }
+
+.interests__trend:focus-visible { outline: none; box-shadow: var(--focus-ring); border-radius: var(--radius-sm); }
+
+.interests__rank {
+  flex: none;
+  width: 20px;
+  color: var(--color-text-secondary);
+  text-align: center;
+}
+
+.interests__trend-text {
+  display: flex;
+  flex: 1;
+  flex-direction: column;
+  min-width: 0;
+}
+
+.interests__follow {
+  display: inline-flex;
+  flex: none;
+  align-items: center;
+  gap: 4px;
+  min-height: 32px;
+  padding: 0 12px;
+  border: 1px solid var(--color-border-strong);
+  border-radius: var(--radius-pill);
+}
+
+.interests__follow--on {
+  border-color: var(--color-action-primary);
+  background: var(--color-action-primary);
+  color: var(--color-text-on-action);
+}
