@@ -67,18 +67,19 @@ export const authorAvatar = (author: string, own?: string) => own ?? authorAvata
 
 export type ShareTarget = { id: string; name: string; kind: 'Cirkel' | 'Besked'; tone: AvatarTone; avatarSrc?: string };
 
+/** Folk, du følger, og dine cirkler – blandet i én liste */
 export const shareTargets: ShareTarget[] = [
   { id: 'familien', name: 'Familien', kind: 'Cirkel', tone: 'rose', avatarSrc: figmaImg('familie-soe.jpg') },
-  { id: 'haandbold', name: 'Håndboldholdet', kind: 'Cirkel', tone: 'sand', avatarSrc: figmaImg('haandbold.jpg') },
+  { id: 'mette', name: 'Mette Lund', kind: 'Besked', tone: 'blue', avatarSrc: figmaImg('mette.jpg') },
   { id: 'jonas', name: 'Jonas Krogh', kind: 'Besked', tone: 'sage', avatarSrc: figmaImg('jonas.jpg') },
+  { id: 'haandbold', name: 'Håndboldholdet', kind: 'Cirkel', tone: 'sand', avatarSrc: figmaImg('haandbold.jpg') },
+  { id: 'anna', name: 'Anna Nørgaard', kind: 'Besked', tone: 'rose', avatarSrc: figmaImg('anna.jpg') },
   { id: 'soeren', name: 'Søren Vang', kind: 'Besked', tone: 'blue', avatarSrc: figmaImg('person-c.jpg') },
+  { id: 'naboerne', name: 'Naboerne', kind: 'Cirkel', tone: 'sage' },
+  { id: 'pernille', name: 'Pernille Sørensen', kind: 'Besked', tone: 'sand', avatarSrc: figmaImg('person-f.jpg') },
+  { id: 'karen', name: 'Karen Bech', kind: 'Besked', tone: 'sage', avatarSrc: figmaImg('person-b.jpg') },
 ];
 
-export type ShareVisibility = 'offentligt' | 'cirkel';
-export const shareVisibilities: { value: ShareVisibility; label: string }[] = [
-  { value: 'offentligt', label: 'Offentligt' },
-  { value: 'cirkel', label: 'Cirkel' },
-];
 
 /* ---------- Rapportér ---------- */
 

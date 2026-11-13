@@ -2,22 +2,30 @@ import { useState } from 'react';
 import { Navigate, useParams, useSearchParams } from 'react-router-dom';
 import { Avatar } from '../../components/Avatar';
 import { Button } from '../../components/Button';
-import { Chip } from '../../components/Chip';
 import { SegmentedControl } from '../../components/SegmentedControl';
 import { TextField } from '../../components/TextField';
-import { authorAvatar, myAvatar, pronouns, shareTargets, shareVisibilities, type ShareVisibility } from '../../data/create';
+import { authorAvatar, myAvatar, pronouns, shareTargets } from '../../data/create';
+import { handleOf } from '../../data/handles';
 import { usePost } from '../../state/posts';
 import { useSession } from '../../state/session';
 import { CloseHeader, RadioDot, useClose } from '../create/parts';
 import '../create/parts.css';
 import './Share.css';
 
-type Mode = 'besked' | 'eget';
+type Mode = 'besked' | 'opslag' | 'moment';
+
+const modes: { value: Mode; label: string }[] = [
+  { value: 'besked', label: 'Besked' },
+  { value: 'opslag', label: 'Opslag' },
+  { value: 'moment', label: 'Moment' },
+];
 
 /**
- * Del et opslag. To måder: send det som besked/til en cirkel,
- * eller del det som eget opslag på din profil (Del · Eget opslag).
- * Åbn med /opslag/:id/del, eller /opslag/:id/del?som=eget for at starte i "Eget opslag".
+ * Del et opslag på tre måder:
+ * - Besked: send det til folk, du følger, eller dine cirkler (én samlet liste)
+ * - Opslag: videredel det som eget opslag på din profil
+ * - Moment: videredel det som et moment i 24 timer
+ * "Del" og "Kopiér link" står altid fast nederst.
  */
 export function Share() {
   const { id } = useParams();
@@ -26,15 +34,20 @@ export function Share() {
   const { profile } = useSession();
   const post = usePost(id);
 
-  const [mode, setMode] = useState<Mode>(params.get('som') === 'eget' ? 'eget' : 'besked');
+  const start = params.get('som');
+  const [mode, setMode] = useState<Mode>(start === 'eget' || start === 'opslag' ? 'opslag' : start === 'moment' ? 'moment' : 'besked');
+  const [message, setMessage] = useState('');
   const [note, setNote] = useState('');
-  const [selected, setSelected] = useState<string[]>(['familien']);
-  const [visibility, setVisibility] = useState<ShareVisibility>('offentligt');
+  const [query, setQuery] = useState('');
+  const [selected, setSelected] = useState<string[]>([]);
   const [copied, setCopied] = useState(false);
 
   if (!post) return <Navigate to="/" replace />;
-  const { first, possessive } = pronouns(post.author);
+  const { first } = pronouns(post.author);
   const postAvatar = authorAvatar(post.author, post.avatarSrc);
+  const myName = profile.name || 'Dig';
+  const q = query.trim().toLowerCase();
+  const targets = q ? shareTargets.filter((t) => t.name.toLowerCase().includes(q)) : shareTargets;
 
   const toggle = (targetId: string) =>
     setSelected((list) => (list.includes(targetId) ? list.filter((x) => x !== targetId) : [...list, targetId]));
@@ -50,41 +63,50 @@ export function Share() {
     window.setTimeout(() => setCopied(false), 2000);
   };
 
-  const myName = profile.name || 'Dig';
+  const shareLabel =
+    mode === 'besked'
+      ? selected.length > 1
+        ? `Send til ${selected.length}`
+        : 'Send'
+      : mode === 'opslag'
+        ? 'Del som opslag'
+        : 'Del som moment';
+
+  const quote = (
+    <div className="share__quote">
+      <div className="share__quote-head">
+        <Avatar name={post.author} tone={post.tone} src={postAvatar} size="S" />
+        <span className="share__quote-name">
+          <span className="t-heading-s">{post.author}</span>
+          <span className="t-caption modal-screen__muted">@{post.username || handleOf(post.author)}</span>
+        </span>
+      </div>
+      <p className="t-body-s">{post.text}</p>
+      {typeof post.image === 'string' && <img className="share__quote-img" src={post.image} alt="" />}
+    </div>
+  );
 
   return (
     <div className="modal-screen share">
       <CloseHeader title="Del" onClose={close} />
       <main className="modal-screen__content">
-        {mode === 'besked' && (
-          <div className="share__preview">
-            <Avatar name={post.author} tone={post.tone} src={postAvatar} size="S" />
-            <p className="t-caption share__preview-text">
-              {post.author} · {post.text}
-            </p>
-          </div>
-        )}
-
-        {mode === 'besked' && <h2 className="t-heading-s">Del som</h2>}
-        <div className="share__chips" role="radiogroup" aria-label="Del som">
-          <Chip role="radio" aria-pressed={undefined} aria-checked={mode === 'besked'} selected={mode === 'besked'} onClick={() => setMode('besked')}>
-            Besked eller cirkel
-          </Chip>
-          <Chip role="radio" aria-pressed={undefined} aria-checked={mode === 'eget'} selected={mode === 'eget'} onClick={() => setMode('eget')}>
-            Eget opslag
-          </Chip>
+        <div className="modal-screen__full">
+          <SegmentedControl label="Del som" options={modes} value={mode} onChange={setMode} />
         </div>
 
-        {mode === 'besked' ? (
+        {mode === 'besked' && (
           <>
-            <p className="t-caption modal-screen__muted">
-              Kun dem, du vælger, kan se det. Opslagets ejer kan se, at det er delt, men ikke med hvem.
-            </p>
-            <TextField label="Tilføj din egen tekst" value={note} onChange={(e) => setNote(e.target.value)} />
+            <div className="share__preview">
+              <Avatar name={post.author} tone={post.tone} src={postAvatar} size="S" />
+              <p className="t-caption share__preview-text">
+                {post.author} · {post.text}
+              </p>
+            </div>
+            <TextField label="Skriv en besked" value={message} onChange={(e) => setMessage(e.target.value)} />
+            <TextField label="Søg efter navn eller cirkel" type="search" value={query} onChange={(e) => setQuery(e.target.value)} />
 
-            <h2 id="share-to" className="t-heading-s">Send til</h2>
-            <ul className="choice-list" aria-labelledby="share-to">
-              {shareTargets.map((t) => {
+            <ul className="choice-list" aria-label="Send til">
+              {targets.map((t) => {
                 const on = selected.includes(t.id);
                 return (
                   <li key={t.id}>
@@ -98,64 +120,70 @@ export function Share() {
                       <Avatar name={t.name} tone={t.tone} src={t.avatarSrc} />
                       <span className="choice__text">
                         <span className="t-label">{t.name}</span>
-                        <span className="t-caption choice__hint">{t.kind}</span>
+                        <span className="t-caption choice__hint">{t.kind === 'Cirkel' ? 'Cirkel' : `@${handleOf(t.name)}`}</span>
                       </span>
                       <RadioDot on={on} />
                     </button>
                   </li>
                 );
               })}
+              {targets.length === 0 && <li className="t-caption modal-screen__muted">Ingen hedder “{query.trim()}”.</li>}
             </ul>
-
-            <Button variant="secondary" block onClick={copyLink}>
-              {copied ? 'Link kopieret' : 'Kopiér link'}
-            </Button>
-            <span className="visually-hidden" aria-live="polite">{copied ? 'Link kopieret' : ''}</span>
-            <Button block disabled={selected.length === 0} onClick={close}>
-              Del
-            </Button>
+            <p className="t-caption modal-screen__muted">
+              Kun dem, du sender til, kan se det. {first} kan se, at opslaget er delt, men ikke med hvem.
+            </p>
           </>
-        ) : (
+        )}
+
+        {mode === 'opslag' && (
           <>
             <div className="share__compose">
               <div className="share__compose-row">
                 <Avatar name={myName} src={profile.avatar ?? myAvatar} />
                 <textarea
                   className="share__note"
-                  aria-label="Skriv noget om dette opslag…"
-                  placeholder="Skriv noget om dette opslag…"
+                  aria-label="Hvad vil du sige om det?"
+                  placeholder="Hvad vil du sige om det?"
                   rows={2}
                   value={note}
                   onChange={(e) => setNote(e.target.value)}
                 />
               </div>
-              <div className="share__quote">
-                <div className="share__quote-head">
-                  <Avatar name={post.author} tone={post.tone} src={postAvatar} size="S" />
-                  <span className="t-heading-s">{post.author}</span>
-                </div>
-                <p className="t-body-s">{post.text}</p>
-              </div>
-            </div>
-
-            <h2 className="t-heading-s">Hvem kan se det?</h2>
-            <div className="modal-screen__full">
-              <SegmentedControl
-                label="Hvem kan se det?"
-                options={shareVisibilities}
-                value={visibility}
-                onChange={setVisibility}
-              />
+              {quote}
             </div>
             <p className="t-caption modal-screen__muted">
-              Opslaget vises på din profil med kredit til {first}. Det følger {possessive} valg om, hvem der kan se det.
+              Vises på din profil med kredit til {first}.{' '}
+              {profile.private ? 'Din profil er privat, så kun dine følgere kan se det.' : 'Din profil er offentlig, så alle kan se det.'}
             </p>
-            <Button block onClick={close}>
-              Del opslag
-            </Button>
+          </>
+        )}
+
+        {mode === 'moment' && (
+          <>
+            <div className="share__moment" aria-label="Sådan ser dit moment ud">
+              <div className="share__moment-card">{quote}</div>
+              <span className="share__moment-who">
+                <Avatar name={myName} src={profile.avatar ?? myAvatar} size="S" />
+                <span className="t-caption-strong">@{profile.username.trim().replace(/^@/, '') || handleOf(myName)}</span>
+              </span>
+            </div>
+            <p className="t-caption modal-screen__muted">
+              Vises som moment i 24 timer med kredit til {first}. Dem, der ser det, kan trykke sig videre til opslaget.
+            </p>
           </>
         )}
       </main>
+
+      {/* Står altid fast nederst, uanset hvor langt man ruller */}
+      <footer className="share__footer">
+        <Button block disabled={mode === 'besked' && selected.length === 0} onClick={close}>
+          {shareLabel}
+        </Button>
+        <Button variant="secondary" block onClick={copyLink}>
+          {copied ? 'Link kopieret' : 'Kopiér link'}
+        </Button>
+        <span className="visually-hidden" aria-live="polite">{copied ? 'Link kopieret' : ''}</span>
+      </footer>
     </div>
   );
 }

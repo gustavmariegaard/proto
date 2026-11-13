@@ -79,3 +79,67 @@
   align-items: center;
   gap: 8px;
 }
+
+/* ---------- Faste knapper nederst ---------- */
+.share__footer {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  padding: 12px 20px calc(12px + var(--safe-bottom));
+  border-top: 1px solid var(--color-border-default);
+  background: var(--color-bg-app);
+}
+
+.share .modal-screen__content { padding-bottom: 16px; }
+
+.share__quote-name {
+  display: flex;
+  flex-direction: column;
+  min-width: 0;
+}
+
+.share__quote-img {
+  display: block;
+  width: 100%;
+  max-height: 180px;
+  object-fit: cover;
+  border-radius: var(--radius-md);
+}
+
+/* ---------- Del som moment: forhåndsvisning ---------- */
+.share__moment {
+  position: relative;
+  align-self: center;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  width: min(240px, 70%);
+  aspect-ratio: 9 / 16;
+  padding: 16px;
+  border-radius: var(--radius-xl);
+  background: var(--ink-900);
+}
+
+.share__moment-card .share__quote {
+  background: var(--color-bg-surface);
+  box-shadow: 0 8px 24px rgb(0 0 0 / 0.35);
+}
+
+.share__moment-card .share__quote-img { max-height: 120px; }
+
+.share__moment-card .t-body-s {
+  display: -webkit-box;
+  -webkit-line-clamp: 4;
+  -webkit-box-orient: vertical;
+  overflow: hidden;
+}
+
+.share__moment-who {
+  position: absolute;
+  left: 14px;
+  top: 14px;
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  color: #fff;
+}
