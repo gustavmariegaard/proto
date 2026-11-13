@@ -10,6 +10,9 @@ import type { Post } from '../components/PostCard';
 /** Sti til et billede fra Figma i public/img/figma (virker også under /proto/ på GitHub Pages) */
 export const img = (file: string) => `${import.meta.env.BASE_URL}img/figma/${file}`;
 
+/** Billeder til siderne (fra brugeren) i public/img/sider */
+export const side = (file: string) => `${import.meta.env.BASE_URL}img/sider/${file}`;
+
 export type Person = { name: string; fullName: string; tone: AvatarTone; avatarSrc?: string };
 
 export const people: Record<string, Person> = {
@@ -25,11 +28,11 @@ export const people: Record<string, Person> = {
 /** Sider (virksomheder og foreninger), man følger. Deres moments vises under Hjem › Interesser. */
 export const pageAccounts: Record<string, Person> = {
   kulturhuset: { name: 'Kulturhuset', fullName: 'Kulturhuset', tone: 'blue', avatarSrc: img('dans.jpg') },
-  hallen: { name: 'Hallen', fullName: 'Hallen', tone: 'rose' },
-  bageri: { name: 'Bageriet', fullName: 'Det lokale bageri', tone: 'sand' },
-  cykel: { name: 'Værkstedet', fullName: 'Cykelværkstedet', tone: 'blue' },
-  bibliotek: { name: 'Biblioteket', fullName: 'Byens bibliotek', tone: 'sage' },
-  teater: { name: 'Teatret', fullName: 'Teaterforeningen', tone: 'sand' },
+  hallen: { name: 'Hallen', fullName: 'Hallen', tone: 'rose', avatarSrc: side('hallen-logo.jpg') },
+  bageri: { name: 'Bageriet', fullName: 'Det lokale bageri', tone: 'sand', avatarSrc: side('bageri-logo.jpg') },
+  cykel: { name: 'Værkstedet', fullName: 'Cykelværkstedet', tone: 'blue', avatarSrc: side('vaerksted-logo.jpg') },
+  bibliotek: { name: 'Biblioteket', fullName: 'Byens bibliotek', tone: 'sage', avatarSrc: side('bibliotek-logo.jpg') },
+  teater: { name: 'Teatret', fullName: 'Teaterforeningen', tone: 'sand', avatarSrc: side('teater-logo.jpg') },
 };
 
 /* ---------- Moments ---------- */
@@ -60,11 +63,11 @@ export const moments: Moment[] = [
   /* Sider (ikke fra Figma) */
   { id: 'pg1', personId: 'kulturhuset', time: '1 time siden', image: img('begivenhed.jpg') },
   { id: 'pg2', personId: 'kulturhuset', time: '1 time siden', image: img('dans.jpg') },
-  { id: 'pg3', personId: 'hallen', time: '3 timer siden', image: img('haandbold.jpg') },
-  { id: 'pg4', personId: 'bageri', time: 'i morges', image: img('spisebord.jpg') },
-  { id: 'pg5', personId: 'cykel', time: 'i går', image: img('cykel.jpg') },
-  { id: 'pg6', personId: 'bibliotek', time: 'i går', image: img('computer.jpg') },
-  { id: 'pg7', personId: 'teater', time: '2 dage siden', image: img('toej.jpg') },
+  { id: 'pg3', personId: 'hallen', time: '3 timer siden', image: side('hallen.jpg') },
+  { id: 'pg4', personId: 'bageri', time: 'i morges', image: side('bageri.jpg') },
+  { id: 'pg5', personId: 'cykel', time: 'i går', image: side('vaerksted.jpg') },
+  { id: 'pg6', personId: 'bibliotek', time: 'i går', image: side('bibliotek.jpg') },
+  { id: 'pg7', personId: 'teater', time: '2 dage siden', image: side('teater.jpg') },
 ];
 
 /** Hvem der er set fra start (grå ring i Figma) */
@@ -271,6 +274,7 @@ export const posts: FeedPost[] = [
     id: 'p-hallen',
     feed: 'interesser',
     author: 'Hallen',
+    avatarSrc: side('hallen-logo.jpg'),
     tone: 'rose',
     meta: 'Side · for 3 timer siden',
     text: 'Hal 2 er lukket for vedligehold fra mandag til onsdag. Træninger flytter til hal 1, se de nye tider på opslagstavlen.',
@@ -280,15 +284,17 @@ export const posts: FeedPost[] = [
     id: 'p-bageri',
     feed: 'interesser',
     author: 'Det lokale bageri',
+    avatarSrc: side('bageri-logo.jpg'),
     tone: 'sand',
     meta: 'Side · i morges',
     text: 'Fastelavnsbollerne er tilbage fra lørdag. Bestil gerne på forhånd, hvis I skal bruge mange.',
-    image: img('spisebord.jpg'),
+    image: side('bageri.jpg'),
   },
   {
     id: 'p-cykelvaerksted',
     feed: 'interesser',
     author: 'Cykelværkstedet',
+    avatarSrc: side('vaerksted-logo.jpg'),
     tone: 'blue',
     meta: 'Side · i går',
     text: 'Gratis lygtetjek hele næste uge. Kig forbi med din cykel, så er du klar til de mørke morgener.',
@@ -298,6 +304,7 @@ export const posts: FeedPost[] = [
     id: 'p-bibliotek',
     feed: 'interesser',
     author: 'Byens bibliotek',
+    avatarSrc: side('bibliotek-logo.jpg'),
     tone: 'sage',
     meta: 'Side · i går',
     text: 'Ny it-café hver onsdag klokken 14. Tag din telefon eller computer med, så hjælper vi med MitID, apps og alt det andet.',
@@ -307,6 +314,7 @@ export const posts: FeedPost[] = [
     id: 'p-teater',
     feed: 'interesser',
     author: 'Teaterforeningen',
+    avatarSrc: side('teater-logo.jpg'),
     tone: 'sand',
     meta: 'Side · for 2 dage siden',
     text: 'Vi mangler frivillige til kostumer til forårets forestilling. Ingen erfaring nødvendig, kun lyst.',

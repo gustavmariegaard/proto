@@ -1,7 +1,8 @@
-import { useState } from 'react';
+import { useRef, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { Chip } from '../../components/Chip';
 import { Icon } from '../../components/Icon';
+import { SwipeHint } from '../../components/SwipeHint';
 import { PostCard } from '../../components/PostCard';
 import { discoverPosts } from '../../data/discover';
 import { useSession } from '../../state/session';
@@ -17,6 +18,7 @@ export function Discover() {
   const { profile } = useSession();
   const [off, setOff] = useState<string[]>([]);
   const [editing, setEditing] = useState(false);
+  const rowRef = useRef<HTMLUListElement>(null);
 
   const topics = profile.interests;
   const active = topics.filter((t) => !off.includes(t));
@@ -31,7 +33,7 @@ export function Discover() {
         Kun verificerede personer. Vælg de emner, du vil følge, og slå dem til og fra herunder.
       </p>
 
-      <ul className="discover__row" aria-label="Filtrér efter dine emner">
+      <ul ref={rowRef} className="discover__row" aria-label="Filtrér efter dine emner">
         {/* Rediger emner står først og ruller med væk, når man bladrer i emnerne */}
         <li>
           <Chip className="discover__edit" onClick={() => setEditing(true)}>
@@ -56,6 +58,7 @@ export function Discover() {
           );
         })}
       </ul>
+      <SwipeHint target={rowRef} />
 
       <div className="discover__posts">
         {shown.map((p) => (

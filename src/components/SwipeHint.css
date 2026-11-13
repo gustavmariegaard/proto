@@ -1,0 +1,19 @@
+.swipe-hint {
+  position: relative;
+  align-self: center;
+  width: 56px;
+  height: 4px;
+  margin-top: -6px;
+  border-radius: 999px;
+  background: var(--color-border-default);
+  overflow: hidden;
+}
+
+.swipe-hint__thumb {
+  position: absolute;
+  top: 0;
+  bottom: 0;
+  border-radius: inherit;
+  background: var(--color-text-secondary);
+  transition: left 0.08s linear;
+}

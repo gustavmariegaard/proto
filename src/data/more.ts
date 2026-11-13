@@ -1,6 +1,6 @@
 import type { AvatarTone } from '../components/Avatar';
 import type { IconName } from '../components/Icon';
-import { img } from './sample';
+import { img, side } from './sample';
 
 /*
  * Data til Mere-arket, Udvid cirkel (Find folk), Grupper og Sider.
@@ -80,12 +80,12 @@ export const groupActivity: GroupActivity[] = [
 /* ---------- Sider ---------- */
 
 export const pages: Community[] = [
-  { id: 'kulturhuset', name: 'Kulturhuset', initials: 'KH', tone: 'blue', meta: 'Nyt opslag i dag', unread: true },
-  { id: 'hallen', name: 'Hallen', initials: 'HA', tone: 'rose', meta: 'I går' },
-  { id: 'bibliotek', name: 'Byens bibliotek', initials: 'BB', tone: 'sage', meta: 'I går' },
-  { id: 'bageri', name: 'Det lokale bageri', initials: 'DB', tone: 'sand', meta: 'Man.' },
-  { id: 'cykel', name: 'Cykelværkstedet', initials: 'CV', tone: 'blue', meta: 'Man.' },
-  { id: 'teater', name: 'Teaterforeningen', initials: 'TF', tone: 'sand', meta: 'Lør.' },
+  { id: 'kulturhuset', name: 'Kulturhuset', initials: 'KH', tone: 'blue', avatarSrc: img('dans.jpg'), meta: 'Nyt opslag i dag', unread: true },
+  { id: 'hallen', name: 'Hallen', initials: 'HA', tone: 'rose', avatarSrc: side('hallen-logo.jpg'), meta: 'I går' },
+  { id: 'bibliotek', name: 'Byens bibliotek', initials: 'BB', tone: 'sage', avatarSrc: side('bibliotek-logo.jpg'), meta: 'I går' },
+  { id: 'bageri', name: 'Det lokale bageri', initials: 'DB', tone: 'sand', avatarSrc: side('bageri-logo.jpg'), meta: 'Man.' },
+  { id: 'cykel', name: 'Cykelværkstedet', initials: 'CV', tone: 'blue', avatarSrc: side('vaerksted-logo.jpg'), meta: 'Man.' },
+  { id: 'teater', name: 'Teaterforeningen', initials: 'TF', tone: 'sand', avatarSrc: side('teater-logo.jpg'), meta: 'Lør.' },
 ];
 
 /** Tallet i Figma ("100 sider"). */
