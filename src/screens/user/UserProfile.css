@@ -69,3 +69,13 @@
   flex-direction: column;
   gap: 14px;
 }
+
+.uprof__filter {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+}
+
+.uprof__content > .pf-tabs,
+.uprof__content > .pf-collections { flex-shrink: 0; }
