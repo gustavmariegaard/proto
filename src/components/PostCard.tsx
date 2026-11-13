@@ -43,10 +43,7 @@ export function PostCard({ post, onComment, onShare, onReport }: PostCardProps) 
             </span>
           </span>
           <div className="post__meta">
-            <h3 className="t-heading-s post__group-title">
-              <span className="post__group-name">{post.group.name}</span>
-              <span className="post__group-badge t-caption-strong">Gruppe</span>
-            </h3>
+            <h3 className="t-heading-s post__group-name">{post.group.name}</h3>
             <p className="t-caption post__sub">
               {post.author} · {post.meta}
             </p>

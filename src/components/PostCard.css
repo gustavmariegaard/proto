@@ -103,23 +103,8 @@
   line-height: 12px;
 }
 
-.post__group-title {
-  display: flex;
-  align-items: center;
-  gap: 8px;
-  min-width: 0;
-}
-
 .post__group-name {
   overflow: hidden;
   text-overflow: ellipsis;
   white-space: nowrap;
-}
-
-.post__group-badge {
-  flex: none;
-  padding: 1px 8px;
-  border-radius: 999px;
-  background: var(--color-bg-subtle);
-  color: var(--color-text-secondary);
 }
