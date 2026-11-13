@@ -344,3 +344,8 @@ img.msg-photo { display: block; object-fit: cover; }
   background: var(--color-accent-note-bg);
   color: var(--color-accent-note-text);
 }
+
+/* Indholdet i arket med cirklens indstillinger */
+.msg-sheet-body {
+  padding: 16px;
+}

@@ -89,6 +89,11 @@ export function openConversation(contactIds: string[]): string {
   return createCircle(picked.map((c) => firstName(c.name)).join(', '), contactIds, false);
 }
 
+/** Slår forsvindende beskeder til eller fra i en cirkel. */
+export function setDisappearing(id: string, disappearing: boolean) {
+  set(threads.map((t) => (t.id === id ? { ...t, disappearing } : t)));
+}
+
 /** Opretter en ny cirkel og returnerer dens id. */
 export function createCircle(name: string, contactIds: string[], disappearing: boolean): string {
   const names = contacts.filter((c) => contactIds.includes(c.id)).map((c) => firstName(c.name));
