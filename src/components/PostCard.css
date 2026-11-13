@@ -51,7 +51,7 @@
   display: flex;
   align-items: center;
   gap: 2px;
-  /* Gem-ikonet står helt ude ved kanten i Figma; trykfladen er stadig 44 px. */
+  /* Rapportér-ikonet står helt ude ved kanten; trykfladen er stadig 44 px. */
   margin-right: -10px;
 }
 

@@ -102,8 +102,6 @@ export function PostCard({ post, onComment, onShare, onReport }: PostCardProps) 
         />
         <Action icon="chat" label="Kommentarer" count={stats.comments} onClick={onComment} />
         <Action icon="send" label="Delinger" count={stats.shares} onClick={onShare} />
-        <IconButton icon="flag" label="Rapportér" onClick={onReport} />
-        <span className="post__spacer" />
         <Action
           icon="bookmark"
           label="Gemt"
@@ -112,6 +110,8 @@ export function PostCard({ post, onComment, onShare, onReport }: PostCardProps) 
           className={saved ? 'post__saved' : undefined}
           onClick={() => setSaved((v) => !v)}
         />
+        <span className="post__spacer" />
+        <IconButton icon="flag" label="Rapportér" onClick={onReport} />
       </footer>
     </article>
   );
