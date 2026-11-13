@@ -327,3 +327,12 @@ a.notif:focus-visible { outline: none; box-shadow: var(--focus-ring); }
 .set-buttons > * { flex: 1; }
 
 .set-danger { align-self: center; color: #c62828; }
+
+/* ---------- Søg: filter som i Offentlig debat ---------- */
+.search-filter { flex-shrink: 0; }
+
+.search-section {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
