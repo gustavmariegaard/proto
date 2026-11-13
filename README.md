@@ -18,7 +18,7 @@ Appen kan udgives automatisk på GitHub Pages, hver gang branchen `prototype` op
 https://gustavmariegaard.github.io/proto/ (kræver, at Pages er slået til i repoets indstillinger).
 
 Åbn linket i Safari → Del → **Føj til hjemmeskærm**.
-Vil du prøve velkomst og oprettelse igen, så tryk **Log ud** nederst i Indstillinger (Profil → tandhjulet).
+Man lander direkte på Hjem som testbrugeren "Sara Jensen" uden at logge ind. Vil du prøve velkomst og oprettelse, så tryk **Log ud** nederst i Indstillinger (Profil → tandhjulet).
 
 ## Mapper
 

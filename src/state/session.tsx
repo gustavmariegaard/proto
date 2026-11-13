@@ -31,18 +31,37 @@ type Session = SessionState & {
 
 const KEY = 'ciircle.session';
 
-const initial: SessionState = {
+const interests = ['Kultur', 'Byudvikling', 'Musik', 'Cykling', 'Madlavning'];
+
+/** Udlogget: velkomst og oprettelse vises (efter "Log ud" i Indstillinger) */
+const loggedOutState: SessionState & { loggedOut: true } = {
   loggedIn: false,
+  loggedOut: true,
   country: 'Danmark',
-  profile: { name: '', username: '', interests: ['Kultur', 'Byudvikling', 'Musik', 'Cykling', 'Madlavning'] },
+  profile: { name: '', username: '', interests },
+};
+
+/**
+ * Til test: man er logget ind fra start med en testprofil og lander direkte på Hjem.
+ * Vil man prøve velkomst og oprettelse, trykker man "Log ud" i Indstillinger.
+ */
+const initial: SessionState = {
+  loggedIn: true,
+  country: 'Danmark',
+  profile: { name: 'Sara Jensen', username: 'sara.jensen', interests },
 };
 
 function load(): SessionState {
   try {
     const raw = localStorage.getItem(KEY);
-    if (raw) return { ...initial, ...JSON.parse(raw) };
+    if (raw) {
+      const stored = JSON.parse(raw) as Partial<SessionState> & { loggedOut?: boolean };
+      // Kun et bevidst "Log ud" holder én logget ud; ellers lander man på Hjem
+      if (stored.loggedOut) return { ...loggedOutState, ...stored };
+      return { ...initial, ...stored, loggedIn: true, profile: { ...initial.profile, ...stored.profile, name: stored.profile?.name || initial.profile.name } };
+    }
   } catch {
-    /* Privat vindue eller blokeret lager: start forfra */
+    /* Privat vindue eller blokeret lager: start som testbruger */
   }
   return initial;
 }
@@ -73,14 +92,10 @@ export function SessionProvider({ children }: { children: React.ReactNode }) {
     () => ({
       setCountry: (country: string) => update({ country }),
       setProfile: (profile: Profile) => update({ profile }),
-      logIn: () => update({ loggedIn: true }),
+      logIn: () => update({ loggedIn: true, loggedOut: false } as Partial<SessionState>),
       logOut: () => {
-        try {
-          localStorage.removeItem(KEY);
-        } catch {
-          /* ignorer */
-        }
-        setState(initial);
+        save(loggedOutState);
+        setState(loggedOutState);
       },
     }),
     [update],
