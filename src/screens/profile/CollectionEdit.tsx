@@ -59,7 +59,7 @@ function Editor({ id, title, initialIds, initialCover }: { id: string; title: st
 
   return (
     <div className="pf-screen">
-      <PageHeader title="Rediger samling" fallback={`/profil/samling/${id}`}>
+      <PageHeader title={title} fallback="/profil">
         <Button variant="ghost" onClick={done}>
           Færdig
         </Button>

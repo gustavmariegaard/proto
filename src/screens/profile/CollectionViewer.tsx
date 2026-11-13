@@ -30,16 +30,11 @@ export function CollectionViewer() {
       startAt={Number(params.get('start')) || 0}
       onClose={close}
       actions={
-        <>
-          <button type="button" className="pf-viewer__action" onClick={() => navigate(`/profil/samling/${id}`, { replace: true })}>
-            <Icon name="layout-grid" size={20} />
-            Se alle
-          </button>
-          <button type="button" className="pf-viewer__action" onClick={() => navigate(`/profil/samling/${id}/rediger`, { replace: true })}>
-            <Icon name="edit" size={20} />
-            Rediger
-          </button>
-        </>
+        // "Se alle" åbner samlingen, hvor man også kan redigere den
+        <button type="button" className="pf-viewer__action" onClick={() => navigate(`/profil/samling/${id}/rediger`, { replace: true })}>
+          <Icon name="layout-grid" size={20} />
+          Se alle
+        </button>
       }
     />
   );
