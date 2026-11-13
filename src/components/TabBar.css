@@ -1,46 +1,50 @@
 /*
- * Flad bundmenu i fuld bredde (som på Instagram): 52 px høj plus
- * iPhonens hjem-streg. Tynd streg øverst i stedet for skygge og runde hjørner.
+ * Flydende, rund bundmenu (som i Figma), men lavere: 52 px høj og 16 px
+ * fra skærmens kanter. Den valgte fane fylder næsten hele højden, så
+ * proportionerne passer (som på Instagram). Se --tabbar-bottom i tokens.css.
  */
 .tabbar {
   position: absolute;
-  left: 0;
-  right: 0;
-  bottom: 0;
+  left: var(--space-16);
+  right: var(--space-16);
+  bottom: var(--tabbar-bottom);
   z-index: 20;
-  padding-bottom: var(--safe-bottom);
-  background: var(--color-bg-surface);
-  border-top: 1px solid var(--color-border-default);
 }
 
 .tabbar__pill {
   display: flex;
   align-items: center;
-  justify-content: space-around;
   height: 52px;
   margin: 0;
-  padding: 0 8px;
+  padding: 0 4px;
   list-style: none;
+  background: var(--color-bg-surface);
+  border: 1px solid var(--color-border-default);
+  border-radius: 26px;
+  box-shadow: var(--shadow-tabbar);
 }
+
+.tabbar__pill > li { flex: 1; }
 
 .tabbar__tab {
   display: flex;
   align-items: center;
   justify-content: center;
-  width: 64px;
-  height: 48px;
+  height: 50px;
   color: var(--color-text-primary);
   border-radius: var(--radius-pill);
   outline: none;
 }
 
+/* Den valgte fane: 44 px høj og bred, så den fylder pillen ud */
 .tabbar__holder {
   display: flex;
   align-items: center;
   justify-content: center;
-  width: 52px;
-  height: 34px;
-  border-radius: var(--radius-pill);
+  width: calc(100% - 4px);
+  max-width: 72px;
+  height: 42px;
+  border-radius: 21px;
   transition: background-color 0.15s ease;
 }
 
@@ -53,12 +57,3 @@
 }
 
 .tabbar__tab:active .tabbar__holder { transform: scale(0.94); }
-
-/* På Flicks er menuen mørk, så den glider ind i billedet */
-.flicks .tabbar {
-  background: var(--ink-900);
-  border-top-color: rgb(255 255 255 / 0.12);
-}
-
-.flicks .tabbar__tab { color: var(--color-text-on-action); }
-.flicks .tabbar__tab.active .tabbar__holder { color: var(--ink-900); }
