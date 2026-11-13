@@ -276,3 +276,21 @@ input:focus-visible + .more-photo__drop { box-shadow: var(--focus-ring); }
 
 /* Tekst-knap i sidehovedet er et link */
 .page-header a.btn { text-decoration: none; }
+
+/* ---------- En gruppe ---------- */
+.group-head {
+  display: flex;
+  align-items: center;
+  gap: 14px;
+}
+
+.group-actions {
+  display: flex;
+  gap: 8px;
+}
+
+.group-posts {
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+}

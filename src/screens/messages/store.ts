@@ -64,6 +64,21 @@ export function sendMessage(id: string, text: string) {
   set([updated, ...threads.filter((t) => t.id !== id)]);
 }
 
+/** Sender et billede eller en stemmebesked */
+export function sendMedia(id: string, message: { kind: 'image'; src: string } | { kind: 'voice'; duration: string }) {
+  const thread = threads.find((t) => t.id === id);
+  if (!thread) return;
+  const m: ChatMessage = { id: `${id}-${Date.now()}`, from: 'me', ...message };
+  const updated: Thread = {
+    ...thread,
+    messages: [...thread.messages, m],
+    preview: message.kind === 'image' ? 'Du: Billede' : 'Du: Stemmebesked',
+    time: now(),
+    unread: false,
+  };
+  set([updated, ...threads.filter((t) => t.id !== id)]);
+}
+
 /** Finder (eller opretter) samtalen med de valgte personer. Returnerer dens id. */
 export function openConversation(contactIds: string[]): string {
   const picked = contacts.filter((c) => contactIds.includes(c.id));

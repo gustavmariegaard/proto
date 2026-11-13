@@ -1,5 +1,5 @@
 import { useEffect, useRef, useState } from 'react';
-import { useNavigate } from 'react-router-dom';
+import { useNavigate, useSearchParams } from 'react-router-dom';
 import { Button } from '../../components/Button';
 import { Chip } from '../../components/Chip';
 import { Icon, type IconName } from '../../components/Icon';
@@ -36,8 +36,11 @@ export function Create() {
   const close = useClose('/');
   const [kind, setKind] = useState<CreateKind>('opslag');
   const [text, setText] = useState('');
-  const [audience, setAudience] = useState<Audience>('offentlig');
-  const [groupId, setGroupId] = useState<string | null>(null);
+  // Fra en gruppe: "Skriv i gruppen" vælger gruppen på forhånd
+  const [params] = useSearchParams();
+  const startGroup = params.get('gruppe');
+  const [audience, setAudience] = useState<Audience>(startGroup ? 'gruppe' : 'offentlig');
+  const [groupId, setGroupId] = useState<string | null>(startGroup);
   const groups = groupStore.use();
   const group = groups.find((g) => g.id === groupId) ?? null;
   const { profile } = useSession();

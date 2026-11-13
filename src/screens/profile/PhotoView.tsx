@@ -20,11 +20,16 @@ export function PhotoView() {
 
   if (!photo) return <Navigate to="/profil?fane=billeder" replace />;
 
+  const [copied, setCopied] = useState(false);
   const share = async () => {
     const url = window.location.href;
     try {
       if (navigator.share) await navigator.share({ url });
-      else await navigator.clipboard?.writeText(url);
+      else {
+        await navigator.clipboard?.writeText(url);
+        setCopied(true);
+        window.setTimeout(() => setCopied(false), 2000);
+      }
     } catch {
       /* Afbrudt af brugeren */
     }
@@ -67,8 +72,7 @@ export function PhotoView() {
             }}
           />
           <IconButton icon="send" label="Del" onClick={share} />
-          {/* Rapportér giver ikke mening på dit eget billede i prototypen */}
-          <IconButton icon="flag" label="Rapportér" />
+          {copied && <span className="t-caption pf-muted" role="status">Link kopieret</span>}
         </div>
 
         {comments.length > 0 && (

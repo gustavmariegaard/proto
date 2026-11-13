@@ -1,6 +1,7 @@
 import { useSyncExternalStore } from 'react';
 import { posts as samplePosts, type FeedPost } from '../data/sample';
 import { keep, save } from './keep';
+import { discoverPosts } from '../data/discover';
 
 /*
  * Opslag i feedet. Nye opslag fra Opret lægges øverst.
@@ -25,7 +26,8 @@ export function usePosts() {
 }
 
 export function usePost(id: string | undefined) {
-  return usePosts().find((p) => p.id === id);
+  // Også opslag fra Offentlig debat, så de kan åbnes, kommenteres og deles
+  return usePosts().find((p) => p.id === id) ?? discoverPosts.find((p) => p.id === id);
 }
 
 export function addPost(post: Omit<FeedPost, 'id'>) {

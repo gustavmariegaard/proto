@@ -65,8 +65,8 @@ export function Discover() {
           <PostCard
             key={p.id}
             post={p}
-            onComment={p.linkable ? () => navigate(`/opslag/${p.id}?kommentarer`) : undefined}
-            onShare={p.linkable ? () => navigate(`/opslag/${p.id}/del`) : undefined}
+            onComment={() => navigate(`/opslag/${p.id}?kommentarer`)}
+            onShare={() => navigate(`/opslag/${p.id}/del`)}
             onReport={() => navigate(`/opslag/${p.id}/rapporter`)}
           />
         ))}

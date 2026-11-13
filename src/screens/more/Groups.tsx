@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import { Link } from 'react-router-dom';
+import { Link, useNavigate } from 'react-router-dom';
 import { TextField } from '../../components/TextField';
 import { groupActivity, groupCount, groups as initialGroups } from '../../data/more';
 import { CommunityRow, InitialsAvatar, MoreHeader, SortRow, matches, sortItems, type SortMode } from './parts';
@@ -32,6 +32,7 @@ function GroupTabs({ active }: { active: 'grupper' | 'aktivitet' }) {
 /** Grupper · Dine grupper. Fuld skærm, rute /grupper. */
 export function Groups() {
   const items = groupStore.use();
+  const navigate = useNavigate();
   const [query, setQuery] = useState('');
   const [sort, setSort] = useState<SortMode>('seneste');
   const shown = sortItems(items.filter((g) => matches(g.name, query)), sort);
@@ -50,7 +51,14 @@ export function Groups() {
         ) : (
           <ul className="more-list">
             {shown.map((g) => (
-              <CommunityRow key={g.id} item={g} onOpen={() => groupStore.markRead(g.id)} />
+              <CommunityRow
+                key={g.id}
+                item={g}
+                onOpen={() => {
+                  groupStore.markRead(g.id);
+                  navigate(`/grupper/${g.id}`);
+                }}
+              />
             ))}
           </ul>
         )}

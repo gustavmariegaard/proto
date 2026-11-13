@@ -90,13 +90,12 @@ export function UserProfile() {
   });
 
   const card = (p: (typeof history)[number]) => {
-    const linkable = all.some((x) => x.id === p.id);
     return (
       <PostCard
         key={p.id}
         post={p}
-        onComment={linkable ? () => navigate(`/opslag/${p.id}?kommentarer`) : undefined}
-        onShare={linkable ? () => navigate(`/opslag/${p.id}/del`) : undefined}
+        onComment={() => navigate(`/opslag/${p.id}?kommentarer`)}
+        onShare={() => navigate(`/opslag/${p.id}/del`)}
         onReport={() => navigate(`/opslag/${p.id}/rapporter`)}
       />
     );

@@ -349,3 +349,61 @@ img.msg-photo { display: block; object-fit: cover; }
 .msg-sheet-body {
   padding: 16px;
 }
+
+/* ---------- Stemmebesked under optagelse ---------- */
+.msg-recording {
+  display: flex;
+  flex: 1;
+  align-items: center;
+  gap: 10px;
+  min-width: 0;
+}
+
+.msg-recording__dot {
+  width: 10px;
+  height: 10px;
+  border-radius: 50%;
+  background: #e53935;
+  animation: msg-rec 1s ease-in-out infinite;
+}
+
+@keyframes msg-rec { 50% { opacity: 0.3; } }
+
+.msg-recording__cancel {
+  margin-left: auto;
+  min-height: 44px;
+  padding: 0 8px;
+  color: var(--color-text-secondary);
+}
+
+/* ---------- Opkald ---------- */
+.msg-call {
+  position: absolute;
+  inset: 0;
+  z-index: 40;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 10px;
+  padding: 24px;
+  background: linear-gradient(180deg, var(--green-900), var(--ink-900));
+  color: #fff;
+  text-align: center;
+}
+
+.msg-call__status { opacity: 0.8; display: inline-flex; align-items: center; gap: 4px; }
+
+.msg-call__end {
+  display: grid;
+  place-items: center;
+  width: 64px;
+  height: 64px;
+  margin-top: 40px;
+  border-radius: 50%;
+  background: #e53935;
+  color: #fff;
+}
+
+.msg-call__end svg { transform: rotate(135deg); }
+.msg-call__end:focus-visible { outline: none; box-shadow: var(--focus-ring); }

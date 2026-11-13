@@ -18,7 +18,7 @@ import { img } from "../../data/sample";
 import type { AvatarTone } from "../../components/Avatar";
 import { useSession } from "../../state/session";
 import { useKeyboardViewport } from "./hooks";
-import { markRead, sendMessage, setDisappearing, useThread } from "./store";
+import { markRead, sendMedia, sendMessage, setDisappearing, useThread } from "./store";
 import "./Messages.css";
 
 /** Samtale (1:1) eller cirkel. Skrivefeltet ligger nederst, listen starter ved den nyeste besked. */
@@ -28,6 +28,16 @@ export function Conversation() {
   const { profile } = useSession();
   const [text, setText] = useState("");
   const [settingsOpen, setSettingsOpen] = useState(false);
+  const [call, setCall] = useState<null | "lyd" | "video">(null);
+  const [recording, setRecording] = useState<number | null>(null);
+  const photoRef = useRef<HTMLInputElement>(null);
+
+  // Stemmebesked: tæller sekunder, mens man optager
+  useEffect(() => {
+    if (recording === null) return;
+    const t = window.setInterval(() => setRecording((r) => (r === null ? r : r + 1)), 1000);
+    return () => window.clearInterval(t);
+  }, [recording === null]); // eslint-disable-line react-hooks/exhaustive-deps
   const screenRef = useRef<HTMLDivElement>(null);
   const listRef = useRef<HTMLDivElement>(null);
   const inputRef = useRef<HTMLInputElement>(null);
@@ -99,8 +109,8 @@ export function Conversation() {
         )}
         {!isCircle && (
           <>
-            <IconButton icon="phone" label="Ring op" variant="outline" />
-            <IconButton icon="video" label="Videoopkald" variant="outline" />
+            <IconButton icon="phone" label="Ring op" variant="outline" onClick={() => setCall("lyd")} />
+            <IconButton icon="video" label="Videoopkald" variant="outline" onClick={() => setCall("video")} />
           </>
         )}
       </header>
@@ -142,7 +152,21 @@ export function Conversation() {
           send();
         }}
       >
-        <IconButton icon="image" label="Send billede" />
+        <IconButton icon="image" label="Send billede" onClick={() => photoRef.current?.click()} />
+        <input
+          ref={photoRef}
+          type="file"
+          accept="image/*"
+          hidden
+          onChange={(e) => {
+            const file = e.target.files?.[0];
+            e.target.value = "";
+            if (!file || !id) return;
+            const reader = new FileReader();
+            reader.onload = () => sendMedia(id, { kind: "image", src: String(reader.result) });
+            reader.readAsDataURL(file);
+          }}
+        />
         <input
           ref={inputRef}
           className="field msg-composer__field"
@@ -154,7 +178,24 @@ export function Conversation() {
           enterKeyHint="send"
           autoComplete="off"
         />
-        {isCircle || hasText ? (
+        {recording !== null ? (
+          <div className="msg-recording" role="status">
+            <span className="msg-recording__dot" aria-hidden="true" />
+            <span className="t-caption-strong">Optager {fmtTime(recording)}</span>
+            <button type="button" className="t-caption-strong msg-recording__cancel" onClick={() => setRecording(null)}>
+              Annuller
+            </button>
+            <IconButton
+              icon="send"
+              label="Send stemmebesked"
+              variant="filled"
+              onClick={() => {
+                if (id) sendMedia(id, { kind: "voice", duration: fmtTime(Math.max(recording, 1)) });
+                setRecording(null);
+              }}
+            />
+          </div>
+        ) : hasText ? (
           <IconButton
             type="submit"
             icon="send"
@@ -164,9 +205,23 @@ export function Conversation() {
             onMouseDown={(e) => e.preventDefault()}
           />
         ) : (
-          <IconButton icon="mic" label="Optag stemmebesked" variant="filled" />
+          <IconButton icon="mic" label="Optag stemmebesked" variant="filled" onClick={() => setRecording(0)} />
         )}
       </form>
+
+      {call && (
+        <div className="msg-call" role="dialog" aria-label={call === "video" ? `Videoopkald til ${thread.name}` : `Opkald til ${thread.name}`}>
+          <Avatar name={thread.name} tone={thread.tone} src={thread.avatarSrc} size="XL" />
+          <p className="t-title-l">{thread.name}</p>
+          <p className="t-body-s msg-call__status">{call === "video" ? "Videoopkald · ringer …" : "Ringer …"}</p>
+          <p className="t-caption msg-call__status">
+            <Icon name="lock" size={12} /> End-to-end-krypteret
+          </p>
+          <button type="button" className="msg-call__end" aria-label="Læg på" onClick={() => setCall(null)}>
+            <Icon name="phone" />
+          </button>
+        </div>
+      )}
 
       {isCircle && (
         <Sheet
@@ -262,4 +317,8 @@ function MessageBody({
       )}
     </div>
   );
+}
+
+function fmtTime(sec: number) {
+  return `${Math.floor(sec / 60)}:${String(sec % 60).padStart(2, "0")}`;
 }

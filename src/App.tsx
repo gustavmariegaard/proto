@@ -45,6 +45,7 @@ import { FindFolk } from './screens/more/FindFolk';
 import { Groups, GroupActivity } from './screens/more/Groups';
 import { Pages } from './screens/more/Pages';
 import { NewGroup, NewPage } from './screens/more/Create';
+import { GroupView } from './screens/more/GroupView';
 import { Profile } from './screens/profile/Profile';
 import { PhotoView } from './screens/profile/PhotoView';
 import { Collection } from './screens/profile/Collection';
@@ -136,6 +137,7 @@ export default function App() {
             <Route path="find-folk" element={<FindFolk />} />
             <Route path="grupper" element={<Groups />} />
             <Route path="grupper/aktivitet" element={<GroupActivity />} />
+            <Route path="grupper/:id" element={<GroupView />} />
             <Route path="grupper/ny" element={<NewGroup />} />
             <Route path="sider" element={<Pages />} />
             <Route path="sider/ny" element={<NewPage />} />
