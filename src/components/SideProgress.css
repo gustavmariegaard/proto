@@ -1,15 +1,14 @@
-/* Lodrette segmenter langs venstre kant (Moments og samlinger), nedefra og op */
+/* Vandrette segmenter i bunden af skærmen (Moments og samlinger), fra venstre mod højre */
 .side-progress {
   position: absolute;
   z-index: 4;
-  left: 10px;
-  top: calc(var(--safe-top) + 64px);
-  bottom: calc(var(--safe-bottom) + 150px);
+  left: 14px;
+  right: 14px;
+  /* Lige over hjem-stregen på iPhone, under svarfeltet */
+  bottom: max(10px, calc(var(--safe-bottom) - 10px));
   display: flex;
-  /* Første segment nederst; fremdriften kører nedefra og op */
-  flex-direction: column-reverse;
   gap: 4px;
-  width: 3px;
+  height: 3px;
   margin: 0;
   padding: 0;
   list-style: none;
@@ -31,11 +30,11 @@
   inset: 0;
   border-radius: inherit;
   background: #fff;
-  transform-origin: bottom;
-  transform: scaleY(0);
+  transform-origin: left;
+  transform: scaleX(0);
 }
 
-.side-progress__fill--done { transform: scaleY(1); }
+.side-progress__fill--done { transform: scaleX(1); }
 
 .side-progress__fill--run {
   animation-name: side-progress-fill;
@@ -44,8 +43,8 @@
 }
 
 @keyframes side-progress-fill {
-  from { transform: scaleY(0); }
-  to { transform: scaleY(1); }
+  from { transform: scaleX(0); }
+  to { transform: scaleX(1); }
 }
 
 @media (prefers-reduced-motion: reduce) {

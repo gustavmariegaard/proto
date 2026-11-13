@@ -212,10 +212,10 @@
 
 /* =========================================================
  * Moments i fuld skærm: billedet fylder hele skærmen,
- * fremdriften er tynde streger øverst.
+ * fremdriften er tynde streger nederst, under svarfeltet.
  * ========================================================= */
 .moment-view--full {
-  padding: 0 0 max(24px, calc(var(--safe-bottom) + 8px));
+  padding: 0 0 max(28px, calc(var(--safe-bottom) + 14px));
   background: var(--ink-900);
 }
 

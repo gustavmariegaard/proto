@@ -139,7 +139,7 @@ export function StoryViewer({ items, title, subtitle, startAt = 0, onClose, acti
         <button type="button" className="moment-view__tap moment-view__tap--next pf-viewer__tap" aria-label="Næste" onClick={() => tap(1)} {...holdProps} />
       </div>
 
-      {/* Fremdrift som stories, men lodret langs venstre side */}
+      {/* Fremdrift som stories, men i bunden af skærmen */}
       <SideProgress count={items.length} index={index} progress={progress} />
 
       <div className="moment-full__top story-viewer__top">

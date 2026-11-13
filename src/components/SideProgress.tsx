@@ -12,8 +12,8 @@ type Props = {
 };
 
 /**
- * Som stories på Instagram, men lodret langs venstre side:
- * ét segment pr. moment, nedefra og op. Det aktuelle fylder sig op nedefra.
+ * Som stories på Instagram, men i bunden af skærmen:
+ * ét segment pr. moment, fra venstre mod højre. Det aktuelle fylder sig op.
  */
 export function SideProgress({ count, index, progress, duration, paused, onDone }: Props) {
   return (
@@ -30,7 +30,7 @@ export function SideProgress({ count, index, progress, duration, paused, onDone 
                 onAnimationEnd={onDone}
               />
             ) : (
-              <span className="side-progress__fill" style={{ transform: `scaleY(${progress ?? 0})` }} />
+              <span className="side-progress__fill" style={{ transform: `scaleX(${progress ?? 0})` }} />
             ))}
         </li>
       ))}

@@ -112,7 +112,7 @@ function Viewer({ personId }: { personId: string }) {
         <button type="button" className="moment-view__tap moment-view__tap--next" aria-label="Næste" onClick={tap(next)} />
       </div>
 
-      {/* Fremdrift som stories, men lodret langs venstre side: ét segment pr. moment */}
+      {/* Fremdrift som stories, men i bunden af skærmen: ét segment pr. moment */}
       <SideProgress
         key={personId}
         count={own.length}
