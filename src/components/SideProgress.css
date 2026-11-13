@@ -1,0 +1,52 @@
+/* Lodrette segmenter langs venstre kant (Moments og samlinger) */
+.side-progress {
+  position: absolute;
+  z-index: 4;
+  left: 10px;
+  top: calc(var(--safe-top) + 64px);
+  bottom: calc(var(--safe-bottom) + 150px);
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  width: 3px;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+  pointer-events: none;
+}
+
+.side-progress__seg {
+  position: relative;
+  flex: 1;
+  overflow: hidden;
+  border-radius: 2px;
+  background: rgb(255 255 255 / 0.35);
+  /* Synlig også på lyse billeder */
+  box-shadow: 0 0 3px rgb(0 0 0 / 0.35);
+}
+
+.side-progress__fill {
+  position: absolute;
+  inset: 0;
+  border-radius: inherit;
+  background: #fff;
+  transform-origin: top;
+  transform: scaleY(0);
+}
+
+.side-progress__fill--done { transform: scaleY(1); }
+
+.side-progress__fill--run {
+  animation-name: side-progress-fill;
+  animation-timing-function: linear;
+  animation-fill-mode: forwards;
+}
+
+@keyframes side-progress-fill {
+  from { transform: scaleY(0); }
+  to { transform: scaleY(1); }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .side-progress__fill--run { animation-timing-function: steps(5); }
+}

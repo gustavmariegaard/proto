@@ -1,5 +1,6 @@
 import { useCallback, useEffect, useRef, useState } from 'react';
 import { Icon } from './Icon';
+import { SideProgress } from './SideProgress';
 import '../screens/home/MomentViewer.css';
 import '../screens/profile/Screens.css';
 
@@ -8,13 +9,6 @@ export const isVideo = (src: string) => /\.(mp4|webm|mov)$/i.test(src);
 
 const DURATION = 5000; // 5 sekunder pr. billede; videoer varer, så længe de er
 const HOLD = 220;
-
-/* Rammen: 331 × 576 px med 36 px hjørner (som Moments). Starter øverst i midten. */
-const W = 331;
-const H = 576;
-const R = 36;
-const S = 2;
-const framePath = `M ${W / 2} ${S} H ${W - R} A ${R - S} ${R - S} 0 0 1 ${W - S} ${R} V ${H - R} A ${R - S} ${R - S} 0 0 1 ${W - R} ${H - S} H ${R} A ${R - S} ${R - S} 0 0 1 ${S} ${H - R} V ${R} A ${R - S} ${R - S} 0 0 1 ${R} ${S} Z`;
 
 type Props = {
   items: string[];
@@ -129,14 +123,11 @@ export function StoryViewer({ items, title, subtitle, startAt = 0, onClose, acti
         {cover && <img src={video ? cover : current} alt="" />}
       </div>
 
+      {/* Fremdrift som stories, men lodret langs venstre side */}
+      <SideProgress count={items.length} index={index} progress={progress} />
+
       <div className="moment-view__top">
-        {items.length > 1 && (
-          <ol className="moment-view__dots" aria-label={`${index + 1} af ${items.length}`}>
-            {items.map((p, i) => (
-              <li key={`${p}-${i}`} className={i === index ? 'is-active' : undefined} />
-            ))}
-          </ol>
-        )}
+        <span />
         <button type="button" className="moment-view__close" aria-label="Luk" onClick={onClose}>
           <Icon name="close" />
         </button>
@@ -161,10 +152,6 @@ export function StoryViewer({ items, title, subtitle, startAt = 0, onClose, acti
               <img src={current} alt="" draggable={false} />
             )}
           </div>
-          <svg className="moment-view__progress" viewBox={`0 0 ${W} ${H}`} aria-hidden="true">
-            <path d={framePath} className="moment-view__track" />
-            <path d={framePath} pathLength={100} className="pf-viewer__bar" style={{ strokeDashoffset: 100 - progress * 100 }} />
-          </svg>
           {video && <Icon name="clip" className="story-viewer__video-icon" />}
           <button type="button" className="moment-view__tap moment-view__tap--prev pf-viewer__tap" aria-label="Forrige" onClick={() => tap(-1)} {...holdProps} />
           <button type="button" className="moment-view__tap moment-view__tap--next pf-viewer__tap" aria-label="Næste" onClick={() => tap(1)} {...holdProps} />
