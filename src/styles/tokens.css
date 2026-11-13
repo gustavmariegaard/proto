@@ -23,7 +23,8 @@
   --green-900: #05392a;
 
   /* ---------- Baggrund ---------- */
-  --color-bg-app: var(--white);
+  /* Næsten hvid: kort og ark (bg-surface) står hvide ovenpå */
+  --color-bg-app: #fafaf9;
   --color-bg-surface: var(--white);
   --color-bg-subtle: var(--gray-100);
   --color-bg-sunken: var(--gray-50);

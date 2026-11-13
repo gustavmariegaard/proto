@@ -151,3 +151,35 @@ html:has(.flicks, .newflick, .moment-view, .cviewer, .smoment) #root {
   .smoment::before { position: absolute; inset: 0; }
 }
 
+
+/* ---------- Bløde overgange mellem skærme ----------
+ * Nye skærme toner blidt frem i stedet for at dukke op med et hop.
+ * Mørke fuldskærmsvisninger (Flicks, Moments) tones ikke, så kanten forbliver mørk. */
+.shell__content > *,
+.acc-screen,
+.more-screen,
+.modal-screen,
+.msg-screen,
+.pf-screen,
+.uprof {
+  animation: screen-in 0.22s ease-out both;
+}
+
+/* Kun opacity (ingen bevægelse), så faste elementer som menuer ikke flytter sig */
+@keyframes screen-in {
+  from { opacity: 0; }
+  to { opacity: 1; }
+}
+
+/* Knapper, faner og kort skifter farve blødt */
+button,
+a,
+.chip,
+.btn,
+.segmented__item,
+.tabbar__holder {
+  transition: background-color 0.18s ease, color 0.18s ease, border-color 0.18s ease, opacity 0.18s ease, box-shadow 0.18s ease;
+}
+
+/* Billeder toner frem, når de er hentet, i stedet for at blinke ind */
+img { transition: opacity 0.2s ease; }

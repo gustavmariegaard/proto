@@ -65,7 +65,8 @@ function MoreRoute() {
   return (
     <>
       <Home />
-      <MoreSheet open onClose={() => navigate('/')} />
+      {/* replace: Mere må ikke ligge i historikken, ellers kan et swipe åbne den igen */}
+      <MoreSheet open onClose={() => navigate('/', { replace: true })} />
     </>
   );
 }

@@ -4,7 +4,7 @@ import { useLocation } from 'react-router-dom';
 /** Skærme med mørk baggrund helt ud til kanten */
 const DARK = [/^\/flicks(\/|$)/, /^\/moment\//, /^\/profil\/samling\/[^/]+\/vis$/, /^\/opslag\/[^/]+\/del\/moment$/, /^\/bruger\/[^/]+\/samling\//];
 
-const LIGHT_COLOR = '#ffffff';
+const LIGHT_COLOR = '#fafaf9';
 const DARK_COLOR = '#171717'; // --ink-900
 
 /** Var siden mørk, da den blev indlæst? (sat af det lille script i index.html) */

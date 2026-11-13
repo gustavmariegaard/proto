@@ -99,20 +99,18 @@ export function Conversation() {
             <p className="t-caption msg-muted msg-ellipsis">{thread.members}</p>
           )}
         </div>
-        {isCircle && (
-          <IconButton
-            icon="more"
-            label="Indstillinger for cirklen"
-            variant="outline"
-            onClick={() => setSettingsOpen(true)}
-          />
-        )}
         {!isCircle && (
           <>
             <IconButton icon="phone" label="Ring op" variant="outline" onClick={() => setCall("lyd")} />
             <IconButton icon="video" label="Videoopkald" variant="outline" onClick={() => setCall("video")} />
           </>
         )}
+        <IconButton
+          icon="more"
+          label={isCircle ? "Indstillinger for cirklen" : "Indstillinger for samtalen"}
+          variant="outline"
+          onClick={() => setSettingsOpen(true)}
+        />
       </header>
 
       <div
@@ -130,7 +128,7 @@ export function Conversation() {
             End-to-end-krypteret
           </p>
         </div>
-        {isCircle && thread.disappearing && (
+        {thread.disappearing && (
           <div className="msg-center-row">
             <Tag>Beskeder forsvinder efter 24 timer</Tag>
           </div>
@@ -223,11 +221,12 @@ export function Conversation() {
         </div>
       )}
 
-      {isCircle && (
+      {(
         <Sheet
           open={settingsOpen}
           onClose={() => setSettingsOpen(false)}
-          title="Indstillinger for cirklen"
+          title={isCircle ? "Indstillinger for cirklen" : "Indstillinger for samtalen"}
+          initialSize="auto"
         >
           <div className="msg-sheet-body">
             <label className="msg-toggle-row">
@@ -236,7 +235,7 @@ export function Conversation() {
                   Beskeder forsvinder efter 24 timer
                 </span>
                 <span className="t-caption msg-muted">
-                  Gælder for alle i cirklen. Du kan altid ændre det igen.
+                  {isCircle ? "Gælder for alle i cirklen." : `Gælder for både dig og ${thread.name.split(" ")[0]}.`} Du kan altid ændre det igen.
                 </span>
               </span>
               <input

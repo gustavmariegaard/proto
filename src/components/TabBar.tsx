@@ -20,7 +20,14 @@ export function TabBar() {
       <ul className="tabbar__pill">
         {tabs.map((tab) => (
           <li key={tab.to}>
-            <NavLink to={tab.to} end={tab.to === '/'} className="tabbar__tab" aria-label={tab.label}>
+            <NavLink
+              to={tab.to}
+              end={tab.to === '/'}
+              // Faner lægges ikke i historikken, så et swipe tilbage/frem ikke skifter fane (fx åbner Mere)
+              replace
+              className="tabbar__tab"
+              aria-label={tab.label}
+            >
               <span className="tabbar__holder">
                 <Icon name={tab.icon} />
               </span>
