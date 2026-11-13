@@ -2,7 +2,7 @@ import { useState } from 'react';
 import { Navigate, useParams } from 'react-router-dom';
 import { Button } from '../../components/Button';
 import { pronouns, reportReasons } from '../../data/create';
-import { posts } from '../../data/sample';
+import { usePost } from '../../state/posts';
 import { CloseHeader, RadioDot, useClose } from '../create/parts';
 import '../create/parts.css';
 import './Report.css';
@@ -11,7 +11,7 @@ import './Report.css';
 export function Report() {
   const { id } = useParams();
   const close = useClose(id ? `/opslag/${id}` : '/');
-  const post = posts.find((p) => p.id === id);
+  const post = usePost(id);
   const [reason, setReason] = useState(reportReasons[0]!.id);
 
   if (!post) return <Navigate to="/" replace />;

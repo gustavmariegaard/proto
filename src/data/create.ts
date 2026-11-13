@@ -13,11 +13,13 @@ export const createKinds: { value: CreateKind; label: string }[] = [
   { value: 'moment', label: 'Moment' },
 ];
 
-export type Audience = 'venner' | 'offentlig';
+/** Man kan dele med venner, offentligt eller i en af sine grupper */
+export type Audience = 'venner' | 'offentlig' | 'gruppe';
 export const audiences: { value: Audience; label: string; hint: string }[] = [
   { value: 'venner', label: 'Venner', hint: 'Dine venner kan se opslaget.' },
-  // Ikke i Figma: forklaringen til "Offentlig" er skrevet i samme tone.
-  { value: 'offentlig', label: 'Offentlig', hint: 'Alle kan se opslaget.' },
+  // Ikke i Figma: forklaringerne til "Offentligt" og "Gruppe" er skrevet i samme tone.
+  { value: 'offentlig', label: 'Offentligt', hint: 'Alle kan se opslaget.' },
+  { value: 'gruppe', label: 'Gruppe', hint: 'Vælg den gruppe, opslaget skal deles i.' },
 ];
 
 export type PhotoFormat = 'kvadrat' | 'portraet' | 'landskab';

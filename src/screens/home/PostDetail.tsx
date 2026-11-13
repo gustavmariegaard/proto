@@ -2,7 +2,7 @@ import { useCallback } from 'react';
 import { Navigate, useNavigate, useParams, useSearchParams } from 'react-router-dom';
 import { PageHeader } from '../../components/PageHeader';
 import { PostCard } from '../../components/PostCard';
-import { posts } from '../../data/sample';
+import { usePost } from '../../state/posts';
 import { CommentsSheet } from './CommentsSheet';
 
 /** Opslag: ét opslag for sig. Kommentarerne åbner som ark ovenpå. */
@@ -10,7 +10,7 @@ export function PostDetail() {
   const { id } = useParams();
   const [params, setParams] = useSearchParams();
   const navigate = useNavigate();
-  const post = posts.find((p) => p.id === id);
+  const post = usePost(id);
   const open = params.has('kommentarer');
   const close = useCallback(() => setParams({}, { replace: true }), [setParams]);
   if (!post) return <Navigate to="/" replace />;

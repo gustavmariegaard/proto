@@ -13,6 +13,11 @@ import {
   type CreateKind,
   type PhotoFormat,
 } from '../../data/create';
+import { groupStore } from '../more/store';
+import type { Community } from '../../data/more';
+import { img } from '../../data/sample';
+import { addPost } from '../../state/posts';
+import { useSession } from '../../state/session';
 import { CloseHeader, ToggleList, useClose } from './parts';
 import './Create.css';
 
@@ -31,6 +36,11 @@ export function Create() {
   const [kind, setKind] = useState<CreateKind>('opslag');
   const [text, setText] = useState('');
   const [audience, setAudience] = useState<Audience>('venner');
+  const [groupId, setGroupId] = useState<string | null>(null);
+  const groups = groupStore.use();
+  const group = groups.find((g) => g.id === groupId) ?? null;
+  const { profile } = useSession();
+  const [busy, setBusy] = useState(false);
   const [more, setMore] = useState(false);
   const [settings, setSettings] = useState(() => initialValues(postSettings));
   const [place, setPlace] = useState(false);
@@ -49,15 +59,47 @@ export function Create() {
     setMedia({ url: URL.createObjectURL(file), type });
   };
 
-  const publish = () => {
+  const publish = async () => {
     if (!media && !text.trim()) {
       textRef.current?.focus({ preventScroll: true });
       return;
     }
+    if (audience === 'gruppe' && !group) {
+      document.getElementById('create-audience')?.scrollIntoView({ behavior: 'smooth', block: 'center' });
+      return;
+    }
+    setBusy(true);
+    const image = media?.type === 'image' ? await shrink(media.url) : undefined;
+    addPost({
+      feed: 'venner',
+      author: profile.name || 'Dig',
+      avatarSrc: profile.avatar ?? img('mig.jpg'),
+      tone: 'blue',
+      meta: audience === 'gruppe' ? 'lige nu' : `${audience === 'offentlig' ? 'Offentligt' : 'Til Venner'} · lige nu`,
+      text: text.trim(),
+      image,
+      group: audience === 'gruppe' && group
+        ? { name: group.name, initials: group.initials, tone: group.tone, avatarSrc: group.avatarSrc }
+        : undefined,
+    });
     navigate('/', { replace: true });
   };
 
-  const hint = audiences.find((a) => a.value === audience)!.hint;
+  const hint =
+    audience === 'gruppe' && group
+      ? `Kun medlemmer af ${group.name} kan se opslaget.`
+      : audiences.find((a) => a.value === audience)!.hint;
+
+  const audiencePicker = (
+    <AudiencePicker
+      audience={audience}
+      onAudience={setAudience}
+      groups={groups}
+      groupId={groupId}
+      onGroup={setGroupId}
+      hint={hint}
+    />
+  );
 
   /* ---------- Opret · Billede ---------- */
   if (media) {
@@ -68,7 +110,7 @@ export function Create() {
           closeLabel={media.type === 'image' ? 'Fjern billede' : 'Fjern video'}
           onClose={() => setMedia(null)}
         >
-          <Button onClick={publish}>Del</Button>
+          <Button onClick={publish} disabled={busy}>Del</Button>
         </CloseHeader>
         <main className="modal-screen__content">
           <div className="create__preview-wrap">
@@ -108,6 +150,8 @@ export function Create() {
             onChange={(e) => setText(e.target.value)}
           />
 
+          {audiencePicker}
+
           <ToggleList
             rows={photoSettings}
             values={photoValues}
@@ -128,7 +172,7 @@ export function Create() {
   return (
     <div className="modal-screen create">
       <CloseHeader title="Opret" onClose={close}>
-        <Button onClick={publish}>Publicér</Button>
+        <Button onClick={publish} disabled={busy}>Publicér</Button>
       </CloseHeader>
       <main className="modal-screen__content create__content">
         <div className="create__tabs" role="tablist" aria-label="Hvad vil du oprette?">
@@ -176,24 +220,7 @@ export function Create() {
           <input ref={videoRef} type="file" accept="video/*" hidden onChange={(e) => { pick(e.target.files?.[0], 'video'); e.target.value = ''; }} />
         </div>
 
-        <section className="create__audience" aria-labelledby="create-audience">
-          <h2 id="create-audience" className="t-heading-s">Vises for</h2>
-          <div className="create__seg" role="radiogroup" aria-labelledby="create-audience">
-            {audiences.map((a) => (
-              <button
-                key={a.value}
-                type="button"
-                role="radio"
-                aria-checked={audience === a.value}
-                className={['create__seg-item', audience === a.value && 'create__seg-item--on'].filter(Boolean).join(' ')}
-                onClick={() => setAudience(a.value)}
-              >
-                {a.label}
-              </button>
-            ))}
-          </div>
-          <p className="t-caption modal-screen__muted" aria-live="polite">{hint}</p>
-        </section>
+        {audiencePicker}
 
         <button
           type="button"
@@ -217,5 +244,86 @@ export function Create() {
         )}
       </main>
     </div>
+  );
+}
+
+/** Gør billedet mindre (højst 1080 px bredt), så det kan huskes i fanen. */
+function shrink(url: string): Promise<string | undefined> {
+  return new Promise((resolve) => {
+    const image = new Image();
+    image.onload = () => {
+      const scale = Math.min(1, 1080 / image.naturalWidth);
+      const canvas = document.createElement('canvas');
+      canvas.width = Math.round(image.naturalWidth * scale);
+      canvas.height = Math.round(image.naturalHeight * scale);
+      canvas.getContext('2d')?.drawImage(image, 0, 0, canvas.width, canvas.height);
+      try {
+        resolve(canvas.toDataURL('image/jpeg', 0.8));
+      } catch {
+        resolve(url);
+      }
+    };
+    image.onerror = () => resolve(undefined);
+    image.src = url;
+  });
+}
+
+type AudiencePickerProps = {
+  audience: Audience;
+  onAudience: (a: Audience) => void;
+  groups: Community[];
+  groupId: string | null;
+  onGroup: (id: string) => void;
+  hint: string;
+};
+
+/** Vises for: Venner, Offentligt eller en af dine grupper */
+function AudiencePicker({ audience, onAudience, groups, groupId, onGroup, hint }: AudiencePickerProps) {
+  return (
+    <section className="create__audience" aria-labelledby="create-audience">
+      <h2 id="create-audience" className="t-heading-s">Vises for</h2>
+      <div className="create__seg" role="radiogroup" aria-labelledby="create-audience">
+        {audiences.map((a) => (
+          <button
+            key={a.value}
+            type="button"
+            role="radio"
+            aria-checked={audience === a.value}
+            className={['create__seg-item', audience === a.value && 'create__seg-item--on'].filter(Boolean).join(' ')}
+            onClick={() => onAudience(a.value)}
+          >
+            {a.label}
+          </button>
+        ))}
+      </div>
+      <p className="t-caption modal-screen__muted" aria-live="polite">{hint}</p>
+
+      {audience === 'gruppe' && (
+        <ul className="create__groups" role="radiogroup" aria-label="Vælg gruppe">
+          {groups.map((g) => {
+            const on = g.id === groupId;
+            return (
+              <li key={g.id}>
+                <button
+                  type="button"
+                  role="radio"
+                  aria-checked={on}
+                  className={['create__group', on && 'create__group--on'].filter(Boolean).join(' ')}
+                  onClick={() => onGroup(g.id)}
+                >
+                  <span className={`create__group-pic avatar--${g.tone}`} aria-hidden="true">
+                    {g.avatarSrc ? <img src={g.avatarSrc} alt="" /> : g.initials}
+                  </span>
+                  <span className="t-label create__group-name">{g.name}</span>
+                  <span className="create__group-check" aria-hidden="true">
+                    {on && <Icon name="check" size={16} />}
+                  </span>
+                </button>
+              </li>
+            );
+          })}
+        </ul>
+      )}
+    </section>
   );
 }

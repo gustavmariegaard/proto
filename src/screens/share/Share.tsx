@@ -6,7 +6,7 @@ import { Chip } from '../../components/Chip';
 import { SegmentedControl } from '../../components/SegmentedControl';
 import { TextField } from '../../components/TextField';
 import { authorAvatar, myAvatar, pronouns, shareTargets, shareVisibilities, type ShareVisibility } from '../../data/create';
-import { posts } from '../../data/sample';
+import { usePost } from '../../state/posts';
 import { useSession } from '../../state/session';
 import { CloseHeader, RadioDot, useClose } from '../create/parts';
 import '../create/parts.css';
@@ -24,7 +24,7 @@ export function Share() {
   const [params] = useSearchParams();
   const close = useClose(id ? `/opslag/${id}` : '/');
   const { profile } = useSession();
-  const post = posts.find((p) => p.id === id);
+  const post = usePost(id);
 
   const [mode, setMode] = useState<Mode>(params.get('som') === 'eget' ? 'eget' : 'besked');
   const [note, setNote] = useState('');

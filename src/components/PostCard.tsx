@@ -8,8 +8,10 @@ export type Post = {
   author: string;
   tone?: AvatarTone;
   avatarSrc?: string;
-  /** Fx "Til Venner · for 2 timer siden" */
+  /** Fx "Til Venner · for 2 timer siden". Ved gruppeopslag kun tiden, fx "i går". */
   meta: string;
+  /** Opslaget er delt i en gruppe (vises som på Facebook: gruppen øverst, forfatteren under) */
+  group?: { name: string; initials: string; tone?: AvatarTone; avatarSrc?: string };
   text: string;
   /** true = grå pladsholder, eller en sti til et billede i public/img */
   image?: boolean | string;
@@ -30,13 +32,35 @@ export function PostCard({ post, onComment, onShare, onReport }: PostCardProps) 
 
   return (
     <article className="post" aria-label={`Opslag fra ${post.author}`}>
-      <header className="post__header">
-        <Avatar name={post.author} tone={post.tone} src={post.avatarSrc} />
-        <div className="post__meta">
-          <h3 className="t-heading-s">{post.author}</h3>
-          <p className="t-caption post__sub">{post.meta}</p>
-        </div>
-      </header>
+      {post.group ? (
+        <header className="post__header">
+          <span className="post__group-pic" aria-hidden="true">
+            <span className={`post__group-thumb avatar--${post.group.tone ?? 'sand'}`}>
+              {post.group.avatarSrc ? <img src={post.group.avatarSrc} alt="" /> : post.group.initials}
+            </span>
+            <span className="post__group-author">
+              <Avatar name={post.author} tone={post.tone} src={post.avatarSrc} size="S" />
+            </span>
+          </span>
+          <div className="post__meta">
+            <h3 className="t-heading-s post__group-title">
+              <span className="post__group-name">{post.group.name}</span>
+              <span className="post__group-badge t-caption-strong">Gruppe</span>
+            </h3>
+            <p className="t-caption post__sub">
+              {post.author} · {post.meta}
+            </p>
+          </div>
+        </header>
+      ) : (
+        <header className="post__header">
+          <Avatar name={post.author} tone={post.tone} src={post.avatarSrc} />
+          <div className="post__meta">
+            <h3 className="t-heading-s">{post.author}</h3>
+            <p className="t-caption post__sub">{post.meta}</p>
+          </div>
+        </header>
+      )}
 
       {post.image &&
         (typeof post.image === 'string' ? (

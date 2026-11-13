@@ -4,7 +4,8 @@ import { Chip } from '../../components/Chip';
 import { MomentBubble } from '../../components/MomentBubble';
 import { PostCard } from '../../components/PostCard';
 import { SegmentedControl } from '../../components/SegmentedControl';
-import { img, people, posts } from '../../data/sample';
+import { img, people } from '../../data/sample';
+import { usePosts } from '../../state/posts';
 import { useMoments } from '../../state/moments';
 import { useSession } from '../../state/session';
 import { InterestsSheet } from './InterestsSheet';
@@ -23,6 +24,7 @@ export function Home() {
   const [editing, setEditing] = useState(false);
 
   const active = profile.interests.filter((i) => !off.includes(i));
+  const posts = usePosts();
   const shown = posts.filter((p) => p.feed === feed && (feed === 'venner' || !p.topic || active.includes(p.topic)));
   // Nye moments først, sete bagefter (som i Figma)
   const order = Object.keys(people).sort((a, b) => Number(seen.includes(a)) - Number(seen.includes(b)));

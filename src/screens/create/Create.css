@@ -191,3 +191,62 @@
   flex-wrap: wrap;
   gap: 8px;
 }
+
+/* ---------- Vælg gruppe ---------- */
+.create__groups {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.create__group {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  width: 100%;
+  min-height: 56px;
+  padding: 6px 12px 6px 6px;
+  border: 1px solid var(--color-border-default);
+  border-radius: var(--radius-md);
+  text-align: left;
+}
+
+.create__group--on {
+  border-color: var(--color-text-primary);
+}
+
+.create__group:focus-visible { outline: none; box-shadow: var(--focus-ring); }
+
+.create__group-pic {
+  display: grid;
+  flex: none;
+  place-items: center;
+  width: 44px;
+  height: 44px;
+  overflow: hidden;
+  border-radius: 12px;
+  font: 600 14px/20px var(--font-body);
+}
+
+.create__group-pic img { width: 100%; height: 100%; object-fit: cover; }
+
+.create__group-name { flex: 1; min-width: 0; }
+
+.create__group-check {
+  display: grid;
+  flex: none;
+  place-items: center;
+  width: 24px;
+  height: 24px;
+  border: 1.5px solid var(--color-border-strong, var(--color-border-default));
+  border-radius: 50%;
+}
+
+.create__group--on .create__group-check {
+  border-color: var(--color-action-primary);
+  background: var(--color-action-primary);
+  color: var(--color-text-on-action);
+}
