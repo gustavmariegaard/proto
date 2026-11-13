@@ -4,7 +4,7 @@ import { Chip } from '../../components/Chip';
 import { MomentBubble } from '../../components/MomentBubble';
 import { PostCard } from '../../components/PostCard';
 import { SegmentedControl } from '../../components/SegmentedControl';
-import { img, people } from '../../data/sample';
+import { img, pageAccounts, people } from '../../data/sample';
 import { usePosts } from '../../state/posts';
 import { useMoments } from '../../state/moments';
 import { useSession } from '../../state/session';
@@ -22,7 +22,8 @@ export function Home() {
   const posts = usePosts();
   const shown = posts.filter((p) => p.feed === feed);
   // Nye moments først, sete bagefter (som i Figma)
-  const order = Object.keys(people).sort((a, b) => Number(seen.includes(a)) - Number(seen.includes(b)));
+  const accounts = feed === 'interesser' ? pageAccounts : people;
+  const order = Object.keys(accounts).sort((a, b) => Number(seen.includes(a)) - Number(seen.includes(b)));
 
   return (
     <div className="home">
@@ -46,18 +47,21 @@ export function Home() {
         </div>
       )}
 
-      <ul className="home__moments" aria-label="Moments">
-        <li>
-          <MomentBubble
-            name="Dig"
-            fullName={profile.name || 'Dig'}
-            state="add"
-            src={profile.avatar ?? img('mig.jpg')}
-            onClick={() => navigate('/flicks/ny')}
-          />
-        </li>
+      {/* Venner: personers moments med "Dig" først. Interesser: moments fra sider, man følger. */}
+      <ul className="home__moments" aria-label={feed === 'interesser' ? 'Moments fra sider' : 'Moments'}>
+        {feed === 'venner' && (
+          <li>
+            <MomentBubble
+              name="Dig"
+              fullName={profile.name || 'Dig'}
+              state="add"
+              src={profile.avatar ?? img('mig.jpg')}
+              onClick={() => navigate('/flicks/ny')}
+            />
+          </li>
+        )}
         {order.map((id) => {
-          const p = people[id]!;
+          const p = accounts[id]!;
           return (
             <li key={id}>
               <MomentBubble

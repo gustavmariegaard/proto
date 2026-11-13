@@ -22,11 +22,22 @@ export const people: Record<string, Person> = {
   karen: { name: 'Karen', fullName: 'Karen Bech', tone: 'sage', avatarSrc: img('person-b.jpg') },
 };
 
+/** Sider (virksomheder og foreninger), man følger. Deres moments vises under Hjem › Interesser. */
+export const pageAccounts: Record<string, Person> = {
+  kulturhuset: { name: 'Kulturhuset', fullName: 'Kulturhuset', tone: 'blue', avatarSrc: img('dans.jpg') },
+  hallen: { name: 'Hallen', fullName: 'Hallen', tone: 'rose' },
+  bageri: { name: 'Bageriet', fullName: 'Det lokale bageri', tone: 'sand' },
+  cykel: { name: 'Værkstedet', fullName: 'Cykelværkstedet', tone: 'blue' },
+  bibliotek: { name: 'Biblioteket', fullName: 'Byens bibliotek', tone: 'sage' },
+  teater: { name: 'Teatret', fullName: 'Teaterforeningen', tone: 'sand' },
+};
+
 /* ---------- Moments ---------- */
 
 export type Moment = {
   id: string;
-  personId: keyof typeof people;
+  /** Id i people (personer) eller pageAccounts (sider) */
+  personId: string;
   /** Fx "2 timer siden" */
   time: string;
   /** Sti til billede i public/img, ellers grå pladsholder */
@@ -46,6 +57,14 @@ export const moments: Moment[] = [
   { id: 's2', personId: 'sofie', time: '3 timer siden', image: img('have.jpg') },
   { id: 'h1', personId: 'ahmed', time: '5 timer siden', image: img('begivenhed.jpg') },
   { id: 'k1', personId: 'karen', time: 'i går', image: img('nyhavn.jpg') },
+  /* Sider (ikke fra Figma) */
+  { id: 'pg1', personId: 'kulturhuset', time: '1 time siden', image: img('begivenhed.jpg') },
+  { id: 'pg2', personId: 'kulturhuset', time: '1 time siden', image: img('dans.jpg') },
+  { id: 'pg3', personId: 'hallen', time: '3 timer siden', image: img('haandbold.jpg') },
+  { id: 'pg4', personId: 'bageri', time: 'i morges', image: img('spisebord.jpg') },
+  { id: 'pg5', personId: 'cykel', time: 'i går', image: img('cykel.jpg') },
+  { id: 'pg6', personId: 'bibliotek', time: 'i går', image: img('computer.jpg') },
+  { id: 'pg7', personId: 'teater', time: '2 dage siden', image: img('toej.jpg') },
 ];
 
 /** Hvem der er set fra start (grå ring i Figma) */

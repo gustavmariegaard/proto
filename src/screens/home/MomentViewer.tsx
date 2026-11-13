@@ -2,7 +2,7 @@ import { useCallback, useEffect, useLayoutEffect, useRef, useState } from 'react
 import { Navigate, useNavigate, useParams } from 'react-router-dom';
 import { Avatar } from '../../components/Avatar';
 import { Icon } from '../../components/Icon';
-import { moments, people } from '../../data/sample';
+import { moments, pageAccounts, people } from '../../data/sample';
 import { useMoments } from '../../state/moments';
 import './MomentViewer.css';
 
@@ -28,12 +28,18 @@ function Viewer({ personId }: { personId: string }) {
   const [liked, setLiked] = useState(false);
   const [reply, setReply] = useState('');
 
-  const personIds = Object.keys(people);
-  const person = people[personId];
+  // Personer (Hjem › Venner) og sider (Hjem › Interesser) bladres hver for sig
+  const isPage = personId in pageAccounts;
+  const accounts = isPage ? pageAccounts : people;
+  const personIds = Object.keys(accounts);
+  const person = accounts[personId];
   const own = moments.filter((m) => m.personId === personId);
   const current = own[index];
 
-  const close = useCallback(() => navigate('/', { replace: true }), [navigate]);
+  const close = useCallback(
+    () => navigate(isPage ? '/?feed=interesser' : '/', { replace: true }),
+    [navigate, isPage],
+  );
 
   const next = useCallback(() => {
     if (index < own.length - 1) return setIndex((i) => i + 1);
