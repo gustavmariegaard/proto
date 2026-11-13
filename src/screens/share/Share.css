@@ -106,44 +106,6 @@
   border-radius: var(--radius-md);
 }
 
-/* ---------- Del som moment: forhåndsvisning ---------- */
-.share__moment {
-  position: relative;
-  align-self: center;
-  display: flex;
-  flex-direction: column;
-  justify-content: center;
-  width: min(240px, 70%);
-  aspect-ratio: 9 / 16;
-  padding: 16px;
-  border-radius: var(--radius-xl);
-  background: var(--ink-900);
-}
-
-.share__moment-card .share__quote {
-  background: var(--color-bg-surface);
-  box-shadow: 0 8px 24px rgb(0 0 0 / 0.35);
-}
-
-.share__moment-card .share__quote-img { max-height: 120px; }
-
-.share__moment-card .t-body-s {
-  display: -webkit-box;
-  -webkit-line-clamp: 4;
-  -webkit-box-orient: vertical;
-  overflow: hidden;
-}
-
-.share__moment-who {
-  position: absolute;
-  left: 14px;
-  top: 14px;
-  display: inline-flex;
-  align-items: center;
-  gap: 6px;
-  color: #fff;
-}
-
 /* Besked: opslagets tekst og billede øverst */
 .share__preview-body {
   display: flex;

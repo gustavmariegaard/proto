@@ -106,9 +106,9 @@ a {
 html[data-dark],
 html[data-dark] body,
 html[data-dark] #root,
-html:has(.flicks, .newflick, .moment-view, .cviewer),
-html:has(.flicks, .newflick, .moment-view, .cviewer) body,
-html:has(.flicks, .newflick, .moment-view, .cviewer) #root {
+html:has(.flicks, .newflick, .moment-view, .cviewer, .smoment),
+html:has(.flicks, .newflick, .moment-view, .cviewer, .smoment) body,
+html:has(.flicks, .newflick, .moment-view, .cviewer, .smoment) #root {
   background: var(--ink-900);
 }
 
@@ -119,7 +119,8 @@ html:has(.flicks, .newflick, .moment-view, .cviewer) #root {
  */
 .flicks,
 .newflick,
-.moment-view {
+.moment-view,
+.smoment {
   position: fixed !important;
   inset: 0;
   height: auto !important;
@@ -128,7 +129,8 @@ html:has(.flicks, .newflick, .moment-view, .cviewer) #root {
 
 .flicks::before,
 .newflick::before,
-.moment-view::before {
+.moment-view::before,
+.smoment::before {
   content: '';
   position: fixed;
   inset: -200px;
@@ -141,9 +143,11 @@ html:has(.flicks, .newflick, .moment-view, .cviewer) #root {
 @media (min-width: 600px) and (min-height: 700px) {
   .flicks,
   .newflick,
-  .moment-view { position: absolute !important; }
+  .moment-view,
+  .smoment { position: absolute !important; }
   .flicks::before,
   .newflick::before,
-  .moment-view::before { position: absolute; inset: 0; }
+  .moment-view::before,
+  .smoment::before { position: absolute; inset: 0; }
 }
 

@@ -16,6 +16,7 @@ import { PostDetail } from './screens/home/PostDetail';
 import { MomentsProvider } from './state/moments';
 import { Create } from './screens/create/Create';
 import { Share } from './screens/share/Share';
+import { ShareMoment } from './screens/share/ShareMoment';
 import { Report } from './screens/share/Report';
 import { Messages } from './screens/messages/Messages';
 import { Conversation } from './screens/messages/Conversation';
@@ -105,6 +106,7 @@ export default function App() {
             {/* Trin 4: Opret, Del, Rapportér og Beskeder */}
             <Route path="opret" element={<Create />} />
             <Route path="opslag/:id/del" element={<Share />} />
+            <Route path="opslag/:id/del/moment" element={<ShareMoment />} />
             <Route path="opslag/:id/rapporter" element={<Report />} />
             <Route path="flicks" element={<Flicks />} />
             <Route path="flicks/ny" element={<NewFlick />} />

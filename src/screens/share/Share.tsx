@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import { Navigate, useParams, useSearchParams } from 'react-router-dom';
+import { Navigate, useNavigate, useParams, useSearchParams } from 'react-router-dom';
 import { Avatar } from '../../components/Avatar';
 import { Button } from '../../components/Button';
 import { SegmentedControl } from '../../components/SegmentedControl';
@@ -10,12 +10,11 @@ import { usePost } from '../../state/posts';
 import { useSession } from '../../state/session';
 import { CloseHeader, RadioDot, useClose } from '../create/parts';
 import '../create/parts.css';
-import { MomentComposer } from './MomentComposer';
 import './Share.css';
 
-type Mode = 'besked' | 'opslag' | 'moment';
+type Mode = 'besked' | 'opslag';
 
-const modes: { value: Mode; label: string }[] = [
+const modes: { value: Mode | 'moment'; label: string }[] = [
   { value: 'besked', label: 'Besked' },
   { value: 'opslag', label: 'Opslag' },
   { value: 'moment', label: 'Moment' },
@@ -30,13 +29,14 @@ const modes: { value: Mode; label: string }[] = [
  */
 export function Share() {
   const { id } = useParams();
+  const navigate = useNavigate();
   const [params] = useSearchParams();
   const close = useClose(id ? `/opslag/${id}` : '/');
   const { profile } = useSession();
   const post = usePost(id);
 
   const start = params.get('som');
-  const [mode, setMode] = useState<Mode>(start === 'eget' || start === 'opslag' ? 'opslag' : start === 'moment' ? 'moment' : 'besked');
+  const [mode, setMode] = useState<Mode>(start === 'eget' || start === 'opslag' ? 'opslag' : 'besked');
   const [message, setMessage] = useState('');
   const [note, setNote] = useState('');
   const [query, setQuery] = useState('');
@@ -65,13 +65,7 @@ export function Share() {
   };
 
   const shareLabel =
-    mode === 'besked'
-      ? selected.length > 1
-        ? `Send til ${selected.length}`
-        : 'Send'
-      : mode === 'opslag'
-        ? 'Del som opslag'
-        : 'Del som moment';
+    mode === 'besked' ? (selected.length > 1 ? `Send til ${selected.length}` : 'Send') : 'Del som opslag';
 
   const quote = (
     <div className="share__quote">
@@ -92,7 +86,13 @@ export function Share() {
       <CloseHeader title="Del" onClose={close} />
       <main className="modal-screen__content">
         <div className="modal-screen__full">
-          <SegmentedControl label="Del som" options={modes} value={mode} onChange={setMode} />
+          <SegmentedControl
+            label="Del som"
+            options={modes}
+            value={mode}
+            // Moment åbner i fuld skærm, ligesom at dele til en story
+            onChange={(m) => (m === 'moment' ? navigate(`/opslag/${post.id}/del/moment`) : setMode(m))}
+          />
         </div>
 
         {mode === 'besked' && (
@@ -165,18 +165,6 @@ export function Share() {
           </>
         )}
 
-        {mode === 'moment' && (
-          <>
-            <MomentComposer
-              card={quote}
-              image={typeof post.image === 'string' ? post.image : undefined}
-              me={{ name: myName, handle: profile.username.trim().replace(/^@/, '') || handleOf(myName), avatar: profile.avatar ?? myAvatar }}
-            />
-            <p className="t-caption modal-screen__muted">
-              Vises som moment i 24 timer med kredit til {first}. Dem, der ser det, kan trykke sig videre til opslaget.
-            </p>
-          </>
-        )}
       </main>
 
       {/* Står altid fast nederst, uanset hvor langt man ruller */}

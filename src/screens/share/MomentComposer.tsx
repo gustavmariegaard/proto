@@ -1,5 +1,7 @@
-import { useRef, useState, type ReactNode } from 'react';
+import { useEffect, useRef, useState, type ReactNode } from 'react';
 import { Avatar } from '../../components/Avatar';
+import { Button } from '../../components/Button';
+import { IconButton } from '../../components/IconButton';
 import './MomentComposer.css';
 
 /** Baggrunde i ciircles farver. "Fra billedet" bruger opslagets billede sløret. */
@@ -17,24 +19,32 @@ type Props = {
   card: ReactNode;
   image?: string;
   me: { name: string; handle: string; avatar?: string };
+  onClose: () => void;
+  onShare: () => void;
 };
 
-const MIN = 0.6;
-const MAX = 1.5;
+const MIN = 0.5;
+const MAX = 1.6;
 const clamp = (n: number, a: number, b: number) => Math.min(b, Math.max(a, n));
 
 /**
- * Del som moment: vælg baggrund og placér opslaget som på Instagram.
- * - Knib med to fingre for at skalere, træk for at flytte
- * - Tryk på baggrunden for at skifte farve, eller vælg nedenfor
- * - Skyderen skalerer også (og virker uden touch)
+ * Del som moment i fuld skærm (som at dele til en story på Instagram).
+ * - Knib med to fingre for at skalere, træk for at flytte (scroll med musen skalerer også)
+ * - Tryk på baggrunden for at skifte farve, eller vælg en farve nederst
+ * - Dobbelttryk eller "Nulstil" sætter opslaget tilbage i midten
  */
-export function MomentComposer({ card, image, me }: Props) {
+export function MomentComposer({ card, image, me, onClose, onShare }: Props) {
   const [bg, setBg] = useState<string>(image ? 'billede' : 'ink');
   const [scale, setScale] = useState(1);
   const [pos, setPos] = useState({ x: 0, y: 0 });
+  const [tip, setTip] = useState(true);
   const pointers = useRef(new Map<number, { x: number; y: number }>());
   const gesture = useRef<{ dist: number; scale: number; mid: { x: number; y: number }; pos: { x: number; y: number }; moved: boolean } | null>(null);
+
+  useEffect(() => {
+    const t = window.setTimeout(() => setTip(false), 3500);
+    return () => window.clearTimeout(t);
+  }, []);
 
   const options = image
     ? [{ id: 'billede', label: 'Fra billedet', css: '', light: false }, ...backgrounds]
@@ -42,19 +52,23 @@ export function MomentComposer({ card, image, me }: Props) {
   const current = options.find((o) => o.id === bg) ?? options[0]!;
   const next = () => setBg(options[(options.indexOf(current) + 1) % options.length]!.id);
 
+  const midOf = (pts: { x: number; y: number }[]) =>
+    pts.reduce((m, p) => ({ x: m.x + p.x / pts.length, y: m.y + p.y / pts.length }), { x: 0, y: 0 });
+
   const snapshot = () => {
     const pts = [...pointers.current.values()];
-    const mid = pts.reduce((m, p) => ({ x: m.x + p.x / pts.length, y: m.y + p.y / pts.length }), { x: 0, y: 0 });
     const dist = pts.length > 1 ? Math.hypot(pts[0]!.x - pts[1]!.x, pts[0]!.y - pts[1]!.y) : 0;
-    gesture.current = { dist, scale, mid, pos, moved: gesture.current?.moved ?? false };
+    gesture.current = { dist, scale, mid: midOf(pts), pos, moved: gesture.current?.moved ?? false };
   };
 
   const onDown = (e: React.PointerEvent) => {
+    if ((e.target as HTMLElement).closest('button, input')) return;
     e.preventDefault();
     (e.currentTarget as HTMLElement).setPointerCapture(e.pointerId);
     pointers.current.set(e.pointerId, { x: e.clientX, y: e.clientY });
     if (pointers.current.size === 1) gesture.current = null;
     snapshot();
+    setTip(false);
   };
 
   const onMove = (e: React.PointerEvent) => {
@@ -62,11 +76,13 @@ export function MomentComposer({ card, image, me }: Props) {
     pointers.current.set(e.pointerId, { x: e.clientX, y: e.clientY });
     const pts = [...pointers.current.values()];
     const g = gesture.current;
-    const mid = pts.reduce((m, p) => ({ x: m.x + p.x / pts.length, y: m.y + p.y / pts.length }), { x: 0, y: 0 });
+    const mid = midOf(pts);
     const dx = mid.x - g.mid.x;
     const dy = mid.y - g.mid.y;
     if (Math.abs(dx) + Math.abs(dy) > 4) g.moved = true;
-    setPos({ x: clamp(g.pos.x + dx, -90, 90), y: clamp(g.pos.y + dy, -160, 160) });
+    const w = window.innerWidth / 2;
+    const h = window.innerHeight / 2;
+    setPos({ x: clamp(g.pos.x + dx, -w, w), y: clamp(g.pos.y + dy, -h, h) });
     if (pts.length > 1 && g.dist) {
       g.moved = true;
       const dist = Math.hypot(pts[0]!.x - pts[1]!.x, pts[0]!.y - pts[1]!.y);
@@ -75,9 +91,10 @@ export function MomentComposer({ card, image, me }: Props) {
   };
 
   const onUp = (e: React.PointerEvent) => {
+    if (!pointers.current.has(e.pointerId)) return;
     const wasTap = pointers.current.size === 1 && gesture.current && !gesture.current.moved;
     pointers.current.delete(e.pointerId);
-    // Et kort tryk på baggrunden (ikke på kortet) skifter farve
+    // Et kort tryk på baggrunden (ikke på opslaget) skifter farve
     if (wasTap && !(e.target as HTMLElement).closest('.mcomp__card')) next();
     if (pointers.current.size) snapshot();
     else gesture.current = null;
@@ -89,65 +106,75 @@ export function MomentComposer({ card, image, me }: Props) {
   };
 
   return (
-    <div className="mcomp">
+    <div
+      className={['smoment', current.light && 'smoment--light'].filter(Boolean).join(' ')}
+      role="dialog"
+      aria-label="Del som moment"
+    >
       <div
-        className={['mcomp__stage', current.light && 'mcomp__stage--light'].filter(Boolean).join(' ')}
+        className="mcomp__stage"
         style={current.id === 'billede' ? undefined : { background: current.css }}
         onPointerDown={onDown}
         onPointerMove={onMove}
         onPointerUp={onUp}
         onPointerCancel={onUp}
         onDoubleClick={reset}
-        aria-label="Sådan ser dit moment ud. Knib for at skalere, træk for at flytte, tryk på baggrunden for at skifte farve."
-        role="img"
+        onWheel={(e) => setScale((s) => clamp(s - e.deltaY / 600, MIN, MAX))}
       >
         {current.id === 'billede' && image && (
           <span className="mcomp__photo" style={{ backgroundImage: `url(${image})` }} aria-hidden="true" />
         )}
-        <span className="mcomp__who">
-          <Avatar name={me.name} src={me.avatar} size="S" />
-          <span className="t-caption-strong">@{me.handle}</span>
-        </span>
-        <div
-          className="mcomp__card"
-          style={{ transform: `translate(${pos.x}px, ${pos.y}px) scale(${scale})` }}
-        >
+        <div className="mcomp__card" style={{ transform: `translate(${pos.x}px, ${pos.y}px) scale(${scale})` }}>
           {card}
         </div>
       </div>
 
-      <p className="t-caption mcomp__tip">Knib for at skalere og træk for at flytte. Tryk på baggrunden for at skifte farve.</p>
+      <header className="smoment__top">
+        <IconButton icon="close" label="Tilbage" className="smoment__btn" onClick={onClose} />
+        <span className="smoment__who">
+          <Avatar name={me.name} src={me.avatar} size="S" />
+          <span className="t-caption-strong">@{me.handle}</span>
+        </span>
+        <button type="button" className="smoment__pill t-caption-strong" onClick={reset}>
+          Nulstil
+        </button>
+      </header>
 
-      <div className="mcomp__swatches" role="radiogroup" aria-label="Baggrund">
-        {options.map((o) => (
-          <button
-            key={o.id}
-            type="button"
-            role="radio"
-            aria-checked={o.id === current.id}
-            aria-label={o.label}
-            className={['mcomp__swatch', o.id === current.id && 'mcomp__swatch--on'].filter(Boolean).join(' ')}
-            style={o.id === 'billede' ? { backgroundImage: `url(${image})` } : { background: o.css }}
-            onClick={() => setBg(o.id)}
-          />
-        ))}
-      </div>
+      {tip && (
+        <p className="smoment__tip t-caption" aria-live="polite">
+          Knib for at skalere, træk for at flytte. Tryk på baggrunden for at skifte farve.
+        </p>
+      )}
 
-      <label className="mcomp__size">
-        <span className="t-label">Størrelse</span>
+      <footer className="smoment__bottom">
+        <div className="mcomp__swatches" role="radiogroup" aria-label="Baggrund">
+          {options.map((o) => (
+            <button
+              key={o.id}
+              type="button"
+              role="radio"
+              aria-checked={o.id === current.id}
+              aria-label={o.label}
+              className={['mcomp__swatch', o.id === current.id && 'mcomp__swatch--on'].filter(Boolean).join(' ')}
+              style={{ '--sw': o.id === 'billede' ? `url(${image})` : o.css } as React.CSSProperties}
+              onClick={() => setBg(o.id)}
+            />
+          ))}
+        </div>
         <input
+          className="visually-hidden"
           type="range"
           min={MIN * 100}
           max={MAX * 100}
-          step={1}
           value={Math.round(scale * 100)}
           onChange={(e) => setScale(Number(e.target.value) / 100)}
+          aria-label="Størrelse"
           aria-valuetext={`${Math.round(scale * 100)} procent`}
         />
-        <button type="button" className="t-caption-strong mcomp__reset" onClick={reset}>
-          Nulstil
-        </button>
-      </label>
+        <Button variant="highlight" block onClick={onShare}>
+          Del som moment
+        </Button>
+      </footer>
     </div>
   );
 }

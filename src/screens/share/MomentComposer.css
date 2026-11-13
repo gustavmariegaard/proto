@@ -1,51 +1,32 @@
-.mcomp {
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  gap: 12px;
-  width: 100%;
+/* Del som moment – fuld skærm (fast placeret og mørk via global.css) */
+.smoment {
+  color: #fff;
+  user-select: none;
+  -webkit-user-select: none;
 }
 
 .mcomp__stage {
-  position: relative;
+  position: absolute;
+  inset: 0;
   display: grid;
   place-items: center;
-  width: min(260px, 72%);
-  aspect-ratio: 9 / 16;
-  padding: 16px;
   overflow: hidden;
-  border-radius: var(--radius-xl);
   background: var(--ink-900);
-  color: #fff;
   touch-action: none;
-  user-select: none;
-  -webkit-user-select: none;
   cursor: grab;
 }
 
-.mcomp__stage--light { color: var(--ink-900); }
-
 .mcomp__photo {
   position: absolute;
-  inset: -24px;
+  inset: -40px;
   background-size: cover;
   background-position: center;
-  filter: blur(18px) brightness(0.7);
-}
-
-.mcomp__who {
-  position: absolute;
-  top: 14px;
-  left: 14px;
-  z-index: 1;
-  display: inline-flex;
-  align-items: center;
-  gap: 6px;
+  filter: blur(28px) brightness(0.65);
 }
 
 .mcomp__card {
   position: relative;
-  width: 100%;
+  width: min(86vw, 360px);
   transform-origin: center;
   will-change: transform;
 }
@@ -53,26 +34,82 @@
 .mcomp__card .share__quote {
   background: var(--color-bg-surface);
   color: var(--color-text-primary);
-  box-shadow: 0 8px 24px rgb(0 0 0 / 0.3);
+  box-shadow: 0 12px 40px rgb(0 0 0 / 0.35);
   pointer-events: none;
 }
 
-.mcomp__card .share__quote-img { max-height: 120px; }
+.mcomp__card .share__quote-img { max-height: 260px; }
 
-.mcomp__card .t-body-s {
-  display: -webkit-box;
-  -webkit-line-clamp: 4;
-  -webkit-box-orient: vertical;
-  overflow: hidden;
+/* ---------- Top ---------- */
+.smoment__top {
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: calc(var(--safe-top) + 8px) 12px 8px;
+  pointer-events: none;
 }
 
-.mcomp__tip {
-  max-width: 300px;
-  color: var(--color-text-secondary);
+.smoment__top > * { pointer-events: auto; }
+
+.smoment__btn {
+  color: inherit;
+  background: rgb(0 0 0 / 0.25);
+  border-radius: 50%;
+}
+
+.smoment--light .smoment__btn { background: rgb(255 255 255 / 0.45); }
+
+.smoment__who {
+  display: inline-flex;
+  flex: 1;
+  align-items: center;
+  gap: 8px;
+  min-width: 0;
+}
+
+.smoment__pill {
+  min-height: 44px;
+  padding: 0 16px;
+  border-radius: var(--radius-pill);
+  background: rgb(0 0 0 / 0.25);
+  color: inherit;
+}
+
+.smoment--light { color: var(--ink-900); }
+.smoment--light .smoment__pill { background: rgb(255 255 255 / 0.45); }
+
+.smoment__tip {
+  position: absolute;
+  top: calc(var(--safe-top) + 72px);
+  left: 50%;
+  transform: translateX(-50%);
+  width: max-content;
+  max-width: calc(100% - 48px);
+  padding: 8px 14px;
+  border-radius: var(--radius-pill);
+  background: rgb(0 0 0 / 0.55);
+  color: #fff;
   text-align: center;
+  pointer-events: none;
 }
 
-/* ---------- Farver ---------- */
+/* ---------- Bund ---------- */
+.smoment__bottom {
+  position: absolute;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  padding: 12px 16px calc(var(--safe-bottom) + 12px);
+  background: linear-gradient(to top, rgb(0 0 0 / 0.45), transparent);
+}
+
 .mcomp__swatches {
   display: flex;
   justify-content: center;
@@ -84,36 +121,25 @@
   width: 44px;
   height: 44px;
   border-radius: 50%;
-  background-size: cover;
-  background-position: center;
-  /* Synlig cirkel på 32 px, trykflade på 44 px */
-  background-clip: content-box;
-  padding: 6px;
-  box-shadow: inset 0 0 0 6px var(--color-bg-app), inset 0 0 0 7px var(--color-border-default);
 }
 
-.mcomp__swatch--on {
-  box-shadow: inset 0 0 0 2px var(--color-text-primary), inset 0 0 0 6px var(--color-bg-app);
+/* Selve farven: en cirkel på 28 px midt i trykfladen på 44 px */
+.mcomp__swatch::before {
+  content: '';
+  position: absolute;
+  inset: 8px;
+  border-radius: 50%;
+  background: var(--sw) center / cover;
+  box-shadow: 0 0 0 1.5px rgb(255 255 255 / 0.75);
+}
+
+/* Den valgte farve får en hvid ring udenom */
+.mcomp__swatch--on::after {
+  content: '';
+  position: absolute;
+  inset: 3px;
+  border-radius: 50%;
+  box-shadow: 0 0 0 2.5px #fff;
 }
 
 .mcomp__swatch:focus-visible { outline: none; box-shadow: var(--focus-ring); }
-
-/* ---------- Størrelse ---------- */
-.mcomp__size {
-  display: flex;
-  align-items: center;
-  gap: 12px;
-  width: 100%;
-}
-
-.mcomp__size input {
-  flex: 1;
-  min-height: 44px;
-  accent-color: var(--color-text-primary);
-}
-
-.mcomp__reset {
-  min-height: 44px;
-  padding: 0 8px;
-  color: var(--color-text-secondary);
-}
