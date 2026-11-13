@@ -118,6 +118,14 @@
   gap: 12px;
 }
 
+/* Ikonerne: hvid kontur og intet fyld, så billedet kan ses igennem */
+.flick__actions .icon-btn--outline {
+  background: transparent;
+  border: 1.5px solid rgb(255 255 255 / 0.9);
+  color: #fff;
+  filter: drop-shadow(0 1px 3px rgb(0 0 0 / 0.35));
+}
+
 .flick__actions .icon-btn:focus-visible {
   box-shadow: 0 0 0 2px var(--ink-900), 0 0 0 4px var(--color-accent-highlight);
 }
@@ -163,14 +171,42 @@
 /* "Swipe op": to pile, den øverste svag. Centreret, 18 px over panelet. */
 .flick__hint {
   position: absolute;
+  z-index: 2;
   left: 50%;
   bottom: calc(var(--tabbar-bottom) + 194px);
   transform: translateX(-50%);
   display: flex;
   flex-direction: column;
   align-items: center;
+  justify-content: center;
+  width: 56px;
+  min-height: 56px;
+  padding: 0;
+  border: 0;
+  border-radius: 28px;
+  background: none;
   color: var(--color-text-on-action);
-  pointer-events: none;
+  filter: drop-shadow(0 1px 3px rgb(0 0 0 / 0.45));
+  touch-action: none;
+  cursor: grab;
+  transition: transform 0.2s ease;
+}
+
+.flick__hint:focus-visible { outline: none; box-shadow: 0 0 0 2px var(--color-accent-highlight); }
+
+/* Mens man trækker, følger pilen fingeren uden forsinkelse og lyser op */
+.flick__hint--drag { transition: none; color: var(--color-accent-highlight); }
+
+/* Hopper let for at vise, at man kan swipe */
+.flick__hint--bounce { animation: flick-hint-bounce 1.6s ease-in-out infinite; }
+
+@keyframes flick-hint-bounce {
+  0%, 100% { transform: translate(-50%, 0); }
+  50% { transform: translate(-50%, -8px); }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .flick__hint--bounce { animation: none; }
 }
 
 .flick__chevron { transform: rotate(-90deg); opacity: 0.9; }

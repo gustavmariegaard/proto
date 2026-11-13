@@ -99,7 +99,12 @@ export function Flicks() {
             key={f.id}
             flick={f}
             position={i + 1}
-            showHint={i === 0 && !hasSwiped}
+            showHint={i < flicks.length - 1}
+            bounce={!hasSwiped}
+            onNext={() => {
+              setHasSwiped(true);
+              scrollTo(i + 1);
+            }}
             liked={liked.includes(f.id)}
             saved={saved.includes(f.id)}
             onLike={() => setLiked((l) => toggle(l, f.id))}
@@ -122,6 +127,9 @@ type FlickViewProps = {
   flick: Flick;
   position: number;
   showHint: boolean;
+  /** Hopper let, indtil man har swipet første gang */
+  bounce: boolean;
+  onNext: () => void;
   liked: boolean;
   saved: boolean;
   onLike: () => void;
@@ -130,7 +138,7 @@ type FlickViewProps = {
   onShare: () => void;
 };
 
-function FlickView({ flick, position, showHint, liked, saved, onLike, onSave, onComments, onShare }: FlickViewProps) {
+function FlickView({ flick, position, showHint, bounce, onNext, liked, saved, onLike, onSave, onComments, onShare }: FlickViewProps) {
   return (
     <article
       className={`flick flick--${flick.placeholder}`}
@@ -140,12 +148,7 @@ function FlickView({ flick, position, showHint, liked, saved, onLike, onSave, on
     >
       {flick.image && <img className="flick__photo" src={flick.image} alt="" />}
 
-      {showHint && (
-        <div className="flick__hint" aria-hidden="true">
-          <Icon name="chevron-right" className="flick__chevron flick__chevron--faint" />
-          <Icon name="chevron-right" className="flick__chevron" />
-        </div>
-      )}
+      {showHint && <SwipeHint bounce={bounce} onNext={onNext} />}
 
       <div className="flick__bottom">
         <div className="flick__actions">
@@ -190,5 +193,55 @@ function FlickView({ flick, position, showHint, liked, saved, onLike, onSave, on
         </div>
       </div>
     </article>
+  );
+}
+
+/**
+ * Swipe-pilen er interaktiv: tryk på den, eller træk den opad, for at gå til næste flick.
+ * Den følger fingeren, og slipper man over 40 px oppe, skifter den.
+ */
+function SwipeHint({ bounce, onNext }: { bounce: boolean; onNext: () => void }) {
+  const [drag, setDrag] = useState(0);
+  const start = useRef<number | null>(null);
+  const moved = useRef(false);
+
+  return (
+    <button
+      type="button"
+      className={['flick__hint', bounce && drag === 0 && 'flick__hint--bounce', drag < 0 && 'flick__hint--drag'].filter(Boolean).join(' ')}
+      style={drag ? { transform: `translate(-50%, ${drag}px)` } : undefined}
+      aria-label="Næste flick"
+      onPointerDown={(e) => {
+        (e.currentTarget as HTMLElement).setPointerCapture(e.pointerId);
+        start.current = e.clientY;
+        moved.current = false;
+      }}
+      onPointerMove={(e) => {
+        if (start.current === null) return;
+        const dy = Math.min(0, Math.max(-90, e.clientY - start.current));
+        if (dy < -4) moved.current = true;
+        setDrag(dy);
+      }}
+      onPointerUp={() => {
+        const go = drag < -40;
+        start.current = null;
+        setDrag(0);
+        if (go) onNext();
+      }}
+      onPointerCancel={() => {
+        start.current = null;
+        setDrag(0);
+      }}
+      onClick={() => {
+        if (moved.current) {
+          moved.current = false;
+          return;
+        }
+        onNext();
+      }}
+    >
+      <Icon name="chevron-right" className="flick__chevron flick__chevron--faint" />
+      <Icon name="chevron-right" className="flick__chevron" />
+    </button>
   );
 }
