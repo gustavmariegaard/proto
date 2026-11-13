@@ -2,6 +2,7 @@ import { useState } from 'react';
 import { Avatar, type AvatarTone } from './Avatar';
 import { Icon, type IconName } from './Icon';
 import { IconButton } from './IconButton';
+import { handleOf } from '../data/handles';
 import './PostCard.css';
 
 export type Post = {
@@ -17,6 +18,8 @@ export type Post = {
   /** true = grå pladsholder, eller en sti til et billede i public/img */
   image?: boolean | string;
   imageAlt?: string;
+  /** Brugernavn uden @. Udelades det, laves det ud fra navnet. */
+  username?: string;
   /** Antal synes godt om, kommentarer, delinger og gemt. Udelades de, laves faste eksempeltal ud fra id. */
   stats?: PostStats;
 };
@@ -74,7 +77,9 @@ export function PostCard({ post, onComment, onShare, onReport }: PostCardProps) 
           <Avatar name={post.author} tone={post.tone} src={post.avatarSrc} />
           <div className="post__meta">
             <h3 className="t-heading-s">{post.author}</h3>
-            <p className="t-caption post__sub">{post.meta}</p>
+            <p className="t-caption post__sub">
+              @{post.username || handleOf(post.author)} · {post.meta}
+            </p>
           </div>
         </header>
       )}

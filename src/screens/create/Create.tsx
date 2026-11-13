@@ -16,6 +16,7 @@ import {
 import { groupStore } from '../more/store';
 import type { Community } from '../../data/more';
 import { img } from '../../data/sample';
+import { handleOf } from '../../data/handles';
 import { addPost } from '../../state/posts';
 import { useSession } from '../../state/session';
 import { CloseHeader, ToggleList, useClose } from './parts';
@@ -73,6 +74,7 @@ export function Create() {
     addPost({
       feed: 'venner',
       author: profile.name || 'Dig',
+      username: profile.username.trim().replace(/^@/, '') || handleOf(profile.name) || 'dit.navn',
       avatarSrc: profile.avatar ?? img('mig.jpg'),
       tone: 'blue',
       meta: audience === 'gruppe' ? 'lige nu' : `${audience === 'offentlig' ? 'Offentligt' : 'Til følgere'} · lige nu`,

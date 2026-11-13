@@ -89,7 +89,7 @@ export const flickComments: FlickComment[] = [
   { id: 'fc2', author: 'Jonas Krogh', tone: 'sage', time: '40 min.', text: 'Gåsehud hele vejen.', likes: 4 },
   { id: 'fc3', author: 'Anna Nørgaard', tone: 'rose', time: '22 min.', text: 'Kommer der flere fra Kulturhuset?', likes: 2 },
   { id: 'fc4', author: 'Peter Holm', tone: 'sand', time: '5 min.', text: 'Tak fordi I deler det her.', likes: 1 },
-  { id: 'fc5', author: 'Karen B.', tone: 'blue', time: 'Lige nu', text: 'Må man dele den videre?', likes: 0 },
+  { id: 'fc5', author: 'Karen Bech', tone: 'blue', time: 'Lige nu', text: 'Må man dele den videre?', likes: 0 },
 ];
 
 /* ---------- Del (Flicks · Del) ---------- */

@@ -2,6 +2,7 @@ import { useCallback, useEffect, useLayoutEffect, useRef, useState } from 'react
 import { Navigate, useNavigate, useParams } from 'react-router-dom';
 import { Avatar } from '../../components/Avatar';
 import { Icon } from '../../components/Icon';
+import { at } from '../../data/handles';
 import { moments, pageAccounts, people } from '../../data/sample';
 import { useMoments } from '../../state/moments';
 import './MomentViewer.css';
@@ -138,7 +139,7 @@ function Viewer({ personId }: { personId: string }) {
 
       <div className="moment-view__who moment-full__who">
         <Avatar name={person.fullName} tone={person.tone} size="S" src={person.avatarSrc} />
-        <span className="t-heading-s">{person.name}</span>
+        <span className="t-heading-s">{at(person.fullName)}</span>
         <span className="t-caption moment-view__time">{current.time}</span>
       </div>
 

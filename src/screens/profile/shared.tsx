@@ -1,4 +1,5 @@
 import { useNavigate } from 'react-router-dom';
+import { handleOf } from '../../data/handles';
 import { fallbackAvatar } from '../../data/profile';
 import { useSession } from '../../state/session';
 import { twoColumns } from './store';
@@ -7,7 +8,7 @@ import { twoColumns } from './store';
 export function useMe() {
   const { profile } = useSession();
   const name = profile.name.trim() || 'Dit navn';
-  const handle = profile.username.trim().replace(/^@/, '') || 'dit-navn';
+  const handle = profile.username.trim().replace(/^@/, '') || handleOf(profile.name) || 'dit.navn';
   return { name, username: `@${handle}`, avatar: profile.avatar || fallbackAvatar, interests: profile.interests };
 }
 

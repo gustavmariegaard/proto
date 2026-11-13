@@ -5,6 +5,7 @@ import { TabBar } from '../../components/TabBar';
 import { flicks, type Flick, type FlickSource } from '../../data/flicks';
 import { FlickCommentsSheet } from './FlickCommentsSheet';
 import { FlickShareSheet } from './FlickShareSheet';
+import { at } from '../../data/handles';
 import './Flicks.css';
 
 const modes: { source: FlickSource; label: string }[] = [
@@ -179,7 +180,7 @@ function FlickView({ flick, position, showHint, liked, saved, onLike, onSave, on
             )}
             <span className="t-caption-strong">{flick.reason}</span>
           </p>
-          <p className="t-heading-s flick__author">{flick.author}</p>
+          <p className="t-heading-s flick__author">{at(flick.author)}</p>
           <p className="t-body-s flick__text">{flick.text}</p>
         </div>
       </div>
