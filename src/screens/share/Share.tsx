@@ -109,7 +109,7 @@ export function Share() {
               )}
             </div>
             <TextField label="Skriv en besked" value={message} onChange={(e) => setMessage(e.target.value)} />
-            <TextField label="Søg efter navn eller cirkel" type="search" value={query} onChange={(e) => setQuery(e.target.value)} />
+            <TextField label="Søg efter navn" type="search" value={query} onChange={(e) => setQuery(e.target.value)} />
 
             <ul className="choice-list" aria-label="Send til">
               {targets.map((t) => {
