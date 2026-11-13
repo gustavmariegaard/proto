@@ -12,6 +12,18 @@
     <link rel="icon" type="image/svg+xml" href="/favicon.svg" />
     <link rel="apple-touch-icon" href="/apple-touch-icon.png" />
     <title>ciircle</title>
+    <script>
+      /* Mørke skærme: farv siden mørk allerede inden appen er indlæst,
+         så Safari ser en mørk side fra første billede. */
+      (function () {
+        var dark = /\/(flicks(\/|$)|moment\/|profil\/samling\/[^/]+\/vis$)/.test(location.pathname);
+        if (!dark) return;
+        document.documentElement.setAttribute('data-dark', '');
+        document.documentElement.style.background = '#171717';
+        var m = document.querySelector('meta[name="theme-color"]');
+        if (m) m.content = '#171717';
+      })();
+    </script>
   </head>
   <body>
     <div id="root"></div>

@@ -16,6 +16,7 @@ export function useThemeColor() {
   const dark = DARK.some((r) => r.test(pathname));
   useEffect(() => {
     document.documentElement.toggleAttribute('data-dark', dark);
+    document.documentElement.style.background = dark ? DARK_COLOR : '';
     let meta = document.querySelector<HTMLMetaElement>('meta[name="theme-color"]');
     if (!meta) {
       meta = document.createElement('meta');
