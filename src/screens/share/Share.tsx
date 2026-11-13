@@ -10,6 +10,7 @@ import { usePost } from '../../state/posts';
 import { useSession } from '../../state/session';
 import { CloseHeader, RadioDot, useClose } from '../create/parts';
 import '../create/parts.css';
+import { MomentComposer } from './MomentComposer';
 import './Share.css';
 
 type Mode = 'besked' | 'opslag' | 'moment';
@@ -166,13 +167,11 @@ export function Share() {
 
         {mode === 'moment' && (
           <>
-            <div className="share__moment" aria-label="Sådan ser dit moment ud">
-              <div className="share__moment-card">{quote}</div>
-              <span className="share__moment-who">
-                <Avatar name={myName} src={profile.avatar ?? myAvatar} size="S" />
-                <span className="t-caption-strong">@{profile.username.trim().replace(/^@/, '') || handleOf(myName)}</span>
-              </span>
-            </div>
+            <MomentComposer
+              card={quote}
+              image={typeof post.image === 'string' ? post.image : undefined}
+              me={{ name: myName, handle: profile.username.trim().replace(/^@/, '') || handleOf(myName), avatar: profile.avatar ?? myAvatar }}
+            />
             <p className="t-caption modal-screen__muted">
               Vises som moment i 24 timer med kredit til {first}. Dem, der ser det, kan trykke sig videre til opslaget.
             </p>

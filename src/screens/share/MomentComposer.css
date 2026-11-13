@@ -1,0 +1,119 @@
+.mcomp {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 12px;
+  width: 100%;
+}
+
+.mcomp__stage {
+  position: relative;
+  display: grid;
+  place-items: center;
+  width: min(260px, 72%);
+  aspect-ratio: 9 / 16;
+  padding: 16px;
+  overflow: hidden;
+  border-radius: var(--radius-xl);
+  background: var(--ink-900);
+  color: #fff;
+  touch-action: none;
+  user-select: none;
+  -webkit-user-select: none;
+  cursor: grab;
+}
+
+.mcomp__stage--light { color: var(--ink-900); }
+
+.mcomp__photo {
+  position: absolute;
+  inset: -24px;
+  background-size: cover;
+  background-position: center;
+  filter: blur(18px) brightness(0.7);
+}
+
+.mcomp__who {
+  position: absolute;
+  top: 14px;
+  left: 14px;
+  z-index: 1;
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+}
+
+.mcomp__card {
+  position: relative;
+  width: 100%;
+  transform-origin: center;
+  will-change: transform;
+}
+
+.mcomp__card .share__quote {
+  background: var(--color-bg-surface);
+  color: var(--color-text-primary);
+  box-shadow: 0 8px 24px rgb(0 0 0 / 0.3);
+  pointer-events: none;
+}
+
+.mcomp__card .share__quote-img { max-height: 120px; }
+
+.mcomp__card .t-body-s {
+  display: -webkit-box;
+  -webkit-line-clamp: 4;
+  -webkit-box-orient: vertical;
+  overflow: hidden;
+}
+
+.mcomp__tip {
+  max-width: 300px;
+  color: var(--color-text-secondary);
+  text-align: center;
+}
+
+/* ---------- Farver ---------- */
+.mcomp__swatches {
+  display: flex;
+  justify-content: center;
+  gap: 2px;
+}
+
+.mcomp__swatch {
+  position: relative;
+  width: 44px;
+  height: 44px;
+  border-radius: 50%;
+  background-size: cover;
+  background-position: center;
+  /* Synlig cirkel på 32 px, trykflade på 44 px */
+  background-clip: content-box;
+  padding: 6px;
+  box-shadow: inset 0 0 0 6px var(--color-bg-app), inset 0 0 0 7px var(--color-border-default);
+}
+
+.mcomp__swatch--on {
+  box-shadow: inset 0 0 0 2px var(--color-text-primary), inset 0 0 0 6px var(--color-bg-app);
+}
+
+.mcomp__swatch:focus-visible { outline: none; box-shadow: var(--focus-ring); }
+
+/* ---------- Størrelse ---------- */
+.mcomp__size {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  width: 100%;
+}
+
+.mcomp__size input {
+  flex: 1;
+  min-height: 44px;
+  accent-color: var(--color-text-primary);
+}
+
+.mcomp__reset {
+  min-height: 44px;
+  padding: 0 8px;
+  color: var(--color-text-secondary);
+}
