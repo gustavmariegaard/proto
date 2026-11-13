@@ -143,3 +143,26 @@
   gap: 6px;
   color: #fff;
 }
+
+/* Besked: opslagets tekst og billede øverst */
+.share__preview-body {
+  display: flex;
+  flex: 1;
+  flex-direction: column;
+  gap: 6px;
+  min-width: 0;
+}
+
+.share__preview-head {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.share__preview-img {
+  flex: none;
+  width: 84px;
+  height: 84px;
+  object-fit: cover;
+  border-radius: var(--radius-md);
+}

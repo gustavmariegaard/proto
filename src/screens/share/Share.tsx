@@ -97,10 +97,16 @@ export function Share() {
         {mode === 'besked' && (
           <>
             <div className="share__preview">
-              <Avatar name={post.author} tone={post.tone} src={postAvatar} size="S" />
-              <p className="t-caption share__preview-text">
-                {post.author} · {post.text}
-              </p>
+              <div className="share__preview-body">
+                <span className="share__preview-head">
+                  <Avatar name={post.author} tone={post.tone} src={postAvatar} size="S" />
+                  <span className="t-caption-strong">{post.author}</span>
+                </span>
+                <p className="t-caption share__preview-text">{post.text}</p>
+              </div>
+              {typeof post.image === 'string' && (
+                <img className="share__preview-img" src={post.image} alt="Billedet i opslaget" />
+              )}
             </div>
             <TextField label="Skriv en besked" value={message} onChange={(e) => setMessage(e.target.value)} />
             <TextField label="Søg efter navn eller cirkel" type="search" value={query} onChange={(e) => setQuery(e.target.value)} />
