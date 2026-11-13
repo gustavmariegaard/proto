@@ -150,7 +150,7 @@ export function Conversation() {
           send();
         }}
       >
-        <IconButton icon="image" label="Send billede" onClick={() => photoRef.current?.click()} />
+        {recording === null && <IconButton icon="image" label="Send billede" onClick={() => photoRef.current?.click()} />}
         <input
           ref={photoRef}
           type="file"
@@ -165,6 +165,7 @@ export function Conversation() {
             reader.readAsDataURL(file);
           }}
         />
+        {recording === null && (
         <input
           ref={inputRef}
           className="field msg-composer__field"
@@ -176,6 +177,7 @@ export function Conversation() {
           enterKeyHint="send"
           autoComplete="off"
         />
+        )}
         {recording !== null ? (
           <div className="msg-recording" role="status">
             <span className="msg-recording__dot" aria-hidden="true" />
