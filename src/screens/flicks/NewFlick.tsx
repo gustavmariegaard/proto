@@ -182,7 +182,7 @@ export function NewFlick() {
             className="newflick__btn"
             onClick={() => (captured ? setCaptured(null) : close())}
           />
-          <span className="newflick__audience">Venner</span>
+          <span className="newflick__audience">Følgere</span>
         </div>
 
         <div className="newflick__controls">

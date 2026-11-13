@@ -50,8 +50,8 @@ export function NewCircle() {
             })}
           </div>
         )}
-        <TextField label="Søg efter venner" value={query} onChange={(e) => setQuery(e.target.value)} autoComplete="off" />
-        <p className="t-caption msg-muted">Skriv et navn for at finde en ven. Viser kun dine venner.</p>
+        <TextField label="Søg blandt dem, du følger" value={query} onChange={(e) => setQuery(e.target.value)} autoComplete="off" />
+        <p className="t-caption msg-muted">Skriv et navn. Viser kun folk, du følger.</p>
 
         <ul className="msg-list">
           {shown.map((c) => (

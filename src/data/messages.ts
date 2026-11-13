@@ -11,19 +11,19 @@ export type Contact = {
   id: string;
   name: string;
   tone: AvatarTone;
-  /** Vises under navnet, fx "Ven" eller "Torvet" */
+  /** Vises under navnet, fx "Du følger" eller "Torvet" */
   relation: string;
-  /** Kun venner kan føjes til en cirkel */
+  /** Kun folk, du følger, kan føjes til en cirkel */
   friend: boolean;
   avatarSrc?: string;
 };
 
 export const contacts: Contact[] = [
-  { id: 'mette', name: 'Mette Lund', tone: 'blue', relation: 'Ven', friend: true, avatarSrc: img('mette.jpg') },
-  { id: 'jonas', name: 'Jonas Krogh', tone: 'sage', relation: 'Ven', friend: true, avatarSrc: img('jonas.jpg') },
-  { id: 'karen', name: 'Karen B.', tone: 'sand', relation: 'Torvet', friend: false, avatarSrc: img('person-b.jpg') },
-  { id: 'soren', name: 'Søren Vang', tone: 'rose', relation: 'Ven', friend: true, avatarSrc: img('person-c.jpg') },
-  { id: 'pernille', name: 'Pernille Sørensen', tone: 'sand', relation: 'Ven', friend: true, avatarSrc: img('person-f.jpg') },
+  { id: 'mette', name: 'Mette Lund', tone: 'blue', relation: 'Du følger', friend: true, avatarSrc: img('mette.jpg') },
+  { id: 'jonas', name: 'Jonas Krogh', tone: 'sage', relation: 'Du følger', friend: true, avatarSrc: img('jonas.jpg') },
+  { id: 'karen', name: 'Karen Bech', tone: 'sand', relation: 'Torvet', friend: false, avatarSrc: img('person-b.jpg') },
+  { id: 'soren', name: 'Søren Vang', tone: 'rose', relation: 'Du følger', friend: true, avatarSrc: img('person-c.jpg') },
+  { id: 'pernille', name: 'Pernille Sørensen', tone: 'sand', relation: 'Du følger', friend: true, avatarSrc: img('person-f.jpg') },
 ];
 
 /** "me" er den, der bruger appen. Ellers navnet på afsenderen. */
@@ -113,7 +113,7 @@ export const initialThreads: Thread[] = [
   {
     id: 'karen',
     kind: 'person',
-    name: 'Karen B.',
+    name: 'Karen Bech',
     tone: 'sand',
     avatarSrc: img('person-b.jpg'),
     contactId: 'karen',

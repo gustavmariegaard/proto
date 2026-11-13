@@ -25,18 +25,18 @@ export const moreTiles: MoreTile[] = [
 
 /* ---------- Udvid cirkel ---------- */
 
-export type FolkPerson = { id: string; name: string; context: string; tone: AvatarTone; avatarSrc: string };
+export type FolkPerson = { id: string; name: string; context: string; tone: AvatarTone; avatarSrc?: string };
 
 export const friendRequests: FolkPerson[] = [
-  { id: 'louise', name: 'Louise Frandsen', context: 'Fælles cirkel: Naboerne', tone: 'rose', avatarSrc: img('person-d.jpg') },
-  { id: 'mikkel', name: 'Mikkel Bech', context: 'Fælles gruppe: Håndboldholdet', tone: 'sage', avatarSrc: img('person-e.jpg') },
+  { id: 'louise', name: 'Louise Frandsen', context: 'Fælles cirkel: Naboerne', tone: 'rose' },
+  { id: 'mikkel', name: 'Mikkel Bech', context: 'Fælles gruppe: Håndboldholdet', tone: 'sage' },
 ];
 
 /** `sent` = anmodning allerede sendt (knappen viser "Sendt"). */
 export const suggestions: (FolkPerson & { sent: boolean })[] = [
   { id: 'pernille', name: 'Pernille Sørensen', context: 'Fælles cirkel: Familien', tone: 'blue', avatarSrc: img('person-f.jpg'), sent: false },
-  { id: 'anders', name: 'Anders Kjær', context: 'Fælles gruppe: Byparkens venner', tone: 'sand', avatarSrc: img('person-g.jpg'), sent: true },
-  { id: 'naja', name: 'Naja Holst', context: 'Fælles cirkel: Naboerne', tone: 'sage', avatarSrc: img('person-h.jpg'), sent: false },
+  { id: 'anders', name: 'Anders Kjær', context: 'Fælles gruppe: Byparkens venner', tone: 'sand', sent: true },
+  { id: 'naja', name: 'Naja Holst', context: 'Fælles cirkel: Naboerne', tone: 'sage', sent: false },
 ];
 
 /* ---------- Grupper ---------- */

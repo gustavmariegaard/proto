@@ -69,7 +69,7 @@ export function Profile() {
       <div className="pf-stats">
         <div className="pf-stats__item">
           <span className="t-heading-m">—</span>
-          <span className="t-caption pf-muted">Venner</span>
+          <span className="t-caption pf-muted">Følgere</span>
         </div>
         <Link to="/profil/interesser" className="pf-stats__item pf-stats__item--link">
           <span className="t-heading-m">{me.interests.length}</span>

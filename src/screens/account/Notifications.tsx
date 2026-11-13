@@ -24,7 +24,7 @@ export function Notifications() {
     setList(
       list.map((x) =>
         x.id === n.id
-          ? { ...x, unread: false, friendRequest: undefined, text: `Du og ${n.friendRequest!.name} er nu venner.`, to: '/find-folk' }
+          ? { ...x, unread: false, friendRequest: undefined, text: `${n.friendRequest!.name} følger dig nu.`, to: '/find-folk' }
           : x,
       ),
     );

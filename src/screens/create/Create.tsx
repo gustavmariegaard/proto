@@ -75,7 +75,7 @@ export function Create() {
       author: profile.name || 'Dig',
       avatarSrc: profile.avatar ?? img('mig.jpg'),
       tone: 'blue',
-      meta: audience === 'gruppe' ? 'lige nu' : `${audience === 'offentlig' ? 'Offentligt' : 'Til Venner'} · lige nu`,
+      meta: audience === 'gruppe' ? 'lige nu' : `${audience === 'offentlig' ? 'Offentligt' : 'Til følgere'} · lige nu`,
       text: text.trim(),
       image,
       group: audience === 'gruppe' && group
@@ -277,7 +277,7 @@ type AudiencePickerProps = {
   hint: string;
 };
 
-/** Vises for: Venner, Offentligt eller en af dine grupper */
+/** Vises for: Følgere, Offentligt eller en af dine grupper */
 function AudiencePicker({ audience, onAudience, groups, groupId, onGroup, hint }: AudiencePickerProps) {
   return (
     <section className="create__audience" aria-labelledby="create-audience">

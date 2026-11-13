@@ -113,7 +113,7 @@ export const inviteGroups: { id: string; label: string; members: Guest[] }[] = [
   { id: 'familien', label: 'Familien', members: [g.anna!, g.peter!] },
   { id: 'naboerne', label: 'Naboerne', members: [g.karen!, g.sofie!] },
   { id: 'haandbold', label: 'Håndboldholdet', members: [g.jonas!, g.ahmed!] },
-  { id: 'venner', label: '+ Venner', members: [g.mette!, g.soeren!, g.pernille!] },
+  { id: 'venner', label: '+ Følgere', members: [g.mette!, g.soeren!, g.pernille!] },
 ];
 
 export const rsvpLabel: Record<Exclude<Rsvp, 'none'>, string> = {

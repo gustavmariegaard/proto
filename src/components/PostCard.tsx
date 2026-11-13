@@ -9,7 +9,7 @@ export type Post = {
   author: string;
   tone?: AvatarTone;
   avatarSrc?: string;
-  /** Fx "Til Venner · for 2 timer siden". Ved gruppeopslag kun tiden, fx "i går". */
+  /** Fx "Til følgere · for 2 timer siden". Ved gruppeopslag kun tiden, fx "i går". */
   meta: string;
   /** Opslaget er delt i en gruppe (vises som på Facebook: gruppen øverst, forfatteren under) */
   group?: { name: string; initials: string; tone?: AvatarTone; avatarSrc?: string };

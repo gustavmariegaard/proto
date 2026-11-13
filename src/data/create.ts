@@ -13,10 +13,10 @@ export const createKinds: { value: CreateKind; label: string }[] = [
   { value: 'moment', label: 'Moment' },
 ];
 
-/** Man kan dele med venner, offentligt eller i en af sine grupper */
+/** Man kan dele med sine følgere, offentligt eller i en af sine grupper */
 export type Audience = 'venner' | 'offentlig' | 'gruppe';
 export const audiences: { value: Audience; label: string; hint: string }[] = [
-  { value: 'venner', label: 'Venner', hint: 'Dine venner kan se opslaget.' },
+  { value: 'venner', label: 'Følgere', hint: 'Dine følgere kan se opslaget.' },
   // Ikke i Figma: forklaringerne til "Offentligt" og "Gruppe" er skrevet i samme tone.
   { value: 'offentlig', label: 'Offentligt', hint: 'Alle kan se opslaget.' },
   { value: 'gruppe', label: 'Gruppe', hint: 'Vælg den gruppe, opslaget skal deles i.' },
@@ -33,7 +33,7 @@ export type SettingRow = { id: string; title: string; hint: string; on: boolean 
 
 /** Flere indstillinger (tekstopslag) */
 export const postSettings: SettingRow[] = [
-  { id: 'kommentarer', title: 'Tillad kommentarer', hint: 'Dine venner kan svare på opslaget.', on: true },
+  { id: 'kommentarer', title: 'Tillad kommentarer', hint: 'Dine følgere kan svare på opslaget.', on: true },
   { id: 'deling', title: 'Tillad deling videre', hint: 'Andre kan dele opslaget til deres egen profil.', on: false },
   { id: 'likes', title: 'Skjul antal synes godt om', hint: 'Andre kan ikke se, hvor mange der har likket opslaget.', on: false },
 ];
@@ -75,7 +75,7 @@ export const shareTargets: ShareTarget[] = [
 export type ShareVisibility = 'cirkel' | 'venner' | 'offentligt';
 export const shareVisibilities: { value: ShareVisibility; label: string }[] = [
   { value: 'cirkel', label: 'Cirkel' },
-  { value: 'venner', label: 'Venner' },
+  { value: 'venner', label: 'Følgere' },
   { value: 'offentligt', label: 'Offentligt' },
 ];
 

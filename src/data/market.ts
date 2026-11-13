@@ -40,7 +40,7 @@ export const listings: Listing[] = [
     km: 2,
     image: img('spisebord.jpg'),
     description: 'Plads til seks. Lidt brugsspor på bordpladen. Afhentes i Trøjborg.',
-    seller: { name: 'Karen B.', tone: 'sand', avatarSrc: img('person-b.jpg') },
+    seller: { name: 'Karen Bech', tone: 'sand', avatarSrc: img('person-b.jpg') },
     threadId: 'karen',
   },
   {
@@ -92,6 +92,6 @@ export const listings: Listing[] = [
     km: 40,
     image: img('cykelsti.jpg'),
     description: 'Let aluminiumsstel og 22 gear. Kørt cirka 3.000 km.',
-    seller: { name: 'Peter', tone: 'rose', avatarSrc: img('peter.jpg') },
+    seller: { name: 'Peter Holm', tone: 'rose', avatarSrc: img('peter.jpg') },
   },
 ];

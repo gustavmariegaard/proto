@@ -202,7 +202,7 @@ export function Conversation() {
 type Sender = { name: string; tone: AvatarTone; src?: string };
 
 /** Personer i cirklerne, der ikke er i kontaktlisten, men har et billede */
-const knownFaces: Record<string, string> = { Mor: img("person-b.jpg") };
+const knownFaces: Record<string, string> = {};
 
 function Message({
   message,

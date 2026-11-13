@@ -19,7 +19,7 @@ export const people: Record<string, Person> = {
   mette: { name: 'Mette', fullName: 'Mette Lund', tone: 'blue', avatarSrc: img('mette.jpg') },
   jonas: { name: 'Jonas', fullName: 'Jonas Krogh', tone: 'sage', avatarSrc: img('jonas.jpg') },
   anna: { name: 'Anna', fullName: 'Anna Nørgaard', tone: 'sand', avatarSrc: img('anna.jpg') },
-  peter: { name: 'Peter', fullName: 'Peter', tone: 'rose', avatarSrc: img('peter.jpg') },
+  peter: { name: 'Peter', fullName: 'Peter Holm', tone: 'rose', avatarSrc: img('peter.jpg') },
   sofie: { name: 'Sofie', fullName: 'Sofie Holm', tone: 'sand', avatarSrc: img('person-d.jpg') },
   ahmed: { name: 'Ahmed', fullName: 'Ahmed Rahimi', tone: 'blue', avatarSrc: img('person-e.jpg') },
   karen: { name: 'Karen', fullName: 'Karen Bech', tone: 'sage', avatarSrc: img('person-b.jpg') },
@@ -76,7 +76,7 @@ export const initiallySeen = ['anna', 'peter', 'karen'];
 /* ---------- Opslag ---------- */
 
 /**
- * venner = Hjem › Venner, interesser = Hjem › Interesser (nyt fra sider, man følger),
+ * venner = Hjem › Følger, interesser = Hjem › Interesser (nyt fra sider, man følger),
  * debat = Opdag › Offentlig debat (opslag om emner)
  */
 export type FeedPost = Post & { feed: 'venner' | 'interesser' | 'debat'; topic?: string };
@@ -88,7 +88,7 @@ export const posts: FeedPost[] = [
     author: 'Mette Lund',
     avatarSrc: img('mette.jpg'),
     tone: 'blue',
-    meta: 'Til Venner · for 2 timer siden',
+    meta: 'Til følgere · for 2 timer siden',
     text: 'Sidste aften før vinteren sætter ind. Tak for en god sommer, alle sammen.',
     image: img('aften.jpg'),
   },
@@ -109,7 +109,7 @@ export const posts: FeedPost[] = [
     author: 'Sofie Holm',
     avatarSrc: img('person-d.jpg'),
     tone: 'sand',
-    meta: 'Til Venner · for 3 timer siden',
+    meta: 'Til følgere · for 3 timer siden',
     text: 'Første forsøg med surdejsbrød. Det blev fladt, men det smager fantastisk. Næste gang skal det nok hæve.',
     image: img('mad.jpg'),
   },
@@ -119,7 +119,7 @@ export const posts: FeedPost[] = [
     author: 'Ahmed Rahimi',
     avatarSrc: img('person-e.jpg'),
     tone: 'blue',
-    meta: 'Til Venner · for 5 timer siden',
+    meta: 'Til følgere · for 5 timer siden',
     text: 'Er der nogen, der har en trailer, jeg kan låne på lørdag? Vi flytter endelig ind i den nye lejlighed.',
   },
   {
@@ -128,7 +128,7 @@ export const posts: FeedPost[] = [
     author: 'Mette Lund',
     avatarSrc: img('mette.jpg'),
     tone: 'blue',
-    meta: 'Til Venner · i går',
+    meta: 'Til følgere · i går',
     text: 'Morgentur ved vandet inden arbejde. Det er koldt nu, men lyset er helt særligt.',
     image: img('soe.jpg'),
   },
@@ -145,10 +145,10 @@ export const posts: FeedPost[] = [
   {
     id: 'p-peter',
     feed: 'venner',
-    author: 'Peter',
+    author: 'Peter Holm',
     avatarSrc: img('peter.jpg'),
     tone: 'rose',
-    meta: 'Til Venner · for 2 dage siden',
+    meta: 'Til følgere · for 2 dage siden',
     text: 'Tak for i lørdags, alle sammen. Det var den bedste fødselsdag i mange år.',
     image: img('familie-soe.jpg'),
   },
@@ -169,7 +169,7 @@ export const posts: FeedPost[] = [
     author: 'Anna Nørgaard',
     avatarSrc: img('anna.jpg'),
     tone: 'rose',
-    meta: 'Til Venner · for 4 dage siden',
+    meta: 'Til følgere · for 4 dage siden',
     text: 'Nogen der vil med på loppemarked i Kødbyen på søndag? Jeg leder efter en gammel reol.',
   },
 
@@ -220,7 +220,6 @@ export const posts: FeedPost[] = [
     feed: 'debat',
     topic: 'Madlavning',
     author: 'Lene Dahl',
-    avatarSrc: img('person-i.jpg'),
     tone: 'rose',
     meta: 'Madlavning · Offentligt',
     text: 'Min bedste opskrift på græskarsuppe: ristet græskar, ingefær og en sjat kokosmælk. Så enkelt er det.',
@@ -230,9 +229,9 @@ export const posts: FeedPost[] = [
     id: 'p-kultur-2',
     feed: 'debat',
     topic: 'Kultur',
-    author: 'Byens Bibliotek',
-    avatarSrc: img('nyhavn.jpg'),
-    tone: 'blue',
+    author: 'Byens bibliotek',
+    avatarSrc: side('bibliotek-logo.jpg'),
+    tone: 'sage',
     meta: 'Kultur · Offentligt',
     text: 'Forfatteraften på tirsdag. Kom og hør, hvordan en roman bliver til, fra første idé til færdig bog.',
   },

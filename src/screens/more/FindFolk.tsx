@@ -5,7 +5,7 @@ import { friendRequests, suggestions } from '../../data/more';
 import { MoreHeader } from './parts';
 import './More.css';
 
-/** Udvid cirkel (Figma "Find folk"): venneanmodninger og forslag. Fuld skærm. */
+/** Udvid cirkel (Figma "Find folk"): anmodninger om at følge dig og forslag. Fuld skærm. */
 export function FindFolk() {
   const [requests, setRequests] = useState(friendRequests.map((r) => ({ ...r, accepted: false })));
   const [sent, setSent] = useState<Record<string, boolean>>(() =>
@@ -17,7 +17,7 @@ export function FindFolk() {
     <div className="more-screen">
       <MoreHeader title="Udvid cirkel" />
       <main className="more-content more-content--tight">
-        <h2 className="t-heading-m">Venneanmodninger</h2>
+        <h2 className="t-heading-m">Vil følge dig</h2>
         {requests.length === 0 && <p className="t-caption more-muted">Ingen nye anmodninger.</p>}
         {requests.map((r) => (
           <section key={r.id} className="more-card" aria-label={r.name}>
@@ -30,7 +30,7 @@ export function FindFolk() {
             </div>
             <div className="more-card__buttons" aria-live="polite">
               {r.accepted ? (
-                <Button variant="secondary" disabled>I er venner nu</Button>
+                <Button variant="secondary" disabled>Følger dig nu</Button>
               ) : (
                 <>
                   <Button onClick={() => setRequests((l) => l.map((x) => (x.id === r.id ? { ...x, accepted: true } : x)))}>
@@ -61,17 +61,17 @@ export function FindFolk() {
               <Button
                 variant={isSent ? 'secondary' : 'primary'}
                 aria-pressed={isSent}
-                aria-label={isSent ? `Anmodning sendt til ${s.name}. Tryk for at fortryde` : `Tilføj ${s.name}`}
+                aria-label={isSent ? `Anmodning sendt til ${s.name}. Tryk for at fortryde` : `Følg ${s.name}`}
                 onClick={() => setSent((m) => ({ ...m, [s.id]: !m[s.id] }))}
               >
-                {isSent ? 'Sendt' : 'Tilføj'}
+                {isSent ? 'Sendt' : 'Følg'}
               </Button>
             </div>
           );
         })}
 
         <div className="more-note">
-          <span className="t-heading-s">Find venner via dine kontakter</span>
+          <span className="t-heading-s">Find folk via dine kontakter</span>
           <span className="t-caption">
             Det sker kun, hvis du selv vælger det. Kontakterne bruges til at finde matches og bliver ikke gemt bagefter.
           </span>

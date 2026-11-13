@@ -12,7 +12,7 @@ import { img, posts } from './sample';
 export type SearchPerson = {
   id: string;
   name: string;
-  /** Under navnet, fx "Ven" eller "Fælles gruppe: Håndboldholdet" */
+  /** Under navnet, fx "Du følger" eller "Fælles gruppe: Håndboldholdet" */
   relation: string;
   tone: AvatarTone;
   avatarSrc?: string;
@@ -23,13 +23,12 @@ export type SearchPerson = {
 };
 
 export const searchPeople: SearchPerson[] = [
-  { id: 'mette', name: 'Mette Lund', relation: 'Ven', tone: 'blue', avatarSrc: img('mette.jpg'), to: '/beskeder/mette', suggested: true },
+  { id: 'mette', name: 'Mette Lund', relation: 'Du følger', tone: 'blue', avatarSrc: img('mette.jpg'), to: '/beskeder/mette', suggested: true },
   {
     id: 'mikkel',
     name: 'Mikkel Bech',
     relation: 'Fælles gruppe: Håndboldholdet',
     tone: 'sage',
-    avatarSrc: img('person-e.jpg'),
     to: '/find-folk',
     suggested: true,
   },
@@ -43,12 +42,12 @@ export const searchPeople: SearchPerson[] = [
     suggested: true,
   },
   /* ---------- ikke fra Figma ---------- */
-  { id: 'jonas', name: 'Jonas Krogh', relation: 'Ven', tone: 'sage', avatarSrc: img('jonas.jpg'), to: '/beskeder/jonas' },
-  { id: 'anna', name: 'Anna Nørgaard', relation: 'Ven', tone: 'rose', avatarSrc: img('anna.jpg'), to: '/find-folk' },
-  { id: 'peter', name: 'Peter', relation: 'Ven', tone: 'rose', avatarSrc: img('peter.jpg'), to: '/find-folk' },
-  { id: 'soren', name: 'Søren Vang', relation: 'Ven', tone: 'sand', avatarSrc: img('person-c.jpg'), to: '/beskeder/soren' },
+  { id: 'jonas', name: 'Jonas Krogh', relation: 'Du følger', tone: 'sage', avatarSrc: img('jonas.jpg'), to: '/beskeder/jonas' },
+  { id: 'anna', name: 'Anna Nørgaard', relation: 'Du følger', tone: 'rose', avatarSrc: img('anna.jpg'), to: '/find-folk' },
+  { id: 'peter', name: 'Peter Holm', relation: 'Du følger', tone: 'rose', avatarSrc: img('peter.jpg'), to: '/find-folk' },
+  { id: 'soren', name: 'Søren Vang', relation: 'Du følger', tone: 'sand', avatarSrc: img('person-c.jpg'), to: '/beskeder/soren' },
   { id: 'karen', name: 'Karen Bech', relation: 'Fælles gruppe: Naboerne', tone: 'sage', avatarSrc: img('person-b.jpg'), to: '/beskeder/karen' },
-  { id: 'louise', name: 'Louise Frandsen', relation: 'Venneanmodning', tone: 'rose', avatarSrc: img('person-d.jpg'), to: '/notifikationer' },
+  { id: 'louise', name: 'Louise Frandsen', relation: 'Vil følge dig', tone: 'rose', to: '/notifikationer' },
 ];
 
 export type SearchPlace = {
@@ -94,7 +93,7 @@ export type Notification = {
   /** "Nye" eller "Tidligere" */
   group: 'nye' | 'tidligere';
   unread: boolean;
-  /** Venneanmodning med Accepter / Afvis / Ignorer */
+  /** Anmodning om at følge dig, med Accepter / Afvis / Ignorer */
   friendRequest?: { name: string };
   /** Hvor rækken fører hen */
   to?: string;
@@ -103,10 +102,9 @@ export type Notification = {
 export const initialNotifications: Notification[] = [
   {
     id: 'n-louise',
-    text: 'Louise Frandsen vil gerne være venner med dig.',
+    text: 'Louise Frandsen vil gerne følge dig.',
     time: 'Lige nu',
     tone: 'rose',
-    avatarSrc: img('person-d.jpg'),
     group: 'nye',
     unread: true,
     friendRequest: { name: 'Louise Frandsen' },

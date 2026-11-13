@@ -17,7 +17,7 @@ export const valuePoints: ValuePoint[] = [
     slug: 'feed',
     icon: 'sliders',
     title: 'Du vælger, hvad dit feed bygger på',
-    summary: 'Du vælger selv, hvad dit feed bygger på: venner, interesser eller nyeste. Du kan altid se, hvorfor noget vises.',
+    summary: 'Du vælger selv, hvad dit feed bygger på: dem du følger, interesser eller nyeste. Du kan altid se, hvorfor noget vises.',
     howShort: '[Beskriv, hvordan valget virker, og hvordan det kontrolleres. Tilføj et konkret eksempel og skriv, hvem der er ansvarlig.]',
   },
   {

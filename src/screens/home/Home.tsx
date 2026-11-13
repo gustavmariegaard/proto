@@ -12,7 +12,7 @@ import './Home.css';
 
 type Feed = 'venner' | 'interesser';
 
-/** Hjem: feed fra venner eller fra dine interesser. */
+/** Hjem: feed fra dem, du følger, eller fra dine interesser. */
 export function Home() {
   const navigate = useNavigate();
   const [params, setParams] = useSearchParams();
@@ -32,7 +32,7 @@ export function Home() {
         value={feed}
         onChange={(v) => setParams(v === 'venner' ? {} : { feed: v }, { replace: true })}
         options={[
-          { value: 'venner', label: 'Venner' },
+          { value: 'venner', label: 'Følger' },
           { value: 'interesser', label: 'Interesser' },
         ]}
       />
@@ -47,7 +47,7 @@ export function Home() {
         </div>
       )}
 
-      {/* Venner: personers moments med "Dig" først. Interesser: moments fra sider, man følger. */}
+      {/* Følger: personers moments med "Dig" først. Interesser: moments fra sider, man følger. */}
       <ul className="home__moments" aria-label={feed === 'interesser' ? 'Moments fra sider' : 'Moments'}>
         {feed === 'venner' && (
           <li>
