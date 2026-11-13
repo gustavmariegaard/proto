@@ -26,3 +26,31 @@
   flex-direction: column;
   gap: 14px;
 }
+
+/* ---------- Interesser: Rediger emner + emnefiltre ---------- */
+.home__filters {
+  display: flex;
+  align-items: center;
+  margin-right: -20px;
+}
+
+.home__edit {
+  gap: 6px;
+  padding: 0 14px;
+}
+
+/* Emnerne ruller vandret ved siden af "Rediger emner" */
+.home__chips--topics {
+  flex: 1;
+  min-width: 0;
+  margin: 0;
+  padding: 0 20px 0 10px;
+  /* Blød kant mod "Rediger emner", når emnerne rulles */
+  -webkit-mask-image: linear-gradient(to right, transparent 0, #000 10px);
+  mask-image: linear-gradient(to right, transparent 0, #000 10px);
+}
+
+.home__topic {
+  gap: 6px;
+  padding: 0 12px 0 16px;
+}

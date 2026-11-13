@@ -1,5 +1,6 @@
 import { useState } from 'react';
 import { useNavigate, useSearchParams } from 'react-router-dom';
+import { Icon } from '../../components/Icon';
 import { Chip } from '../../components/Chip';
 import { MomentBubble } from '../../components/MomentBubble';
 import { PostCard } from '../../components/PostCard';
@@ -42,21 +43,31 @@ export function Home() {
       />
 
       {feed === 'interesser' && (
-        <ul className="home__chips" aria-label="Dine interesser">
-          {profile.interests.map((i) => (
-            <li key={i}>
-              <Chip
-                selected={!off.includes(i)}
-                onClick={() => setOff((o) => (o.includes(i) ? o.filter((x) => x !== i) : [...o, i]))}
-              >
-                {i}
-              </Chip>
-            </li>
-          ))}
-          <li>
-            <Chip onClick={() => setEditing(true)}>Rediger emner</Chip>
-          </li>
-        </ul>
+        <div className="home__filters">
+          {/* Rediger emner står fast yderst til venstre; emnerne ruller ved siden af */}
+          <Chip className="home__edit" onClick={() => setEditing(true)}>
+            <Icon name="sliders" size={18} />
+            Rediger emner
+          </Chip>
+          <ul className="home__chips home__chips--topics" aria-label="Filtrér efter dine interesser">
+            {profile.interests.map((i) => {
+              const on = !off.includes(i);
+              return (
+                <li key={i}>
+                  <Chip
+                    selected={on}
+                    className="home__topic"
+                    aria-label={on ? `${i}, vises. Tryk for at fjerne` : `${i}, skjult. Tryk for at vise`}
+                    onClick={() => setOff((o) => (on ? [...o, i] : o.filter((x) => x !== i)))}
+                  >
+                    {i}
+                    <Icon name={on ? 'close' : 'plus'} size={16} />
+                  </Chip>
+                </li>
+              );
+            })}
+          </ul>
+        </div>
       )}
 
       <ul className="home__moments" aria-label="Moments">
