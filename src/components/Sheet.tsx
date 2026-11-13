@@ -7,7 +7,8 @@ type SheetProps = {
   onClose: () => void;
   title: string;
   /** Halv højde (som i Figma) eller næsten hele skærmen */
-  initialSize?: 'half' | 'full';
+  /** auto = så højt som indholdet (fx små menuer) */
+  initialSize?: 'half' | 'full' | 'auto';
   /** Fast nederst, fx et tekstfelt */
   footer?: React.ReactNode;
   /** Mørk hinde bag arket */
@@ -54,6 +55,11 @@ export function Sheet({ open, onClose, title, initialSize = 'half', footer, dim,
     if (drag === null) return;
     const d = drag;
     setDrag(null);
+    if (size === 'auto') {
+      // Små ark: træk ned for at lukke
+      if (d > 80) onClose();
+      return;
+    }
     if (Math.abs(d) < 6) {
       // Et tryk på håndtaget skifter mellem halv og hel højde
       setSize((s) => (s === 'half' ? 'full' : 'half'));
@@ -80,7 +86,7 @@ export function Sheet({ open, onClose, title, initialSize = 'half', footer, dim,
         <button
           type="button"
           className="sheet__handle"
-          aria-label={size === 'half' ? 'Vis hele arket' : 'Gør arket mindre'}
+          aria-label={size === 'auto' ? 'Træk ned for at lukke' : size === 'half' ? 'Vis hele arket' : 'Gør arket mindre'}
           onPointerDown={onPointerDown}
           onPointerMove={onPointerMove}
           onPointerUp={onPointerUp}
@@ -88,7 +94,7 @@ export function Sheet({ open, onClose, title, initialSize = 'half', footer, dim,
           onKeyDown={(e) => {
             if (e.key === 'Enter' || e.key === ' ') {
               e.preventDefault();
-              setSize((s) => (s === 'half' ? 'full' : 'half'));
+              if (size !== 'auto') setSize((s) => (s === 'half' ? 'full' : 'half'));
             }
           }}
         >

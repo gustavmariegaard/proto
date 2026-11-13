@@ -41,6 +41,7 @@
 /* Halv: 480 af 844 px i Figma. Hel: 26 px under frirummet. */
 .sheet--half { height: min(calc(480px + var(--safe-bottom)), 62%); }
 .sheet--full { height: calc(100% - var(--safe-top) - 26px); }
+.sheet--auto { height: auto; max-height: calc(100% - var(--safe-top) - 26px); }
 
 .sheet__handle {
   display: flex;

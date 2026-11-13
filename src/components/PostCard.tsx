@@ -150,7 +150,7 @@ export function PostCard({ post, onComment, onShare, onReport }: PostCardProps) 
 
       </footer>
 
-      <Sheet open={menu !== 'closed'} onClose={() => setMenu('closed')} title={menu === 'why' ? 'Hvorfor ser jeg dette opslag?' : 'Opslag'} dim>
+      <Sheet open={menu !== 'closed'} onClose={() => setMenu('closed')} title={menu === 'why' ? 'Hvorfor ser jeg dette opslag?' : 'Opslag'} dim initialSize="auto">
         {menu === 'why' ? (
           <div className="post-menu__why">
             <p className="t-body">{whyText(post)}</p>
