@@ -1,27 +1,26 @@
 /*
- * Pillen er 64 px høj og 16 px fra skærmens kanter. Den ligger lavt,
- * så indholdet får mest mulig plads (se --tabbar-bottom i tokens.css).
+ * Flad bundmenu i fuld bredde (som på Instagram): 52 px høj plus
+ * iPhonens hjem-streg. Tynd streg øverst i stedet for skygge og runde hjørner.
  */
 .tabbar {
   position: absolute;
-  left: var(--space-16);
-  right: var(--space-16);
-  bottom: var(--tabbar-bottom);
+  left: 0;
+  right: 0;
+  bottom: 0;
   z-index: 20;
+  padding-bottom: var(--safe-bottom);
+  background: var(--color-bg-surface);
+  border-top: 1px solid var(--color-border-default);
 }
 
 .tabbar__pill {
   display: flex;
   align-items: center;
-  justify-content: space-between;
-  height: 64px;
+  justify-content: space-around;
+  height: 52px;
   margin: 0;
-  padding: 0 12px;
+  padding: 0 8px;
   list-style: none;
-  background: var(--color-bg-surface);
-  border: 1px solid var(--color-border-default);
-  border-radius: 32px;
-  box-shadow: var(--shadow-tabbar);
 }
 
 .tabbar__tab {
@@ -29,7 +28,7 @@
   align-items: center;
   justify-content: center;
   width: 64px;
-  height: 52px;
+  height: 48px;
   color: var(--color-text-primary);
   border-radius: var(--radius-pill);
   outline: none;
@@ -39,8 +38,8 @@
   display: flex;
   align-items: center;
   justify-content: center;
-  width: 56px;
-  height: 40px;
+  width: 52px;
+  height: 34px;
   border-radius: var(--radius-pill);
   transition: background-color 0.15s ease;
 }
@@ -54,3 +53,12 @@
 }
 
 .tabbar__tab:active .tabbar__holder { transform: scale(0.94); }
+
+/* På Flicks er menuen mørk, så den glider ind i billedet */
+.flicks .tabbar {
+  background: var(--ink-900);
+  border-top-color: rgb(255 255 255 / 0.12);
+}
+
+.flicks .tabbar__tab { color: var(--color-text-on-action); }
+.flicks .tabbar__tab.active .tabbar__holder { color: var(--ink-900); }

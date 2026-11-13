@@ -12,10 +12,32 @@ export function Report() {
   const { id } = useParams();
   const close = useClose(id ? `/opslag/${id}` : '/');
   const post = usePost(id);
-  const [reason, setReason] = useState(reportReasons[0]!.id);
+  // Ingen kategori fra start: man skal selv vælge, før man kan sende
+  const [reason, setReason] = useState<string | null>(null);
+  const [other, setOther] = useState('');
+  const [sent, setSent] = useState(false);
 
   if (!post) return <Navigate to="/" replace />;
   const { object } = pronouns(post.author);
+  const needsText = reason === 'andet';
+  const canSend = reason !== null && (!needsText || other.trim().length > 2);
+
+  if (sent) {
+    return (
+      <div className="modal-screen report">
+        <CloseHeader title="Rapportér" onClose={close} />
+        <main className="modal-screen__content">
+          <h2 className="t-heading-m">Tak for din rapport</h2>
+          <p className="t-body-s">
+            Vi kigger på opslaget hurtigst muligt. Du får besked, når vi har taget stilling. Din rapport er anonym for {object}.
+          </p>
+          <Button block onClick={close}>
+            Færdig
+          </Button>
+        </main>
+      </div>
+    );
+  }
 
   return (
     <div className="modal-screen report">
@@ -47,8 +69,24 @@ export function Report() {
             );
           })}
         </div>
-        <Button block onClick={close}>
-          Fortsæt
+        {needsText && (
+          <label className="report__other">
+            <span className="t-label">Beskriv problemet</span>
+            <textarea
+              className="report__field"
+              rows={3}
+              placeholder="Fortæl kort, hvad der er galt"
+              value={other}
+              onChange={(e) => setOther(e.target.value)}
+              autoFocus
+            />
+          </label>
+        )}
+        <p className="t-caption modal-screen__muted" aria-live="polite">
+          {reason === null ? 'Vælg en kategori for at sende rapporten.' : needsText && !canSend ? 'Skriv et par ord om problemet.' : ''}
+        </p>
+        <Button block disabled={!canSend} onClick={() => setSent(true)}>
+          Send rapport
         </Button>
       </main>
     </div>

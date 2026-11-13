@@ -24,7 +24,7 @@
   flex-direction: column;
   gap: 12px;
   /* 112 px i Figma: luft til den flydende bundmenu */
-  padding: 0 20px calc(var(--tabbar-bottom) + 64px + 28px);
+  padding: 0 20px calc(var(--tabbar-bar) + 28px);
   background: var(--color-bg-app);
   border-radius: var(--radius-sheet) var(--radius-sheet) 0 0;
   outline: none;

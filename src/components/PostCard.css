@@ -144,3 +144,71 @@
   text-decoration: none;
   font-weight: 600;
 }
+
+/* ---------- Menu (⋯) øverst til højre ---------- */
+.post__header { position: relative; }
+
+.post__who { flex: 1; }
+
+.post__more {
+  display: grid;
+  flex: none;
+  place-items: center;
+  width: 44px;
+  height: 44px;
+  margin: -6px -10px -6px auto;
+  border-radius: 50%;
+  color: var(--color-text-primary);
+}
+
+.post__more:focus-visible { outline: none; box-shadow: var(--focus-ring); }
+
+.post-menu {
+  margin: 0;
+  padding: 8px 12px calc(16px + var(--safe-bottom));
+  list-style: none;
+}
+
+.post-menu__item {
+  display: flex;
+  align-items: center;
+  gap: 14px;
+  width: 100%;
+  min-height: 56px;
+  padding: 0 8px;
+  border-radius: var(--radius-md);
+  font: 500 16px/22px var(--font-body);
+  text-align: left;
+  color: var(--color-text-primary);
+}
+
+.post-menu__item:active { background: var(--color-bg-subtle); }
+.post-menu__item:focus-visible { outline: none; box-shadow: var(--focus-ring); }
+.post-menu__item--danger { color: #c62828; }
+
+.post-menu__why {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  padding: 16px 20px calc(24px + var(--safe-bottom));
+}
+
+.post-menu__muted { color: var(--color-text-secondary); }
+
+/* Skjult opslag ("Ikke interesseret") */
+.post--hidden {
+  flex-direction: row;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  padding: 14px;
+  background: var(--color-bg-sunken);
+}
+
+.post__undo {
+  flex: none;
+  min-height: 44px;
+  padding: 0 12px;
+  border-radius: var(--radius-pill);
+  text-decoration: underline;
+}

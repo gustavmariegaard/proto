@@ -2,7 +2,8 @@ import { useState } from 'react';
 import { Link } from 'react-router-dom';
 import { Avatar, type AvatarTone } from './Avatar';
 import { Icon, type IconName } from './Icon';
-import { IconButton } from './IconButton';
+import { Sheet } from './Sheet';
+import { setHidden, useHidden } from '../state/posts';
 import { handleOf } from '../data/handles';
 import './PostCard.css';
 
@@ -56,6 +57,29 @@ export function PostCard({ post, onComment, onShare, onReport }: PostCardProps) 
   const handle = post.username || handleOf(post.author);
   // Egne opslag åbner din egen profil
   const profileHref = post.id.startsWith('mit-') ? '/profil' : `/bruger/${handle}`;
+  const [menu, setMenu] = useState<'closed' | 'menu' | 'why'>('closed');
+  const isHidden = useHidden(post.id);
+  const mine = post.id.startsWith('mit-');
+
+  const moreButton = (
+    <button type="button" className="post__more" aria-label="Flere muligheder" aria-haspopup="dialog" onClick={() => setMenu('menu')}>
+      <Icon name="dots" />
+    </button>
+  );
+
+  /* "Ikke interesseret": opslaget foldes sammen til en kort besked, som kan fortrydes */
+  if (isHidden) {
+    return (
+      <article className="post post--hidden" aria-label={`Skjult opslag fra ${post.author}`}>
+        <p className="t-body-s">
+          <strong>Opslaget er skjult.</strong> Du ser færre opslag som dette.
+        </p>
+        <button type="button" className="t-caption-strong post__undo" onClick={() => setHidden(post.id, false)}>
+          Fortryd
+        </button>
+      </article>
+    );
+  }
 
   return (
     <article className="post" aria-label={`Opslag fra ${post.author}`}>
@@ -75,6 +99,7 @@ export function PostCard({ post, onComment, onShare, onReport }: PostCardProps) 
               <Link to={profileHref} className="post__name-link">{post.author}</Link> · {post.meta}
             </p>
           </div>
+          {moreButton}
         </header>
       ) : (
         <header className="post__header">
@@ -87,6 +112,7 @@ export function PostCard({ post, onComment, onShare, onReport }: PostCardProps) 
               </p>
             </div>
           </Link>
+          {moreButton}
         </header>
       )}
 
@@ -121,11 +147,70 @@ export function PostCard({ post, onComment, onShare, onReport }: PostCardProps) 
           className={saved ? 'post__saved' : undefined}
           onClick={() => setSaved((v) => !v)}
         />
-        <span className="post__spacer" />
-        <IconButton icon="flag" label="Rapportér" onClick={onReport} />
+
       </footer>
+
+      <Sheet open={menu !== 'closed'} onClose={() => setMenu('closed')} title={menu === 'why' ? 'Hvorfor ser jeg dette opslag?' : 'Opslag'} dim>
+        {menu === 'why' ? (
+          <div className="post-menu__why">
+            <p className="t-body">{whyText(post)}</p>
+            <p className="t-caption post-menu__muted">
+              ciircle viser kun opslag fra dem, du følger, dine grupper, sider og de emner, du selv har valgt. Vi bruger ikke din adfærd andre steder.
+            </p>
+          </div>
+        ) : (
+          <ul className="post-menu">
+            <li>
+              <button type="button" className="post-menu__item" onClick={() => setMenu('why')}>
+                <Icon name="info" />
+                Hvorfor ser jeg dette opslag?
+              </button>
+            </li>
+            {!mine && (
+              <li>
+                <button
+                  type="button"
+                  className="post-menu__item"
+                  onClick={() => {
+                    setMenu('closed');
+                    setHidden(post.id, true);
+                  }}
+                >
+                  <Icon name="eye-off" />
+                  Ikke interesseret
+                </button>
+              </li>
+            )}
+            {!mine && onReport && (
+              <li>
+                <button
+                  type="button"
+                  className="post-menu__item post-menu__item--danger"
+                  onClick={() => {
+                    setMenu('closed');
+                    onReport();
+                  }}
+                >
+                  <Icon name="flag" />
+                  Rapportér
+                </button>
+              </li>
+            )}
+          </ul>
+        )}
+      </Sheet>
     </article>
   );
+}
+
+/** Forklaringen bag "Hvorfor ser jeg dette opslag?" */
+function whyText(post: Post & { feed?: string; topic?: string }) {
+  const name = post.group?.name;
+  if (post.id.startsWith('mit-')) return 'Det er dit eget opslag.';
+  if (name) return `Du er medlem af gruppen ${name}.`;
+  if (post.meta.startsWith('Side')) return `Du følger siden ${post.author}.`;
+  if (post.feed === 'debat' || post.topic) return `Opslaget handler om ${post.topic ?? post.meta}, som er et af dine emner i Offentlig debat.`;
+  return `Du følger ${post.author}.`;
 }
 
 type ActionProps = {

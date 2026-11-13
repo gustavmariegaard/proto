@@ -35,3 +35,28 @@ export function addPost(post: Omit<FeedPost, 'id'>) {
   save('posts', mine);
   listeners.forEach((l) => l());
 }
+
+/* ---------- "Ikke interesseret": skjulte opslag ---------- */
+let hidden: string[] = keep('hidden', []);
+const hiddenListeners = new Set<() => void>();
+const getHidden = () => hidden;
+
+export function useHidden(id: string) {
+  const list = useSyncExternalStore(
+    (l) => {
+      hiddenListeners.add(l);
+      return () => {
+        hiddenListeners.delete(l);
+      };
+    },
+    getHidden,
+    getHidden,
+  );
+  return list.includes(id);
+}
+
+export function setHidden(id: string, on: boolean) {
+  hidden = on ? [...hidden.filter((x) => x !== id), id] : hidden.filter((x) => x !== id);
+  save('hidden', hidden);
+  hiddenListeners.forEach((l) => l());
+}

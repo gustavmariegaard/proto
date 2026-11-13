@@ -90,6 +90,8 @@
   --top-gap: 4px;
   --appbar-height: 58px;
   --tabbar-height: 88px;
+  /* Den flade bundmenu (som på Instagram): 52 px + hjem-stregen på iPhone */
+  --tabbar-bar: calc(52px + var(--safe-bottom));
   /* Bundmenuen ligger lavt, men fri af iPhonens hjem-streg */
   --tabbar-bottom: max(10px, calc(var(--safe-bottom) - 14px));
   --focus-ring: 0 0 0 3px var(--color-bg-app), 0 0 0 5px var(--color-text-primary);

@@ -98,14 +98,14 @@
 }
 
 /*
- * Knapper og tekstpanel nederst. Panelet ligger 16 px over bundmenuen
- * (bundmenuen: 64 px høj, 20 px fra bunden). Knapperne 16 px over panelet.
+ * Knapper og tekstpanel nederst. Panelet ligger 16 px over den flade bundmenu.
+ * Knapperne 16 px over panelet.
  */
 .flick__bottom {
   position: absolute;
   left: 12px;
   right: 20px;
-  bottom: calc(var(--tabbar-bottom) + 80px);
+  bottom: calc(var(--tabbar-bar) + 16px);
   display: flex;
   flex-direction: column;
   gap: 16px;
@@ -173,7 +173,7 @@
   position: absolute;
   z-index: 2;
   left: 50%;
-  bottom: calc(var(--tabbar-bottom) + 194px);
+  bottom: calc(var(--tabbar-bar) + 130px);
   transform: translateX(-50%);
   display: flex;
   flex-direction: column;

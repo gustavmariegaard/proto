@@ -6,7 +6,20 @@
 const S = 'stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"';
 const p = (d: string) => `<path d="${d}" ${S}/>`;
 
+const dot = (cx: number) => `<circle cx="${cx}" cy="12" r="1.6" fill="currentColor"/>`;
+
 const paths = {
+  /** Tre prikker (menu på opslag). Ikke fra Figma. */
+  dots: dot(5) + dot(12) + dot(19),
+  /** Info (Hvorfor ser jeg dette?). Ikke fra Figma. */
+  info:
+    p('M12 21C16.9706 21 21 16.9706 21 12C21 7.02944 16.9706 3 12 3C7.02944 3 3 7.02944 3 12C3 16.9706 7.02944 21 12 21Z') +
+    p('M12 11V16M12 8H12.01'),
+  /** Ikke interesseret. Ikke fra Figma. */
+  'eye-off':
+    p('M3 3L21 21') +
+    p('M10.6 5.1C11.06 5.03 11.53 5 12 5C17 5 21 12 21 12C20.4 13.1 19.6 14.2 18.7 15.1M6.6 6.6C4.3 8.1 3 12 3 12C3 12 7 19 12 19C13.9 19 15.6 18.2 17 17.1') +
+    p('M9.9 9.9C9.3 10.5 9 11.2 9 12C9 13.7 10.3 15 12 15C12.8 15 13.5 14.7 14.1 14.1'),
   home: p('M4 11L12 4L20 11V20H4V11Z'),
   circles:
     p('M9 12.5C10.933 12.5 12.5 10.933 12.5 9C12.5 7.067 10.933 5.5 9 5.5C7.067 5.5 5.5 7.067 5.5 9C5.5 10.933 7.067 12.5 9 12.5Z') +
