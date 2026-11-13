@@ -2,7 +2,7 @@ import { useRef, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { Chip } from '../../components/Chip';
 import { Icon } from '../../components/Icon';
-import { SwipeHint } from '../../components/SwipeHint';
+import { useScrollFade } from '../../components/useScrollFade';
 import { PostCard } from '../../components/PostCard';
 import { discoverPosts } from '../../data/discover';
 import { useSession } from '../../state/session';
@@ -19,6 +19,7 @@ export function Discover() {
   const [off, setOff] = useState<string[]>([]);
   const [editing, setEditing] = useState(false);
   const rowRef = useRef<HTMLUListElement>(null);
+  useScrollFade(rowRef);
 
   const topics = profile.interests;
   const active = topics.filter((t) => !off.includes(t));
@@ -58,7 +59,6 @@ export function Discover() {
           );
         })}
       </ul>
-      <SwipeHint target={rowRef} />
 
       <div className="discover__posts">
         {shown.map((p) => (

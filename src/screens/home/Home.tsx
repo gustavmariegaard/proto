@@ -1,8 +1,6 @@
-import { useRef } from 'react';
 import { useNavigate, useSearchParams } from 'react-router-dom';
 import { Icon } from '../../components/Icon';
 import { Chip } from '../../components/Chip';
-import { SwipeHint } from '../../components/SwipeHint';
 import { MomentBubble } from '../../components/MomentBubble';
 import { PostCard } from '../../components/PostCard';
 import { SegmentedControl } from '../../components/SegmentedControl';
@@ -21,7 +19,6 @@ export function Home() {
   const feed: Feed = params.get('feed') === 'interesser' ? 'interesser' : 'venner';
   const { seen } = useMoments();
   const { profile } = useSession();
-  const momentsRef = useRef<HTMLUListElement>(null);
   const posts = usePosts();
   const shown = posts.filter((p) => p.feed === feed);
   // Nye moments først, sete bagefter (som i Figma)
@@ -51,7 +48,7 @@ export function Home() {
       )}
 
       {/* Venner: personers moments med "Dig" først. Interesser: moments fra sider, man følger. */}
-      <ul ref={momentsRef} className="home__moments" aria-label={feed === 'interesser' ? 'Moments fra sider' : 'Moments'}>
+      <ul className="home__moments" aria-label={feed === 'interesser' ? 'Moments fra sider' : 'Moments'}>
         {feed === 'venner' && (
           <li>
             <MomentBubble
@@ -79,7 +76,6 @@ export function Home() {
           );
         })}
       </ul>
-      <SwipeHint key={feed} target={momentsRef} />
 
       <div className="home__posts">
         {shown.map((p) => (

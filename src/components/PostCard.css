@@ -50,12 +50,28 @@
 .post__actions {
   display: flex;
   align-items: center;
-  gap: 6px;
+  gap: 2px;
   /* Gem-ikonet står helt ude ved kanten i Figma; trykfladen er stadig 44 px. */
   margin-right: -10px;
 }
 
 .post__spacer { flex: 1; }
+
+/* Ikon + antal. Trykfladen er mindst 44 × 44 px. */
+.post__act {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  min-width: 44px;
+  min-height: 44px;
+  padding: 0 8px;
+  border-radius: var(--radius-pill);
+  color: var(--color-text-primary);
+}
+
+.post__act:focus-visible { outline: none; box-shadow: var(--focus-ring); }
+
+.post__count { font-variant-numeric: tabular-nums; }
 
 .post__saved svg path { fill: currentColor; }
 

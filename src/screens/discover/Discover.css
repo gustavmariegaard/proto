@@ -21,6 +21,22 @@
 
 .discover__row::-webkit-scrollbar { display: none; }
 
+/* Blød fade i siden, når der er flere emner at swipe til */
+.discover__row[data-fade='right'] {
+  -webkit-mask-image: linear-gradient(to right, #000 calc(100% - 56px), transparent);
+  mask-image: linear-gradient(to right, #000 calc(100% - 56px), transparent);
+}
+
+.discover__row[data-fade='left'] {
+  -webkit-mask-image: linear-gradient(to left, #000 calc(100% - 56px), transparent);
+  mask-image: linear-gradient(to left, #000 calc(100% - 56px), transparent);
+}
+
+.discover__row[data-fade='both'] {
+  -webkit-mask-image: linear-gradient(to right, transparent, #000 56px, #000 calc(100% - 56px), transparent);
+  mask-image: linear-gradient(to right, transparent, #000 56px, #000 calc(100% - 56px), transparent);
+}
+
 .discover__edit {
   gap: 6px;
   padding: 0 14px;

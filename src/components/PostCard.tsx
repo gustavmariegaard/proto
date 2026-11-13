@@ -1,5 +1,6 @@
 import { useState } from 'react';
 import { Avatar, type AvatarTone } from './Avatar';
+import { Icon, type IconName } from './Icon';
 import { IconButton } from './IconButton';
 import './PostCard.css';
 
@@ -16,7 +17,25 @@ export type Post = {
   /** true = grå pladsholder, eller en sti til et billede i public/img */
   image?: boolean | string;
   imageAlt?: string;
+  /** Antal synes godt om, kommentarer, delinger og gemt. Udelades de, laves faste eksempeltal ud fra id. */
+  stats?: PostStats;
 };
+
+export type PostStats = { likes: number; comments: number; shares: number; saves: number };
+
+/** Faste eksempeltal pr. opslag (samme tal hver gang). Egne nye opslag starter på 0. */
+function sampleStats(id: string): PostStats {
+  if (id.startsWith('mit-')) return { likes: 0, comments: 0, shares: 0, saves: 0 };
+  let h = 0;
+  for (const c of id) h = (h * 31 + c.charCodeAt(0)) >>> 0;
+  const pick = (max: number, min = 0) => {
+    h = (h * 1103515245 + 12345) >>> 0;
+    return min + (h % (max - min + 1));
+  };
+  return { likes: pick(140, 4), comments: pick(32), shares: pick(14), saves: pick(20) };
+}
+
+const fmt = (n: number) => n.toLocaleString('da-DK');
 
 type PostCardProps = {
   post: Post;
@@ -29,6 +48,7 @@ type PostCardProps = {
 export function PostCard({ post, onComment, onShare, onReport }: PostCardProps) {
   const [liked, setLiked] = useState(false);
   const [saved, setSaved] = useState(false);
+  const [stats] = useState(() => post.stats ?? sampleStats(post.id));
 
   return (
     <article className="post" aria-label={`Opslag fra ${post.author}`}>
@@ -72,25 +92,52 @@ export function PostCard({ post, onComment, onShare, onReport }: PostCardProps) 
       <p className="t-body">{post.text}</p>
 
       <footer className="post__actions">
-        <IconButton
+        <Action
           icon={liked ? 'heart-filled' : 'heart'}
           label="Synes godt om"
-          aria-pressed={liked}
+          count={stats.likes + (liked ? 1 : 0)}
+          pressed={liked}
           className={liked ? 'post__liked' : undefined}
           onClick={() => setLiked((v) => !v)}
         />
-        <IconButton icon="chat" label="Kommentér" onClick={onComment} />
-        <IconButton icon="send" label="Del" onClick={onShare} />
+        <Action icon="chat" label="Kommentarer" count={stats.comments} onClick={onComment} />
+        <Action icon="send" label="Delinger" count={stats.shares} onClick={onShare} />
         <IconButton icon="flag" label="Rapportér" onClick={onReport} />
         <span className="post__spacer" />
-        <IconButton
+        <Action
           icon="bookmark"
-          label="Gem"
-          aria-pressed={saved}
+          label="Gemt"
+          count={stats.saves + (saved ? 1 : 0)}
+          pressed={saved}
           className={saved ? 'post__saved' : undefined}
           onClick={() => setSaved((v) => !v)}
         />
       </footer>
     </article>
+  );
+}
+
+type ActionProps = {
+  icon: IconName;
+  label: string;
+  count: number;
+  pressed?: boolean;
+  className?: string;
+  onClick?: () => void;
+};
+
+/** Handling med antal ved siden af ikonet. Antallet skjules ved 0. */
+function Action({ icon, label, count, pressed, className, onClick }: ActionProps) {
+  return (
+    <button
+      type="button"
+      className={['post__act', className].filter(Boolean).join(' ')}
+      aria-label={count ? `${label}: ${fmt(count)}` : label}
+      aria-pressed={pressed}
+      onClick={onClick}
+    >
+      <Icon name={icon} />
+      {count > 0 && <span className="t-caption-strong post__count">{fmt(count)}</span>}
+    </button>
   );
 }
