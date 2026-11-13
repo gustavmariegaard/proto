@@ -40,7 +40,10 @@ export function PostCard({ post, onComment, onShare, onReport }: PostCardProps) 
 
       {post.image &&
         (typeof post.image === 'string' ? (
-          <img className="post__image" src={post.image} alt={post.imageAlt ?? ''} />
+          // Billedet vises i sit eget format (højt, kvadratisk eller bredt), som brugeren uploadede det
+          <div className="post__media">
+            <img className="post__image post__image--photo" src={post.image} alt={post.imageAlt ?? ''} />
+          </div>
         ) : (
           <div className="post__image" role="img" aria-label={post.imageAlt ?? 'Billede'} />
         ))}

@@ -32,6 +32,21 @@
   background: var(--color-bg-subtle);
 }
 
+/*
+ * Uploadede billeder beholder deres eget format.
+ * Meget høje billeder skæres til højst 4:5, meget brede til højst 1,91:1,
+ * så et enkelt billede ikke fylder hele skærmen eller bliver en tynd stribe.
+ */
+.post__media {
+  container-type: inline-size;
+}
+
+.post__image--photo {
+  height: auto;
+  min-height: 52cqw;
+  max-height: 125cqw;
+}
+
 .post__actions {
   display: flex;
   align-items: center;
