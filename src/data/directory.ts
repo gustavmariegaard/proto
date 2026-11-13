@@ -21,6 +21,8 @@ export type Account = {
   bio?: string;
   /** Følges fra start */
   followed: boolean;
+  /** Personen følger dig (sider følger aldrig tilbage) */
+  followsMe: boolean;
 };
 
 /** Korte tekster om nogle af profilerne (eksempler, ikke fra Figma) */
@@ -44,7 +46,7 @@ let cache: Map<string, Account> | null = null;
 
 function build() {
   const map = new Map<string, Account>();
-  const add = (a: Omit<Account, 'handle' | 'bio'>) => {
+  const add = (a: Omit<Account, 'handle' | 'bio' | 'followsMe'> & { followsMe?: boolean }) => {
     const handle = handleOf(a.name);
     const prev = map.get(handle);
     map.set(handle, {
@@ -54,18 +56,19 @@ function build() {
       avatarSrc: prev?.avatarSrc ?? a.avatarSrc,
       momentsId: prev?.momentsId ?? a.momentsId,
       followed: (prev?.followed ?? false) || a.followed,
+      followsMe: a.kind === 'person' && ((prev?.followsMe ?? false) || Boolean(a.followsMe)),
       bio: bios[handle],
     });
   };
   const hasMoments = (id: string) => moments.some((m) => m.personId === id);
   Object.entries(people).forEach(([id, p]) =>
-    add({ name: p.fullName, kind: 'person', tone: p.tone, avatarSrc: p.avatarSrc, momentsId: hasMoments(id) ? id : undefined, followed: true }),
+    add({ name: p.fullName, kind: 'person', tone: p.tone, avatarSrc: p.avatarSrc, momentsId: hasMoments(id) ? id : undefined, followed: true, followsMe: true }),
   );
   Object.entries(pageAccounts).forEach(([id, p]) =>
     add({ name: p.fullName, kind: 'side', tone: p.tone, avatarSrc: p.avatarSrc, momentsId: hasMoments(id) ? id : undefined, followed: true }),
   );
   pages.forEach((p) => add({ name: p.name, kind: 'side', tone: p.tone, avatarSrc: p.avatarSrc, followed: true }));
-  contacts.forEach((c) => add({ name: c.name, kind: 'person', tone: c.tone, avatarSrc: c.avatarSrc, followed: c.friend }));
+  contacts.forEach((c) => add({ name: c.name, kind: 'person', tone: c.tone, avatarSrc: c.avatarSrc, followed: c.friend, followsMe: c.friend }));
   [...posts, ...discoverPosts].forEach((p) =>
     add({
       name: p.author,

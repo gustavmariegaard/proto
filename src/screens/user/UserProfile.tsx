@@ -27,7 +27,7 @@ function countsFor(handle: string, kind: 'person' | 'side') {
   for (const c of handle) h = (h * 31 + c.charCodeAt(0)) >>> 0;
   return kind === 'side'
     ? { followers: 300 + (h % 2400), following: 0 }
-    : { followers: 40 + (h % 400), following: 30 + ((h >> 8) % 300) };
+    : { followers: 40 + (h % 400), following: 30 + ((h >>> 8) % 300) };
 }
 
 const fmt = (n: number) => n.toLocaleString('da-DK');
@@ -136,6 +136,11 @@ export function UserProfile() {
               @{account.handle}
               {isSide && ' · Side'}
             </p>
+            {account.followsMe && (
+              <span className={['uprof__relation t-caption-strong', following && 'uprof__relation--mutual'].filter(Boolean).join(' ')}>
+                {following ? 'I følger hinanden' : 'Følger dig'}
+              </span>
+            )}
           </div>
         </section>
 
@@ -160,7 +165,7 @@ export function UserProfile() {
 
         <div className="uprof__actions">
           <Button variant={following ? 'secondary' : 'primary'} block onClick={toggleFollow} aria-pressed={following}>
-            {following ? 'Følger' : 'Følg'}
+            {following ? 'Følger' : account.followsMe ? 'Følg tilbage' : 'Følg'}
           </Button>
           {!isSide && (
             <Button variant="secondary" block onClick={message}>

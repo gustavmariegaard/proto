@@ -89,3 +89,18 @@
   color: #fff;
   filter: drop-shadow(0 1px 3px rgb(0 0 0 / 0.5));
 }
+
+/* "I følger hinanden" / "Følger dig" */
+.uprof__relation {
+  align-self: flex-start;
+  margin-top: 6px;
+  padding: 3px 10px;
+  border-radius: var(--radius-pill);
+  background: var(--color-bg-subtle);
+  color: var(--color-text-secondary);
+}
+
+.uprof__relation--mutual {
+  background: var(--color-accent-note-bg);
+  color: var(--color-accent-note-text);
+}
