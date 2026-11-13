@@ -124,3 +124,23 @@
   text-overflow: ellipsis;
   white-space: nowrap;
 }
+
+/* Navn og billede åbner profilen */
+.post__who {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  min-width: 0;
+  color: inherit;
+  text-decoration: none;
+  border-radius: var(--radius-sm);
+}
+
+.post__who:focus-visible,
+.post__name-link:focus-visible { outline: none; box-shadow: var(--focus-ring); }
+
+.post__name-link {
+  color: inherit;
+  text-decoration: none;
+  font-weight: 600;
+}

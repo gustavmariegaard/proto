@@ -312,3 +312,5 @@
 }
 
 .moment-edge__bar { vector-effect: non-scaling-stroke; }
+
+.moment-full__link { color: inherit; text-decoration: none; }

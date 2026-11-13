@@ -1,4 +1,5 @@
 import { useRef, useState } from 'react';
+import { Link } from 'react-router-dom';
 import { Avatar, initials } from '../../components/Avatar';
 import { Icon } from '../../components/Icon';
 import { Sheet } from '../../components/Sheet';
@@ -72,7 +73,7 @@ export function CommentsSheet({ open, onClose }: Props) {
               <Avatar name={c.author} tone={c.tone} src={c.avatarSrc} />
               <div className="comment__text">
                 <p className="comment__name">
-                  <span className="t-heading-s">{c.author}</span>
+                  <Link to={c.author === me ? '/profil' : `/bruger/${handleOf(c.author)}`} className="t-heading-s comment-link">{c.author}</Link>
                   {c.isAuthor && <span className="t-caption-strong comment__muted">Forfatter</span>}
                 </p>
                 <p className="t-caption comment__muted">

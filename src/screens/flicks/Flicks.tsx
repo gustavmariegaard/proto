@@ -1,11 +1,12 @@
 import { useCallback, useEffect, useRef, useState } from 'react';
+import { Link } from 'react-router-dom';
 import { IconButton } from '../../components/IconButton';
 import { Icon } from '../../components/Icon';
 import { TabBar } from '../../components/TabBar';
 import { flicks, type Flick, type FlickSource } from '../../data/flicks';
 import { FlickCommentsSheet } from './FlickCommentsSheet';
 import { FlickShareSheet } from './FlickShareSheet';
-import { at } from '../../data/handles';
+import { at, handleOf } from '../../data/handles';
 import './Flicks.css';
 
 const modes: { source: FlickSource; label: string }[] = [
@@ -180,7 +181,11 @@ function FlickView({ flick, position, showHint, liked, saved, onLike, onSave, on
             )}
             <span className="t-caption-strong">{flick.reason}</span>
           </p>
-          <p className="t-heading-s flick__author">{at(flick.author)}</p>
+          <p className="t-heading-s flick__author">
+            <Link to={`/bruger/${handleOf(flick.author)}`} className="flick__author-link">
+              {at(flick.author)}
+            </Link>
+          </p>
           <p className="t-body-s flick__text">{flick.text}</p>
         </div>
       </div>

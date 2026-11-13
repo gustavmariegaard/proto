@@ -1,4 +1,5 @@
 import { useState } from 'react';
+import { Link } from 'react-router-dom';
 import { Avatar, type AvatarTone } from './Avatar';
 import { Icon, type IconName } from './Icon';
 import { IconButton } from './IconButton';
@@ -52,6 +53,9 @@ export function PostCard({ post, onComment, onShare, onReport }: PostCardProps) 
   const [liked, setLiked] = useState(false);
   const [saved, setSaved] = useState(false);
   const [stats] = useState(() => post.stats ?? sampleStats(post.id));
+  const handle = post.username || handleOf(post.author);
+  // Egne opslag åbner din egen profil
+  const profileHref = post.id.startsWith('mit-') ? '/profil' : `/bruger/${handle}`;
 
   return (
     <article className="post" aria-label={`Opslag fra ${post.author}`}>
@@ -68,19 +72,21 @@ export function PostCard({ post, onComment, onShare, onReport }: PostCardProps) 
           <div className="post__meta">
             <h3 className="t-heading-s post__group-name">{post.group.name}</h3>
             <p className="t-caption post__sub">
-              {post.author} · {post.meta}
+              <Link to={profileHref} className="post__name-link">{post.author}</Link> · {post.meta}
             </p>
           </div>
         </header>
       ) : (
         <header className="post__header">
-          <Avatar name={post.author} tone={post.tone} src={post.avatarSrc} />
-          <div className="post__meta">
-            <h3 className="t-heading-s">{post.author}</h3>
-            <p className="t-caption post__sub">
-              @{post.username || handleOf(post.author)} · {post.meta}
-            </p>
-          </div>
+          <Link to={profileHref} className="post__who" aria-label={`Gå til profilen for ${post.author}`}>
+            <Avatar name={post.author} tone={post.tone} src={post.avatarSrc} />
+            <div className="post__meta">
+              <h3 className="t-heading-s">{post.author}</h3>
+              <p className="t-caption post__sub">
+                @{handle} · {post.meta}
+              </p>
+            </div>
+          </Link>
         </header>
       )}
 

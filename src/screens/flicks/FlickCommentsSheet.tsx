@@ -1,4 +1,5 @@
 import { useRef, useState } from 'react';
+import { Link } from 'react-router-dom';
 import { Avatar, initials } from '../../components/Avatar';
 import { Icon } from '../../components/Icon';
 import { Sheet } from '../../components/Sheet';
@@ -45,7 +46,7 @@ export function FlickCommentsSheet({ open, onClose }: Props) {
           <Avatar name={c.author} tone={c.tone} />
           <div className="fcomment__text">
             <p className="fcomment__name">
-              <span className="t-heading-s">{c.author}</span>
+              <Link to={c.author === me ? '/profil' : `/bruger/${handleOf(c.author)}`} className="t-heading-s comment-link">{c.author}</Link>
             </p>
             <p className="t-caption fcomment__muted">
               @{c.author === me ? myHandle : handleOf(c.author)} · {c.time}

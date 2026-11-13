@@ -1,4 +1,5 @@
 import { useState } from 'react';
+import { handleOf } from '../../data/handles';
 import { Link } from 'react-router-dom';
 import { Avatar } from '../../components/Avatar';
 import { BackButton } from '../../components/BackButton';
@@ -121,7 +122,7 @@ export function Search() {
             {kind === 'folk' &&
               people.map((p) => (
                 <li key={p.id}>
-                  <Link to={p.to} className="acc-card" onClick={remember}>
+                  <Link to={`/bruger/${handleOf(p.name)}`} className="acc-card" onClick={remember}>
                     <Avatar name={p.name} tone={p.tone} size="L" src={p.avatarSrc} />
                     <span className="acc-card__text">
                       <span className="t-heading-s acc-ellipsis">{p.name}</span>
