@@ -147,19 +147,3 @@ html:has(.flicks, .newflick, .moment-view, .cviewer) #root {
   .moment-view::before { position: absolute; inset: 0; }
 }
 
-/* Mørke striber langs skærmens øverste og nederste kant på mørke skærme (Safari farver efter dem) */
-.edge-tint {
-  position: fixed;
-  left: 0;
-  right: 0;
-  z-index: 1000;
-  background: var(--ink-900);
-  pointer-events: none;
-}
-
-.edge-tint--top { top: 0; height: max(env(safe-area-inset-top), 2px); }
-.edge-tint--bottom { bottom: 0; height: max(env(safe-area-inset-bottom), 2px); }
-
-@media (min-width: 600px) and (min-height: 700px) {
-  .edge-tint { display: none; }
-}

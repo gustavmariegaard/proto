@@ -7,11 +7,14 @@ import { contacts, initialThreads, type ChatMessage, type Thread } from '../../d
  * når man går tilbage til listen og ind igen. Intet sendes nogen steder hen.
  */
 
-let threads: Thread[] = initialThreads;
+import { keep, save } from '../../state/keep';
+
+let threads: Thread[] = keep('threads', initialThreads);
 const listeners = new Set<() => void>();
 
 function set(next: Thread[]) {
   threads = next;
+  save('threads', next);
   listeners.forEach((l) => l());
 }
 

@@ -6,7 +6,9 @@ import { initialCollections, photoById, type Collection, type Photo } from '../.
  * "Rediger samling" ses på profilen og i samlingen. Kun i hukommelsen.
  */
 
-let collections: Collection[] = initialCollections;
+import { keep, save } from '../../state/keep';
+
+let collections: Collection[] = keep('collections', initialCollections);
 const listeners = new Set<() => void>();
 
 function subscribe(cb: () => void) {
@@ -25,6 +27,7 @@ export function useCollection(id: string) {
 
 export function updateCollection(id: string, patch: Partial<Omit<Collection, 'id'>>) {
   collections = collections.map((c) => (c.id === id ? { ...c, ...patch } : c));
+  save('collections', collections);
   listeners.forEach((cb) => cb());
 }
 

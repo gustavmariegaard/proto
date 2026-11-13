@@ -7,8 +7,10 @@ import { groups as initialGroups, pages as initialPages, type Community } from '
  * Intet sendes nogen steder hen.
  */
 
-function createStore(initial: Community[]) {
-  let items = initial;
+import { keep, save } from '../../state/keep';
+
+function createStore(key: string, initial: Community[]) {
+  let items = keep(key, initial);
   const listeners = new Set<() => void>();
   const subscribe = (l: () => void) => {
     listeners.add(l);
@@ -17,6 +19,7 @@ function createStore(initial: Community[]) {
   const get = () => items;
   const set = (next: Community[]) => {
     items = next;
+    save(key, next);
     listeners.forEach((l) => l());
   };
   return {
@@ -26,8 +29,8 @@ function createStore(initial: Community[]) {
   };
 }
 
-export const groupStore = createStore(initialGroups);
-export const pageStore = createStore(initialPages);
+export const groupStore = createStore('groups', initialGroups);
+export const pageStore = createStore('pages', initialPages);
 
 /** To bogstaver ud fra navnet, fx "Bogklubben" → "BO", "Byens bibliotek" → "BB". */
 export function initialsOf(name: string) {

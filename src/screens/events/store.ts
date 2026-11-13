@@ -7,11 +7,14 @@ import { initialEvents, type EventItem, type Rsvp } from '../../data/events';
  * mellem listen og en begivenhed. Intet sendes nogen steder hen.
  */
 
-let events: EventItem[] = initialEvents;
+import { keep, save } from '../../state/keep';
+
+let events: EventItem[] = keep('events', initialEvents);
 const listeners = new Set<() => void>();
 
 function set(next: EventItem[]) {
   events = next;
+  save('events', next);
   listeners.forEach((l) => l());
 }
 
