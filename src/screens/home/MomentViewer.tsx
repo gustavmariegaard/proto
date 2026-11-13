@@ -123,21 +123,21 @@ function Viewer({ personId }: { personId: string }) {
       />
 
       <div className="moment-full__top">
-        <span />
+        {/* Brugernavnet øverst til venstre */}
+        <div className="moment-view__who moment-full__who">
+          <Avatar name={person.fullName} tone={person.tone} size="S" src={person.avatarSrc} />
+          <Link to={`/bruger/${handleOf(person.fullName)}`} className="t-heading-s moment-full__link">
+            {at(person.fullName)}
+          </Link>
+          <span className="t-caption moment-view__time">{current.time}</span>
+        </div>
+
         <button type="button" className="moment-view__close" aria-label="Luk" onClick={close}>
           <Icon name="close" />
         </button>
       </div>
 
       <div className="moment-full__spacer" />
-
-      <div className="moment-view__who moment-full__who">
-        <Avatar name={person.fullName} tone={person.tone} size="S" src={person.avatarSrc} />
-        <Link to={`/bruger/${handleOf(person.fullName)}`} className="t-heading-s moment-full__link">
-          {at(person.fullName)}
-        </Link>
-        <span className="t-caption moment-view__time">{current.time}</span>
-      </div>
 
       <form
         className="moment-view__reply"

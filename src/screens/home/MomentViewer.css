@@ -273,7 +273,7 @@
   justify-content: space-between;
   height: 44px;
   margin-top: calc(var(--safe-top) + 10px);
-  padding: 0 14px 0 24px;
+  padding: 0 14px 0 16px;
   pointer-events: none;
 }
 
@@ -291,6 +291,16 @@
 .moment-view--full .moment-view__reply {
   z-index: 3;
   margin-top: 0;
+  /* Samme bredde som fremdriften nederst */
+  padding: 0 4px 0 14px;
+}
+
+/* Brugernavnet øverst til venstre */
+.moment-full__top .moment-full__who {
+  justify-content: flex-start;
+  margin: 0;
+  min-width: 0;
+  pointer-events: auto;
 }
 
 /* Fremdriftsrammen langs skærmens kant */
