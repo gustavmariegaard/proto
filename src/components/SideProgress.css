@@ -1,4 +1,4 @@
-/* Lodrette segmenter langs venstre kant (Moments og samlinger) */
+/* Lodrette segmenter langs venstre kant (Moments og samlinger), nedefra og op */
 .side-progress {
   position: absolute;
   z-index: 4;
@@ -6,7 +6,8 @@
   top: calc(var(--safe-top) + 64px);
   bottom: calc(var(--safe-bottom) + 150px);
   display: flex;
-  flex-direction: column;
+  /* Første segment nederst; fremdriften kører nedefra og op */
+  flex-direction: column-reverse;
   gap: 4px;
   width: 3px;
   margin: 0;
@@ -30,7 +31,7 @@
   inset: 0;
   border-radius: inherit;
   background: #fff;
-  transform-origin: top;
+  transform-origin: bottom;
   transform: scaleY(0);
 }
 

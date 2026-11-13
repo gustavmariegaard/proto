@@ -111,59 +111,53 @@ export function StoryViewer({ items, title, subtitle, startAt = 0, onClose, acti
     onContextMenu: (e: React.MouseEvent) => e.preventDefault(),
   };
 
-  const cover = items.find((x) => !isVideo(x));
   const videos = items.filter(isVideo).length;
   const count = [items.length - videos && `${items.length - videos} ${items.length - videos === 1 ? 'billede' : 'billeder'}`, videos && `${videos} ${videos === 1 ? 'video' : 'videoer'}`]
     .filter(Boolean)
     .join(' · ');
 
   return (
-    <div className="moment-view pf-viewer" role="dialog" aria-label={`Samlingen ${title}`}>
-      <div className="moment-view__bg" aria-hidden="true">
-        {cover && <img src={video ? cover : current} alt="" />}
+    <div className="moment-view moment-view--full pf-viewer story-viewer" role="dialog" aria-label={`Samlingen ${title}`}>
+      {/* Billedet eller videoen fylder hele skærmen. Tryk til siden skifter, hold nede = pause. */}
+      <div className={['moment-full__photo', held && 'is-held'].filter(Boolean).join(' ')}>
+        {video ? (
+          <video
+            key={`${current}-${index}`}
+            ref={videoRef}
+            src={current}
+            muted
+            playsInline
+            autoPlay
+            preload="auto"
+            onEnded={() => goTo(index + 1)}
+            aria-label={`Video ${index + 1}`}
+          />
+        ) : (
+          <img src={current} alt="" draggable={false} />
+        )}
+        <button type="button" className="moment-view__tap moment-view__tap--prev pf-viewer__tap" aria-label="Forrige" onClick={() => tap(-1)} {...holdProps} />
+        <button type="button" className="moment-view__tap moment-view__tap--next pf-viewer__tap" aria-label="Næste" onClick={() => tap(1)} {...holdProps} />
       </div>
 
       {/* Fremdrift som stories, men lodret langs venstre side */}
       <SideProgress count={items.length} index={index} progress={progress} />
 
-      <div className="moment-view__top">
-        <span />
+      <div className="moment-full__top story-viewer__top">
+        <div className="story-viewer__title">
+          <span className="t-heading-s">{title}</span>
+          <span className="t-caption">
+            {subtitle ?? count}
+            {video && ' · Video'}
+          </span>
+        </div>
         <button type="button" className="moment-view__close" aria-label="Luk" onClick={onClose}>
           <Icon name="close" />
         </button>
       </div>
 
-      <div className="moment-view__stage">
-        <div className={['moment-view__frame', held && 'is-held'].filter(Boolean).join(' ')}>
-          <div className="moment-view__photo">
-            {video ? (
-              <video
-                key={`${current}-${index}`}
-                ref={videoRef}
-                src={current}
-                muted
-                playsInline
-                autoPlay
-                preload="auto"
-                onEnded={() => goTo(index + 1)}
-                aria-label={`Video ${index + 1}`}
-              />
-            ) : (
-              <img src={current} alt="" draggable={false} />
-            )}
-          </div>
-          {video && <Icon name="clip" className="story-viewer__video-icon" />}
-          <button type="button" className="moment-view__tap moment-view__tap--prev pf-viewer__tap" aria-label="Forrige" onClick={() => tap(-1)} {...holdProps} />
-          <button type="button" className="moment-view__tap moment-view__tap--next pf-viewer__tap" aria-label="Næste" onClick={() => tap(1)} {...holdProps} />
-        </div>
-      </div>
+      <div className="moment-full__spacer" />
 
-      <div className="moment-view__who">
-        <span className="t-heading-s">{title}</span>
-        <span className="t-caption moment-view__time">{subtitle ?? count}</span>
-      </div>
-
-      {actions && <div className="pf-viewer__actions">{actions}</div>}
+      {actions && <div className="pf-viewer__actions story-viewer__actions">{actions}</div>}
     </div>
   );
 }

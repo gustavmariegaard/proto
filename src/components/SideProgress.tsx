@@ -13,7 +13,7 @@ type Props = {
 
 /**
  * Som stories på Instagram, men lodret langs venstre side:
- * ét segment pr. moment, set ovenfra og ned. Det aktuelle fylder sig op.
+ * ét segment pr. moment, nedefra og op. Det aktuelle fylder sig op nedefra.
  */
 export function SideProgress({ count, index, progress, duration, paused, onDone }: Props) {
   return (
