@@ -1,7 +1,6 @@
 import { Link, useNavigate, useSearchParams } from 'react-router-dom';
 import { Icon } from '../../components/Icon';
 import { IconButton } from '../../components/IconButton';
-import { SegmentedControl } from '../../components/SegmentedControl';
 import { Tag } from '../../components/Tag';
 import { useSession } from '../../state/session';
 import { latestPhotos, myFlicks, photoById, photoHeights, photos, pinnedPost, textPosts, type TextPost } from '../../data/profile';
@@ -23,7 +22,7 @@ export function Profile() {
   const navigate = useNavigate();
   const [params, setParams] = useSearchParams();
   const me = useMe();
-  const { profile, setProfile } = useSession();
+  const { profile } = useSession();
   const collections = useCollections();
   const raw = params.get('fane');
   const tab: Tab = tabs.some((t) => t.value === raw) ? (raw as Tab) : 'alt';
@@ -62,7 +61,14 @@ export function Profile() {
         </span>
         <div className="pf-identity__name">
           <h1 className="t-title-l">{me.name}</h1>
-          <p className="t-caption pf-muted">{me.username}</p>
+          <p className="t-caption pf-muted">
+            {me.username}
+            {profile.private && (
+              <Link to="/indstillinger/privatliv" className="pf-private">
+                <Icon name="lock" size={12} /> Privat
+              </Link>
+            )}
+          </p>
         </div>
         <IconButton icon="settings" label="Indstillinger" onClick={() => navigate('/indstillinger')} />
       </section>
@@ -79,25 +85,6 @@ export function Profile() {
           <span className="t-caption pf-muted">Interesser</span>
         </Link>
       </div>
-
-      {/* Som på Instagram: hele profilen er offentlig eller privat – ikke de enkelte opslag */}
-      <section className="pf-privacy" aria-labelledby="pf-privacy">
-        <h2 id="pf-privacy" className="t-heading-s">Hvem kan se din profil?</h2>
-        <SegmentedControl
-          label="Hvem kan se din profil?"
-          value={profile.private ? 'privat' : 'offentlig'}
-          onChange={(v) => setProfile({ ...profile, private: v === 'privat' })}
-          options={[
-            { value: 'offentlig', label: 'Offentlig' },
-            { value: 'privat', label: 'Privat' },
-          ]}
-        />
-        <p className="t-caption pf-muted" aria-live="polite">
-          {profile.private
-            ? 'Kun dine følgere kan se dine opslag, moments og flicks. Nye følgere skal godkendes af dig. Opslag i grupper ses stadig af gruppens medlemmer.'
-            : 'Alle kan se dine opslag, moments og flicks. Opslag i grupper ses kun af gruppens medlemmer.'}
-        </p>
-      </section>
 
       <h2 className="t-heading-s">Samlinger</h2>
       <ul className="pf-collections">

@@ -39,7 +39,7 @@ import { Search } from './screens/account/Search';
 import { Notifications } from './screens/account/Notifications';
 import { Saved } from './screens/account/Saved';
 import { Creator } from './screens/account/Creator';
-import { Settings } from './screens/account/Settings';
+import { LanguageSettings, NetworkSettings, PrivacySettings, Settings } from './screens/account/Settings';
 import { MoreSheet } from './screens/more/MoreSheet';
 import { FindFolk } from './screens/more/FindFolk';
 import { Groups, GroupActivity } from './screens/more/Groups';
@@ -128,6 +128,9 @@ export default function App() {
             <Route path="gemt" element={<Saved />} />
             <Route path="skaber" element={<Creator />} />
             <Route path="indstillinger" element={<Settings />} />
+            <Route path="indstillinger/privatliv" element={<PrivacySettings />} />
+            <Route path="indstillinger/sprog" element={<LanguageSettings />} />
+            <Route path="indstillinger/netvaerk" element={<NetworkSettings />} />
             <Route path="indstillinger/foraeldrekontrol" element={<ParentalControl />} />
             <Route path="indstillinger/foraeldrekontrol/:id" element={<ChildSettingsScreen />} />
             <Route path="find-folk" element={<FindFolk />} />

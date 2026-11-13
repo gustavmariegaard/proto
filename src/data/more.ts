@@ -19,8 +19,6 @@ export const moreTiles: MoreTile[] = [
   { label: 'Sider', icon: 'flag', to: '/sider' },
   { label: 'Gemt', icon: 'bookmark', to: '/gemt' },
   { label: 'Udvid cirkel', icon: 'user-plus', to: '/find-folk' },
-  { label: 'Sprog, netværk og børn', icon: 'sliders', to: '/indstillinger' },
-  { label: 'Privatliv og data', icon: 'lock', to: '/indstillinger' },
 ];
 
 /* ---------- Udvid cirkel ---------- */

@@ -214,19 +214,6 @@ export const networkToggles = [
   { id: 'del-offentlige', title: 'Del mine offentlige opslag', hint: 'Andre netværk kan følge dine offentlige opslag.' },
 ];
 
-export const familyToggles = [
-  { id: 'boernetilstand', title: 'Børnetilstand', hint: 'Kun godkendte kontakter og indhold, der passer til alderen.' },
-];
-
-export const settingsToggleDefaults: Record<string, boolean> = {
-  'oversaet-opslag': true,
-  'oversaet-beskeder': true,
-  'foelg-andre': true,
-  'del-offentlige': false,
-  boernetilstand: false,
-  foraeldrekontrol: false,
-};
-
 export const screenTimeOptions = ['30 min.', '60 min.', '90 min.', 'Ingen grænse'];
 
 /** Eksemplet på oversættelse i Indstillinger */
