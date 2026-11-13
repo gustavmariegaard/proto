@@ -291,9 +291,16 @@
 .moment-view--full .moment-view__reply {
   z-index: 3;
   margin-top: 0;
-  /* Samme bredde som fremdriften nederst */
+  /* Samme bredde som fremdriften nederst: ikonernes kant flugter med stregerne */
   padding: 0 4px 0 14px;
+  /* Lige stor afstand: felt → hjerte → del (ikonerne har selv 10 px luft i trykfladen) */
+  gap: 0;
 }
+
+.moment-view--full .moment-view__field { margin-right: 10px; }
+
+/* Papirflyveren er tegnet lidt til højre i sit ikon; ret den, så afstandene ser lige store ud */
+.moment-view--full .moment-view__like + .moment-view__like svg { transform: translateX(-3px); }
 
 /* Brugernavnet øverst til venstre */
 .moment-full__top .moment-full__who {
