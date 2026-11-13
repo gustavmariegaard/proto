@@ -166,6 +166,15 @@ function Viewer({ personId }: { personId: string }) {
         >
           <Icon name={liked ? 'heart-filled' : 'heart'} />
         </button>
+        {/* Del eller send momentet videre, præcis som et opslag */}
+        <button
+          type="button"
+          className="moment-view__like"
+          aria-label="Del"
+          onClick={() => navigate(`/opslag/${current.id}/del`)}
+        >
+          <Icon name="send" />
+        </button>
       </form>
     </div>
   );
