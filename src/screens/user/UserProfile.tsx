@@ -97,7 +97,7 @@ export function UserProfile() {
         post={p}
         onComment={linkable ? () => navigate(`/opslag/${p.id}?kommentarer`) : undefined}
         onShare={linkable ? () => navigate(`/opslag/${p.id}/del`) : undefined}
-        onReport={linkable ? () => navigate(`/opslag/${p.id}/rapporter`) : undefined}
+        onReport={() => navigate(`/opslag/${p.id}/rapporter`)}
       />
     );
   };

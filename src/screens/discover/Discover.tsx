@@ -67,7 +67,7 @@ export function Discover() {
             post={p}
             onComment={p.linkable ? () => navigate(`/opslag/${p.id}?kommentarer`) : undefined}
             onShare={p.linkable ? () => navigate(`/opslag/${p.id}/del`) : undefined}
-            onReport={p.linkable ? () => navigate(`/opslag/${p.id}/rapporter`) : undefined}
+            onReport={() => navigate(`/opslag/${p.id}/rapporter`)}
           />
         ))}
         {shown.length === 0 && (

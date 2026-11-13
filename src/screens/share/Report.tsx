@@ -2,6 +2,7 @@ import { useState } from 'react';
 import { Navigate, useParams } from 'react-router-dom';
 import { Button } from '../../components/Button';
 import { pronouns, reportReasons } from '../../data/create';
+import { discoverPosts } from '../../data/discover';
 import { usePost } from '../../state/posts';
 import { CloseHeader, RadioDot, useClose } from '../create/parts';
 import '../create/parts.css';
@@ -11,7 +12,8 @@ import './Report.css';
 export function Report() {
   const { id } = useParams();
   const close = useClose(id ? `/opslag/${id}` : '/');
-  const post = usePost(id);
+  // Også opslag, der kun findes i Offentlig debat
+  const post = usePost(id) ?? discoverPosts.find((p) => p.id === id);
   // Ingen kategori fra start: man skal selv vælge, før man kan sende
   const [reason, setReason] = useState<string | null>(null);
   const [other, setOther] = useState('');

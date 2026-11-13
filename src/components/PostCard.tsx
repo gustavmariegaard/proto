@@ -157,6 +157,16 @@ export function PostCard({ post, onComment, onShare, onReport }: PostCardProps) 
             <p className="t-caption post-menu__muted">
               ciircle viser kun opslag fra dem, du følger, dine grupper, sider og de emner, du selv har valgt. Vi bruger ikke din adfærd andre steder.
             </p>
+            {/* Man skal altid kunne komme tilbage */}
+            <div className="post-menu__buttons">
+              <button type="button" className="post-menu__back" onClick={() => setMenu('menu')}>
+                <Icon name="chevron-left" size={20} />
+                Tilbage
+              </button>
+              <button type="button" className="post-menu__ok" onClick={() => setMenu('closed')}>
+                OK
+              </button>
+            </div>
           </div>
         ) : (
           <ul className="post-menu">
@@ -196,6 +206,12 @@ export function PostCard({ post, onComment, onShare, onReport }: PostCardProps) 
                 </button>
               </li>
             )}
+            <li className="post-menu__cancel">
+              <button type="button" className="post-menu__item" onClick={() => setMenu('closed')}>
+                <Icon name="close" />
+                Luk
+              </button>
+            </li>
           </ul>
         )}
       </Sheet>

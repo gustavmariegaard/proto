@@ -4,9 +4,9 @@ import './TabBar.css';
 
 const tabs: { to: string; label: string; icon: IconName }[] = [
   { to: '/', label: 'Hjem', icon: 'home' },
-  { to: '/flicks', label: 'Flicks', icon: 'clip' },
+  { to: '/opdag', label: 'Offentlig debat', icon: 'compass' },
   { to: '/opret', label: 'Opret', icon: 'plus' },
-  { to: '/opdag', label: 'Opdag', icon: 'compass' },
+  { to: '/flicks', label: 'Flicks', icon: 'clip' },
   { to: '/mere', label: 'Mere', icon: 'more' },
 ];
 
