@@ -2,6 +2,7 @@ import { useEffect, useRef, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { Button } from '../../components/Button';
 import { IconButton } from '../../components/IconButton';
+import { useSession } from '../../state/session';
 import './NewFlick.css';
 
 const HOLD_MS = 350; // så længe skal man holde, før der optages video
@@ -15,6 +16,7 @@ type Captured = { kind: 'image' | 'video'; url: string };
  */
 export function NewFlick() {
   const navigate = useNavigate();
+  const { profile } = useSession();
   const videoRef = useRef<HTMLVideoElement>(null);
   const captureInput = useRef<HTMLInputElement>(null);
   const galleryInput = useRef<HTMLInputElement>(null);
@@ -182,7 +184,7 @@ export function NewFlick() {
             className="newflick__btn"
             onClick={() => (captured ? setCaptured(null) : close())}
           />
-          <span className="newflick__audience">Følgere</span>
+          <span className="newflick__audience">{profile.private ? 'Privat profil' : 'Offentlig profil'}</span>
         </div>
 
         <div className="newflick__controls">

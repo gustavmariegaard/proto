@@ -36,7 +36,7 @@ export function Create() {
   const close = useClose('/');
   const [kind, setKind] = useState<CreateKind>('opslag');
   const [text, setText] = useState('');
-  const [audience, setAudience] = useState<Audience>('venner');
+  const [audience, setAudience] = useState<Audience>('offentlig');
   const [groupId, setGroupId] = useState<string | null>(null);
   const groups = groupStore.use();
   const group = groups.find((g) => g.id === groupId) ?? null;
@@ -77,7 +77,7 @@ export function Create() {
       username: profile.username.trim().replace(/^@/, '') || handleOf(profile.name) || 'dit.navn',
       avatarSrc: profile.avatar ?? img('mig.jpg'),
       tone: 'blue',
-      meta: audience === 'gruppe' ? 'lige nu' : `${audience === 'offentlig' ? 'Offentligt' : 'Til følgere'} · lige nu`,
+      meta: 'lige nu',
       text: text.trim(),
       image,
       group: audience === 'gruppe' && group
@@ -90,7 +90,9 @@ export function Create() {
   const hint =
     audience === 'gruppe' && group
       ? `Kun medlemmer af ${group.name} kan se opslaget.`
-      : audiences.find((a) => a.value === audience)!.hint;
+      : audience === 'offentlig' && profile.private
+        ? 'Din profil er privat, så kun dine følgere kan se opslaget. Det kan du ændre på din profil.'
+        : audiences.find((a) => a.value === audience)!.hint;
 
   const audiencePicker = (
     <AudiencePicker
@@ -279,7 +281,7 @@ type AudiencePickerProps = {
   hint: string;
 };
 
-/** Vises for: Følgere, Offentligt eller en af dine grupper */
+/** Vises for: Offentligt (din profil) eller en af dine grupper */
 function AudiencePicker({ audience, onAudience, groups, groupId, onGroup, hint }: AudiencePickerProps) {
   return (
     <section className="create__audience" aria-labelledby="create-audience">

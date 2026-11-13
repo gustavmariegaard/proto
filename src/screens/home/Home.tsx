@@ -4,6 +4,7 @@ import { Chip } from '../../components/Chip';
 import { MomentBubble } from '../../components/MomentBubble';
 import { PostCard } from '../../components/PostCard';
 import { SegmentedControl } from '../../components/SegmentedControl';
+import { handleOf } from '../../data/handles';
 import { img, pageAccounts, people } from '../../data/sample';
 import { usePosts } from '../../state/posts';
 import { useMoments } from '../../state/moments';
@@ -65,7 +66,7 @@ export function Home() {
           return (
             <li key={id}>
               <MomentBubble
-                name={p.name}
+                name={handleOf(p.fullName)}
                 fullName={p.fullName}
                 tone={p.tone}
                 src={p.avatarSrc}

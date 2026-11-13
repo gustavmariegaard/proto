@@ -12,6 +12,8 @@ export type Profile = {
   interests: string[];
   /** Billede valgt fra telefonen (kun gemt lokalt) */
   avatar?: string;
+  /** Privat profil: kun følgere kan se ens opslag, moments og flicks (som på Instagram) */
+  private?: boolean;
 };
 
 type SessionState = {

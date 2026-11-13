@@ -2,6 +2,7 @@ import { useRef, useState } from 'react';
 import { Avatar, initials } from '../../components/Avatar';
 import { Icon } from '../../components/Icon';
 import { Sheet } from '../../components/Sheet';
+import { handleOf } from '../../data/handles';
 import { comments as sampleComments, type Comment } from '../../data/sample';
 import { useSession } from '../../state/session';
 import './CommentsSheet.css';
@@ -16,6 +17,7 @@ export function CommentsSheet({ open, onClose }: Props) {
   const [text, setText] = useState('');
   const inputRef = useRef<HTMLInputElement>(null);
   const me = profile.name || 'Du';
+  const myHandle = profile.username.trim().replace(/^@/, '') || handleOf(profile.name) || 'dit.navn';
 
   const send = () => {
     const t = text.trim();
@@ -71,8 +73,10 @@ export function CommentsSheet({ open, onClose }: Props) {
               <div className="comment__text">
                 <p className="comment__name">
                   <span className="t-heading-s">{c.author}</span>
-                  <span className="t-caption comment__muted">{c.time}</span>
                   {c.isAuthor && <span className="t-caption-strong comment__muted">Forfatter</span>}
+                </p>
+                <p className="t-caption comment__muted">
+                  @{c.author === me ? myHandle : handleOf(c.author)} · {c.time}
                 </p>
                 <p className="t-body-s">{c.text}</p>
                 <p className="comment__actions t-caption-strong">

@@ -29,7 +29,7 @@ export function Share() {
   const [mode, setMode] = useState<Mode>(params.get('som') === 'eget' ? 'eget' : 'besked');
   const [note, setNote] = useState('');
   const [selected, setSelected] = useState<string[]>(['familien']);
-  const [visibility, setVisibility] = useState<ShareVisibility>('venner');
+  const [visibility, setVisibility] = useState<ShareVisibility>('offentligt');
   const [copied, setCopied] = useState(false);
 
   if (!post) return <Navigate to="/" replace />;

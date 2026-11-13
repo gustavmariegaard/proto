@@ -3,6 +3,7 @@ import { Avatar, initials } from '../../components/Avatar';
 import { Icon } from '../../components/Icon';
 import { Sheet } from '../../components/Sheet';
 import { flickComments, type FlickComment } from '../../data/flicks';
+import { handleOf } from '../../data/handles';
 import { useSession } from '../../state/session';
 import './FlickCommentsSheet.css';
 
@@ -20,6 +21,7 @@ export function FlickCommentsSheet({ open, onClose }: Props) {
   const [text, setText] = useState('');
   const inputRef = useRef<HTMLInputElement>(null);
   const me = profile.name || 'Du';
+  const myHandle = profile.username.trim().replace(/^@/, '') || handleOf(profile.name) || 'dit.navn';
 
   const send = () => {
     const t = text.trim();
@@ -44,7 +46,9 @@ export function FlickCommentsSheet({ open, onClose }: Props) {
           <div className="fcomment__text">
             <p className="fcomment__name">
               <span className="t-heading-s">{c.author}</span>
-              <span className="t-caption fcomment__muted">{c.time}</span>
+            </p>
+            <p className="t-caption fcomment__muted">
+              @{c.author === me ? myHandle : handleOf(c.author)} · {c.time}
             </p>
             <p className="t-body-s">{c.text}</p>
             <p className="fcomment__actions t-caption-strong">

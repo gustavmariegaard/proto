@@ -13,11 +13,13 @@ export const createKinds: { value: CreateKind; label: string }[] = [
   { value: 'moment', label: 'Moment' },
 ];
 
-/** Man kan dele med sine følgere, offentligt eller i en af sine grupper */
-export type Audience = 'venner' | 'offentlig' | 'gruppe';
+/**
+ * Man deler enten på sin profil (offentligt) eller i en af sine grupper.
+ * Om profilen er offentlig eller privat, vælger man på profilen – ikke pr. opslag.
+ */
+export type Audience = 'offentlig' | 'gruppe';
 export const audiences: { value: Audience; label: string; hint: string }[] = [
-  { value: 'venner', label: 'Følgere', hint: 'Dine følgere kan se opslaget.' },
-  // Ikke i Figma: forklaringerne til "Offentligt" og "Gruppe" er skrevet i samme tone.
+  // Ikke i Figma: forklaringerne er skrevet i samme tone.
   { value: 'offentlig', label: 'Offentligt', hint: 'Alle kan se opslaget.' },
   { value: 'gruppe', label: 'Gruppe', hint: 'Vælg den gruppe, opslaget skal deles i.' },
 ];
@@ -72,11 +74,10 @@ export const shareTargets: ShareTarget[] = [
   { id: 'soeren', name: 'Søren Vang', kind: 'Besked', tone: 'blue', avatarSrc: figmaImg('person-c.jpg') },
 ];
 
-export type ShareVisibility = 'cirkel' | 'venner' | 'offentligt';
+export type ShareVisibility = 'offentligt' | 'cirkel';
 export const shareVisibilities: { value: ShareVisibility; label: string }[] = [
-  { value: 'cirkel', label: 'Cirkel' },
-  { value: 'venner', label: 'Følgere' },
   { value: 'offentligt', label: 'Offentligt' },
+  { value: 'cirkel', label: 'Cirkel' },
 ];
 
 /* ---------- Rapportér ---------- */
