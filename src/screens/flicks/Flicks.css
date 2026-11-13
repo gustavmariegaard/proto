@@ -213,3 +213,50 @@
 .flick__chevron--faint { opacity: 0.35; margin-bottom: -10px; }
 
 .flick__author-link { color: inherit; text-decoration: none; }
+
+/* ---------- Ikoner uden ring: kun hvide ikoner med skygge ---------- */
+.flick__actions .icon-btn {
+  color: #fff;
+  filter: drop-shadow(0 1px 3px rgb(0 0 0 / 0.5));
+}
+
+/* ⋯ øverst til højre */
+.flick__more {
+  position: absolute;
+  z-index: 11;
+  top: calc(var(--safe-top) + var(--top-gap));
+  right: 10px;
+  display: grid;
+  place-items: center;
+  width: 44px;
+  height: 44px;
+  border-radius: 50%;
+  color: #fff;
+  filter: drop-shadow(0 1px 3px rgb(0 0 0 / 0.5));
+}
+
+.flick__more:focus-visible { outline: none; box-shadow: 0 0 0 2px var(--color-accent-highlight); }
+
+/* Skjult flick ("Ikke interesseret") */
+.flick__hidden {
+  position: absolute;
+  inset: 0;
+  z-index: 5;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 12px;
+  padding: 24px;
+  background: rgb(23 23 23 / 0.92);
+  color: #fff;
+  text-align: center;
+}
+
+.flick__undo {
+  min-height: 44px;
+  padding: 0 18px;
+  border: 1px solid rgb(255 255 255 / 0.6);
+  border-radius: var(--radius-pill);
+  color: #fff;
+}

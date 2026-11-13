@@ -2,7 +2,7 @@ import { useState } from 'react';
 import { Link } from 'react-router-dom';
 import { Avatar, type AvatarTone } from './Avatar';
 import { Icon, type IconName } from './Icon';
-import { Sheet } from './Sheet';
+import { PostMenu } from './PostMenu';
 import { setHidden, useHidden } from '../state/posts';
 import { handleOf } from '../data/handles';
 import './PostCard.css';
@@ -57,7 +57,7 @@ export function PostCard({ post, onComment, onShare, onReport }: PostCardProps) 
   const handle = post.username || handleOf(post.author);
   // Egne opslag åbner din egen profil
   const profileHref = post.id.startsWith('mit-') ? '/profil' : `/bruger/${handle}`;
-  const [menu, setMenu] = useState<'closed' | 'menu' | 'why'>('closed');
+  const [menu, setMenu] = useState<'closed' | 'menu'>('closed');
   const isHidden = useHidden(post.id);
   const mine = post.id.startsWith('mit-');
 
@@ -150,71 +150,14 @@ export function PostCard({ post, onComment, onShare, onReport }: PostCardProps) 
 
       </footer>
 
-      <Sheet open={menu !== 'closed'} onClose={() => setMenu('closed')} title={menu === 'why' ? 'Hvorfor ser jeg dette opslag?' : 'Opslag'} dim initialSize="auto">
-        {menu === 'why' ? (
-          <div className="post-menu__why">
-            <p className="t-body">{whyText(post)}</p>
-            <p className="t-caption post-menu__muted">
-              ciircle viser kun opslag fra dem, du følger, dine grupper, sider og de emner, du selv har valgt. Vi bruger ikke din adfærd andre steder.
-            </p>
-            {/* Man skal altid kunne komme tilbage */}
-            <div className="post-menu__buttons">
-              <button type="button" className="post-menu__back" onClick={() => setMenu('menu')}>
-                <Icon name="chevron-left" size={20} />
-                Tilbage
-              </button>
-              <button type="button" className="post-menu__ok" onClick={() => setMenu('closed')}>
-                OK
-              </button>
-            </div>
-          </div>
-        ) : (
-          <ul className="post-menu">
-            <li>
-              <button type="button" className="post-menu__item" onClick={() => setMenu('why')}>
-                <Icon name="info" />
-                Hvorfor ser jeg dette opslag?
-              </button>
-            </li>
-            {!mine && (
-              <li>
-                <button
-                  type="button"
-                  className="post-menu__item"
-                  onClick={() => {
-                    setMenu('closed');
-                    setHidden(post.id, true);
-                  }}
-                >
-                  <Icon name="eye-off" />
-                  Ikke interesseret
-                </button>
-              </li>
-            )}
-            {!mine && onReport && (
-              <li>
-                <button
-                  type="button"
-                  className="post-menu__item post-menu__item--danger"
-                  onClick={() => {
-                    setMenu('closed');
-                    onReport();
-                  }}
-                >
-                  <Icon name="flag" />
-                  Rapportér
-                </button>
-              </li>
-            )}
-            <li className="post-menu__cancel">
-              <button type="button" className="post-menu__item" onClick={() => setMenu('closed')}>
-                <Icon name="close" />
-                Luk
-              </button>
-            </li>
-          </ul>
-        )}
-      </Sheet>
+      <PostMenu
+        open={menu !== 'closed'}
+        onClose={() => setMenu('closed')}
+        why={whyText(post)}
+        mine={mine}
+        onHide={() => setHidden(post.id, true)}
+        onReport={onReport}
+      />
     </article>
   );
 }

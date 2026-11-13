@@ -1,5 +1,7 @@
 import { useCallback, useEffect, useRef, useState } from 'react';
-import { Link } from 'react-router-dom';
+import { Link, useNavigate } from 'react-router-dom';
+import { PostMenu } from '../../components/PostMenu';
+import { setHidden, useHidden } from '../../state/posts';
 import { IconButton } from '../../components/IconButton';
 import { Icon } from '../../components/Icon';
 import { TabBar } from '../../components/TabBar';
@@ -11,7 +13,7 @@ import './Flicks.css';
 
 const modes: { source: FlickSource; label: string }[] = [
   { source: 'tildig', label: 'Til dig' },
-  { source: 'cirkel', label: 'Cirkel' },
+  { source: 'cirkel', label: 'Følger' },
 ];
 
 /**
@@ -139,6 +141,9 @@ type FlickViewProps = {
 };
 
 function FlickView({ flick, position, showHint, bounce, onNext, liked, saved, onLike, onSave, onComments, onShare }: FlickViewProps) {
+  const navigate = useNavigate();
+  const [menu, setMenu] = useState(false);
+  const hidden = useHidden(flick.id);
   return (
     <article
       className={`flick flick--${flick.placeholder}`}
@@ -148,21 +153,45 @@ function FlickView({ flick, position, showHint, bounce, onNext, liked, saved, on
     >
       {flick.image && <img className="flick__photo" src={flick.image} alt="" />}
 
+      {/* ⋯ øverst til højre, præcis som på opslag */}
+      <button type="button" className="flick__more" aria-label="Flere muligheder" aria-haspopup="dialog" onClick={() => setMenu(true)}>
+        <Icon name="dots" />
+      </button>
+      <PostMenu
+        noun="flick"
+        open={menu}
+        onClose={() => setMenu(false)}
+        why={whyFlick(flick)}
+        onHide={() => setHidden(flick.id, true)}
+        onReport={() => navigate(`/opslag/${flick.id}/rapporter`)}
+      />
+
+      {hidden && (
+        <div className="flick__hidden">
+          <p className="t-body-s">
+            <strong>Flicken er skjult.</strong> Du ser færre flicks som denne.
+          </p>
+          <button type="button" className="t-caption-strong flick__undo" onClick={() => setHidden(flick.id, false)}>
+            Fortryd
+          </button>
+        </div>
+      )}
+
       {showHint && <SwipeHint bounce={bounce} onNext={onNext} />}
 
       <div className="flick__bottom">
         <div className="flick__actions">
           <IconButton
-            variant="outline"
+            variant="ghost"
             icon={liked ? 'heart-filled' : 'heart'}
             label="Synes godt om"
             aria-pressed={liked}
             onClick={onLike}
           />
-          <IconButton variant="outline" icon="chat" label="Kommentarer" aria-haspopup="dialog" onClick={onComments} />
-          <IconButton variant="outline" icon="send" label="Del" aria-haspopup="dialog" onClick={onShare} />
+          <IconButton variant="ghost" icon="chat" label="Kommentarer" aria-haspopup="dialog" onClick={onComments} />
+          <IconButton variant="ghost" icon="send" label="Del" aria-haspopup="dialog" onClick={onShare} />
           <IconButton
-            variant="outline"
+            variant="ghost"
             icon="bookmark"
             label="Gem"
             aria-pressed={saved}
@@ -172,18 +201,6 @@ function FlickView({ flick, position, showHint, bounce, onNext, liked, saved, on
         </div>
 
         <div className="flick__caption">
-          <p className="flick__reason">
-            {flick.friends && (
-              <span className="flick__friends" aria-hidden="true">
-                {flick.friends.map((p) => (
-                  <span key={p.name} className={`flick__friend flick__friend--${p.tone}`}>
-                    {p.avatarSrc && <img src={p.avatarSrc} alt="" />}
-                  </span>
-                ))}
-              </span>
-            )}
-            <span className="t-caption-strong">{flick.reason}</span>
-          </p>
           <p className="t-heading-s flick__author">
             <Link to={`/bruger/${handleOf(flick.author)}`} className="flick__author-link">
               {at(flick.author)}
@@ -244,4 +261,12 @@ function SwipeHint({ bounce, onNext }: { bounce: boolean; onNext: () => void }) 
       <Icon name="chevron-right" className="flick__chevron" />
     </button>
   );
+}
+
+/** Forklaringen bag "Hvorfor ser jeg denne flick?" (tidligere den grønne linje) */
+function whyFlick(f: Flick) {
+  const topic = f.reason.match(/^Fordi du følger (.+)$/);
+  if (topic) return `Flicken handler om ${topic[1]}, som er et af dine emner.`;
+  if (f.friends?.length) return `${f.friends.map((p) => p.name.split(' ')[0]).join(' og ')}, som du følger, har liket den.`;
+  return `Du følger ${f.author}.`;
 }
