@@ -19,6 +19,8 @@ import { Share } from './screens/share/Share';
 import { ShareMoment } from './screens/share/ShareMoment';
 import { UserProfile } from './screens/user/UserProfile';
 import { UserCollection } from './screens/user/UserCollection';
+import { ParentalControl } from './screens/parental/ParentalControl';
+import { ChildSettingsScreen } from './screens/parental/ChildSettings';
 import { Report } from './screens/share/Report';
 import { Messages } from './screens/messages/Messages';
 import { Conversation } from './screens/messages/Conversation';
@@ -126,6 +128,8 @@ export default function App() {
             <Route path="gemt" element={<Saved />} />
             <Route path="skaber" element={<Creator />} />
             <Route path="indstillinger" element={<Settings />} />
+            <Route path="indstillinger/foraeldrekontrol" element={<ParentalControl />} />
+            <Route path="indstillinger/foraeldrekontrol/:id" element={<ChildSettingsScreen />} />
             <Route path="find-folk" element={<FindFolk />} />
             <Route path="grupper" element={<Groups />} />
             <Route path="grupper/aktivitet" element={<GroupActivity />} />

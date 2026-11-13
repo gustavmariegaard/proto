@@ -216,7 +216,6 @@ export const networkToggles = [
 
 export const familyToggles = [
   { id: 'boernetilstand', title: 'Børnetilstand', hint: 'Kun godkendte kontakter og indhold, der passer til alderen.' },
-  { id: 'foraeldrekontrol', title: 'Forældrekontrol', hint: 'Beskyttet med kode. Forældre godkender nye kontakter.' },
 ];
 
 export const settingsToggleDefaults: Record<string, boolean> = {

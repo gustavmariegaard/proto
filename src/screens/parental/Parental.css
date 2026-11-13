@@ -1,0 +1,102 @@
+/* ---------- Forældrekontrol ---------- */
+.pc-note {
+  display: flex;
+  gap: 10px;
+  padding: 12px 14px;
+  border-radius: var(--radius-md);
+  background: var(--color-accent-note-bg);
+  color: var(--color-accent-note-text);
+}
+
+.pc-note svg { flex: none; margin-top: 1px; }
+
+.pc-sheet {
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+  padding: 16px 20px calc(24px + var(--safe-bottom));
+}
+
+/* MitID-knappen (blå som MitID) */
+.pc-mitid {
+  min-height: 52px;
+  border-radius: var(--radius-pill);
+  background: #0060e6;
+  color: #fff;
+  font: 600 16px/22px var(--font-body);
+}
+
+.pc-mitid:focus-visible { outline: none; box-shadow: var(--focus-ring); }
+
+.pc-pick--on { border-color: var(--color-text-primary); }
+
+.pc-check {
+  display: grid;
+  flex: none;
+  place-items: center;
+  width: 24px;
+  height: 24px;
+  border: 1.5px solid var(--color-border-strong);
+  border-radius: 50%;
+}
+
+.pc-pick--on .pc-check {
+  border-color: var(--color-action-primary);
+  background: var(--color-action-primary);
+  color: var(--color-text-on-action);
+}
+
+.pc-field {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.pc-child {
+  display: flex;
+  align-items: center;
+  gap: 14px;
+}
+
+.pc-full { width: 100%; }
+
+/* Ugens forbrug som små søjler */
+.pc-week {
+  display: flex;
+  align-items: flex-end;
+  gap: 8px;
+  width: 100%;
+  height: 96px;
+}
+
+.pc-week__day {
+  display: flex;
+  flex: 1;
+  flex-direction: column;
+  align-items: center;
+  justify-content: flex-end;
+  gap: 6px;
+  height: 100%;
+}
+
+.pc-week__bar {
+  display: block;
+  width: 100%;
+  max-width: 28px;
+  min-height: 4px;
+  border-radius: 6px 6px 2px 2px;
+  background: var(--color-accent-highlight);
+}
+
+.pc-topics { margin: 0; padding: 0; list-style: none; }
+.pc-topic { gap: 6px; padding: 0 12px 0 16px; }
+
+.pc-buttons {
+  display: flex;
+  gap: 8px;
+  width: 100%;
+}
+
+.pc-buttons > * { flex: 1; }
+
+.pc-remove { color: #c62828; align-self: center; }

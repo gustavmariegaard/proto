@@ -1,5 +1,7 @@
 import { useState } from 'react';
-import { useNavigate } from 'react-router-dom';
+import { Link, useNavigate } from 'react-router-dom';
+import { Icon } from '../../components/Icon';
+import { useChildren } from '../parental/store';
 import { Avatar } from '../../components/Avatar';
 import { Button } from '../../components/Button';
 import { Chip } from '../../components/Chip';
@@ -9,7 +11,6 @@ import {
   familyToggles,
   languages,
   networkToggles,
-  screenTimeOptions,
   settingsToggleDefaults,
   translationExample as ex,
   translationToggles,
@@ -26,7 +27,7 @@ export function Settings() {
   const [showOriginal, setShowOriginal] = useState(false);
   const [toggles, setToggles] = useState(settingsToggleDefaults);
   const [handle, setHandle] = useState('');
-  const [screenTime, setScreenTime] = useState('Ingen grænse');
+  const children = useChildren();
 
   const flip = (id: string) => setToggles((v) => ({ ...v, [id]: !v[id] }));
 
@@ -77,15 +78,17 @@ export function Settings() {
         <h2 className="t-heading-m">Børn og forældre</h2>
         <p className="t-caption acc-muted">Indbyggede værn for unge brugere og værktøjer til forældre.</p>
         <ToggleList rows={familyToggles} values={toggles} onToggle={flip} />
-
-        <h3 className="t-heading-s">Daglig skærmtid</h3>
-        <div className="acc-chips" role="group" aria-label="Daglig skærmtid">
-          {screenTimeOptions.map((o) => (
-            <Chip key={o} selected={o === screenTime} onClick={() => setScreenTime(o)}>
-              {o}
-            </Chip>
-          ))}
-        </div>
+        <Link to="/indstillinger/foraeldrekontrol" className="acc-card">
+          <span className="acc-card__text">
+            <span className="t-heading-s">Forældrekontrol</span>
+            <span className="t-caption acc-muted">
+              {children.length === 0
+                ? 'Tilknyt dine børn, og bestem hvad de kan se'
+                : `${children.map((c) => c.name).join(' og ')} er tilknyttet`}
+            </span>
+          </span>
+          <Icon name="chevron-right" />
+        </Link>
 
         <div className="age-note">
           <p className="t-heading-s">Aldersverificering</p>
