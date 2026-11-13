@@ -6,7 +6,6 @@ import { Icon } from '../../components/Icon';
 import { TabBar } from '../../components/TabBar';
 import { flicks, type Flick, type FlickSource } from '../../data/flicks';
 import { FlickCommentsSheet } from './FlickCommentsSheet';
-import { FlickShareSheet } from './FlickShareSheet';
 import { at, handleOf } from '../../data/handles';
 import './Flicks.css';
 
@@ -21,13 +20,13 @@ const modes: { source: FlickSource; label: string }[] = [
  * Skærmen har ingen topbar, men viser selv bundmenuen.
  */
 export function Flicks() {
+  const navigate = useNavigate();
   const feedRef = useRef<HTMLDivElement>(null);
   const [index, setIndex] = useState(0);
   const [hasSwiped, setHasSwiped] = useState(false);
   const [liked, setLiked] = useState<string[]>([]);
   const [saved, setSaved] = useState<string[]>([]);
   const [commentsFor, setCommentsFor] = useState<string | null>(null);
-  const [shareFor, setShareFor] = useState<string | null>(null);
 
   const current = flicks[index] ?? flicks[0]!;
 
@@ -50,7 +49,7 @@ export function Flicks() {
   // Piletaster skifter flick, når intet ark er åbent
   useEffect(() => {
     const onKey = (e: KeyboardEvent) => {
-      if (commentsFor || shareFor) return;
+      if (commentsFor) return;
       if (e.target instanceof HTMLInputElement || e.target instanceof HTMLTextAreaElement) return;
       if (e.key === 'ArrowDown' || e.key === 'PageDown') {
         e.preventDefault();
@@ -63,11 +62,10 @@ export function Flicks() {
     };
     window.addEventListener('keydown', onKey);
     return () => window.removeEventListener('keydown', onKey);
-  }, [index, commentsFor, shareFor]);
+  }, [index, commentsFor]);
 
   const toggle = (list: string[], id: string) => (list.includes(id) ? list.filter((x) => x !== id) : [...list, id]);
   const closeComments = useCallback(() => setCommentsFor(null), []);
-  const closeShare = useCallback(() => setShareFor(null), []);
 
   return (
     <div className="flicks">
@@ -111,7 +109,8 @@ export function Flicks() {
             onLike={() => setLiked((l) => toggle(l, f.id))}
             onSave={() => setSaved((s) => toggle(s, f.id))}
             onComments={() => setCommentsFor(f.id)}
-            onShare={() => setShareFor(f.id)}
+            // Samme deling som alle andre opslag: Besked, Opslag eller Moment
+            onShare={() => navigate(`/opslag/${f.id}/del`)}
           />
         ))}
       </div>
@@ -119,7 +118,6 @@ export function Flicks() {
       <TabBar />
 
       <FlickCommentsSheet open={commentsFor !== null} onClose={closeComments} />
-      <FlickShareSheet open={shareFor !== null} onClose={closeShare} />
     </div>
   );
 }

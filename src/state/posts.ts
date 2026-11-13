@@ -2,6 +2,16 @@ import { useSyncExternalStore } from 'react';
 import { posts as samplePosts, type FeedPost } from '../data/sample';
 import { keep, save } from './keep';
 import { discoverPosts } from '../data/discover';
+import { flicks } from '../data/flicks';
+import { pageAccounts, people } from '../data/sample';
+
+/** En flick som opslag, så den kan deles, rapporteres og åbnes på samme måde */
+function flickAsPost(id: string | undefined): FeedPost | undefined {
+  const f = flicks.find((x) => x.id === id);
+  if (!f) return undefined;
+  const person = [...Object.values(people), ...Object.values(pageAccounts)].find((p) => p.fullName === f.author);
+  return { id: f.id, feed: 'venner', author: f.author, avatarSrc: person?.avatarSrc, tone: person?.tone ?? 'sand', meta: 'Flick', text: f.text, image: f.image };
+}
 
 /*
  * Opslag i feedet. Nye opslag fra Opret lægges øverst.
@@ -27,7 +37,7 @@ export function usePosts() {
 
 export function usePost(id: string | undefined) {
   // Også opslag fra Offentlig debat, så de kan åbnes, kommenteres og deles
-  return usePosts().find((p) => p.id === id) ?? discoverPosts.find((p) => p.id === id);
+  return usePosts().find((p) => p.id === id) ?? discoverPosts.find((p) => p.id === id) ?? flickAsPost(id);
 }
 
 export function addPost(post: Omit<FeedPost, 'id'>) {
