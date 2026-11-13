@@ -76,7 +76,7 @@ export const initiallySeen = ['anna', 'peter', 'karen'];
 /* ---------- Opslag ---------- */
 
 /**
- * venner = Hjem › Følger, interesser = Hjem › Interesser (nyt fra sider, man følger),
+ * venner = Hjem › Brugere, interesser = Hjem › Interesser (nyt fra sider, man følger),
  * debat = Opdag › Offentlig debat (opslag om emner)
  */
 export type FeedPost = Post & { feed: 'venner' | 'interesser' | 'debat'; topic?: string };

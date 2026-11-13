@@ -29,7 +29,7 @@ function Viewer({ personId }: { personId: string }) {
   const [liked, setLiked] = useState(false);
   const [reply, setReply] = useState('');
 
-  // Personer (Hjem › Følger) og sider (Hjem › Interesser) bladres hver for sig
+  // Personer (Hjem › Brugere) og sider (Hjem › Interesser) bladres hver for sig
   const isPage = personId in pageAccounts;
   const accounts = isPage ? pageAccounts : people;
   const personIds = Object.keys(accounts);

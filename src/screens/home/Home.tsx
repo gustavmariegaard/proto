@@ -33,7 +33,7 @@ export function Home() {
         value={feed}
         onChange={(v) => setParams(v === 'venner' ? {} : { feed: v }, { replace: true })}
         options={[
-          { value: 'venner', label: 'Følger' },
+          { value: 'venner', label: 'Brugere' },
           { value: 'interesser', label: 'Interesser' },
         ]}
       />
@@ -48,7 +48,7 @@ export function Home() {
         </div>
       )}
 
-      {/* Følger: personers moments med "Dig" først. Interesser: moments fra sider, man følger. */}
+      {/* Brugere: personers moments med "Dig" først. Interesser: moments fra sider, man følger. */}
       <ul className="home__moments" aria-label={feed === 'interesser' ? 'Moments fra sider' : 'Moments'}>
         {feed === 'venner' && (
           <li>
