@@ -141,8 +141,9 @@ export function PostCard({ post, onComment, onShare, onReport }: PostCardProps) 
         <Action icon="send" label="Delinger" count={stats.shares} onClick={onShare} />
         <Action
           icon="bookmark"
-          label="Gemt"
-          count={stats.saves + (saved ? 1 : 0)}
+          label="Gem"
+          // Antal gemte vises ikke (det er privat)
+          count={0}
           pressed={saved}
           className={saved ? 'post__saved' : undefined}
           onClick={() => setSaved((v) => !v)}

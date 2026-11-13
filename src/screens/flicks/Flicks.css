@@ -173,7 +173,7 @@
   position: absolute;
   z-index: 2;
   left: 50%;
-  bottom: calc(var(--tabbar-bar) + 130px);
+  bottom: calc(var(--tabbar-bar) + 96px);
   transform: translateX(-50%);
   display: flex;
   flex-direction: column;
@@ -260,3 +260,23 @@
   border-radius: var(--radius-pill);
   color: #fff;
 }
+
+/* Ikoner med antal under, helt ude til højre */
+.flick__actions {
+  gap: 10px;
+  margin-right: -12px;
+}
+
+.flick__act {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 2px;
+  min-width: 48px;
+  min-height: 44px;
+  color: #fff;
+  filter: drop-shadow(0 1px 3px rgb(0 0 0 / 0.55));
+}
+
+.flick__act:focus-visible { outline: none; box-shadow: 0 0 0 2px var(--color-accent-highlight); border-radius: 12px; }
+.flick__saved svg path { fill: currentColor; }

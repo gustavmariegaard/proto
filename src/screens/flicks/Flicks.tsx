@@ -2,7 +2,6 @@ import { useCallback, useEffect, useRef, useState } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import { PostMenu } from '../../components/PostMenu';
 import { setHidden, useHidden } from '../../state/posts';
-import { IconButton } from '../../components/IconButton';
 import { Icon } from '../../components/Icon';
 import { TabBar } from '../../components/TabBar';
 import { flicks, type Flick, type FlickSource } from '../../data/flicks';
@@ -144,6 +143,7 @@ function FlickView({ flick, position, showHint, bounce, onNext, liked, saved, on
   const navigate = useNavigate();
   const [menu, setMenu] = useState(false);
   const hidden = useHidden(flick.id);
+  const counts = flickCounts(flick.id);
   return (
     <article
       className={`flick flick--${flick.placeholder}`}
@@ -181,23 +181,10 @@ function FlickView({ flick, position, showHint, bounce, onNext, liked, saved, on
 
       <div className="flick__bottom">
         <div className="flick__actions">
-          <IconButton
-            variant="ghost"
-            icon={liked ? 'heart-filled' : 'heart'}
-            label="Synes godt om"
-            aria-pressed={liked}
-            onClick={onLike}
-          />
-          <IconButton variant="ghost" icon="chat" label="Kommentarer" aria-haspopup="dialog" onClick={onComments} />
-          <IconButton variant="ghost" icon="send" label="Del" aria-haspopup="dialog" onClick={onShare} />
-          <IconButton
-            variant="ghost"
-            icon="bookmark"
-            label="Gem"
-            aria-pressed={saved}
-            className={saved ? 'flick__saved' : undefined}
-            onClick={onSave}
-          />
+          <FlickAction icon={liked ? 'heart-filled' : 'heart'} label="Synes godt om" count={counts.likes + (liked ? 1 : 0)} pressed={liked} onClick={onLike} />
+          <FlickAction icon="chat" label="Kommentarer" count={counts.comments} onClick={onComments} />
+          <FlickAction icon="send" label="Delinger" count={counts.shares} onClick={onShare} />
+          <FlickAction icon="bookmark" label="Gem" pressed={saved} className={saved ? 'flick__saved' : undefined} onClick={onSave} />
         </div>
 
         <div className="flick__caption">
@@ -269,4 +256,38 @@ function whyFlick(f: Flick) {
   if (topic) return `Flicken handler om ${topic[1]}, som er et af dine emner.`;
   if (f.friends?.length) return `${f.friends.map((p) => p.name.split(' ')[0]).join(' og ')}, som du følger, har liket den.`;
   return `Du følger ${f.author}.`;
+}
+
+/** Faste eksempeltal pr. flick */
+function flickCounts(id: string) {
+  let h = 11;
+  for (const c of id) h = (h * 31 + c.charCodeAt(0)) >>> 0;
+  return { likes: 120 + (h % 2400), comments: 8 + ((h >>> 5) % 180), shares: 3 + ((h >>> 11) % 90) };
+}
+
+const fmtCount = (n: number) => (n >= 1000 ? `${(n / 1000).toFixed(1).replace('.', ',')} t.` : String(n));
+
+type FlickActionProps = {
+  icon: Parameters<typeof Icon>[0]['name'];
+  label: string;
+  count?: number;
+  pressed?: boolean;
+  className?: string;
+  onClick: () => void;
+};
+
+/** Ikon med antal under (antal vises ikke for Gem) */
+function FlickAction({ icon, label, count, pressed, className, onClick }: FlickActionProps) {
+  return (
+    <button
+      type="button"
+      className={['flick__act', className].filter(Boolean).join(' ')}
+      aria-label={count ? `${label}: ${count}` : label}
+      aria-pressed={pressed}
+      onClick={onClick}
+    >
+      <Icon name={icon} size={28} />
+      {count !== undefined && <span className="t-caption-strong">{fmtCount(count)}</span>}
+    </button>
+  );
 }
