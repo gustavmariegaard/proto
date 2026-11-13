@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
 import { Navigate, useNavigate, useParams } from 'react-router-dom';
 import { Avatar } from '../../components/Avatar';
 import { Button } from '../../components/Button';
@@ -9,7 +9,8 @@ import { SegmentedControl } from '../../components/SegmentedControl';
 import { screenTimeOptions } from '../../data/account';
 import { allTopics } from '../../data/interests';
 import { ToggleList } from '../create/parts';
-import { areas, removeChild, updateChild, useChildren, type Contact } from './store';
+import { SaveBar, SavedToast } from '../../components/SaveBar';
+import { areas, removeChild, updateChild, useChildren, type Child, type ChildSettings as ChildSettingsT, type Contact } from './store';
 import '../account/account.css';
 import '../create/parts.css';
 import './Parental.css';
@@ -30,12 +31,27 @@ export function ChildSettingsScreen() {
   const { id = '' } = useParams();
   const navigate = useNavigate();
   const child = useChildren().find((c) => c.id === id);
-  const [topic, setTopic] = useState('');
-  const [confirmRemove, setConfirmRemove] = useState(false);
   if (!child) return <Navigate to="/indstillinger/foraeldrekontrol" replace />;
 
-  const s = child.settings;
-  const set = (patch: Partial<typeof s>) => updateChild(child.id, patch);
+  return <Editor key={child.id} child={child} onRemove={() => {
+    removeChild(child.id);
+    navigate('/indstillinger/foraeldrekontrol', { replace: true });
+  }} />;
+}
+
+/** Ændringer er en kladde, indtil man trykker "Gem ændringer" */
+function Editor({ child, onRemove }: { child: Child; onRemove: () => void }) {
+  const [topic, setTopic] = useState('');
+  const [confirmRemove, setConfirmRemove] = useState(false);
+  const [s, setDraft] = useState<ChildSettingsT>(child.settings);
+  const [toast, setToast] = useState(false);
+  const dirty = JSON.stringify(s) !== JSON.stringify(child.settings);
+  const set = (patch: Partial<ChildSettingsT>) => setDraft((d) => ({ ...d, ...patch }));
+  useEffect(() => {
+    if (!toast) return;
+    const t = window.setTimeout(() => setToast(false), 1800);
+    return () => window.clearTimeout(t);
+  }, [toast]);
   const total = week.reduce((n, d) => n + d.min, 0);
   const max = Math.max(...week.map((d) => d.min));
   const q = topic.trim().toLowerCase();
@@ -173,10 +189,7 @@ export function ChildSettingsScreen() {
                 Annuller
               </Button>
               <Button
-                onClick={() => {
-                  removeChild(child.id);
-                  navigate('/indstillinger/foraeldrekontrol', { replace: true });
-                }}
+                onClick={onRemove}
               >
                 Fjern
               </Button>
@@ -188,6 +201,16 @@ export function ChildSettingsScreen() {
           </Button>
         )}
       </main>
+      <SaveBar
+        dirty={dirty}
+        onSave={() => {
+          updateChild(child.id, s);
+          setToast(true);
+        }}
+        onReset={() => setDraft(child.settings)}
+        note={`Ændringerne gælder først for ${child.name}, når du gemmer.`}
+      />
+      <SavedToast show={toast} />
     </div>
   );
 }

@@ -1,6 +1,7 @@
 /* ---------- Fælles ramme for Søg, Notifikationer, Gemt, Skaber og Indstillinger ---------- */
 
 .acc-screen {
+  position: relative;
   display: flex;
   flex-direction: column;
   height: 100%;

@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import { Avatar } from '../../components/Avatar';
 import { Button } from '../../components/Button';
@@ -6,6 +6,7 @@ import { Chip } from '../../components/Chip';
 import { Icon, type IconName } from '../../components/Icon';
 import { PageHeader } from '../../components/PageHeader';
 import { SegmentedControl } from '../../components/SegmentedControl';
+import { SaveBar, SavedToast } from '../../components/SaveBar';
 import { TextField } from '../../components/TextField';
 import { languages, networkToggles, translationExample as ex, translationToggles } from '../../data/account';
 import { keep, save } from '../../state/keep';
@@ -24,6 +25,29 @@ function useSetting<T>(key: string, initial: T): [T, (v: T) => void] {
       save(`indstilling.${key}`, v);
     },
   ];
+}
+
+/**
+ * Kladde: ændringer gemmes først, når man trykker "Gem ændringer".
+ * Indtil da kan man fortryde, og intet træder i kraft.
+ */
+function useDraft<T>(saved: T) {
+  const [draft, setDraft] = useState<T>(saved);
+  const [toast, setToast] = useState(false);
+  const dirty = JSON.stringify(draft) !== JSON.stringify(saved);
+  useEffect(() => {
+    if (!toast) return;
+    const t = window.setTimeout(() => setToast(false), 1800);
+    return () => window.clearTimeout(t);
+  }, [toast]);
+  return {
+    draft,
+    patch: (p: Partial<T>) => setDraft((d) => ({ ...d, ...p })),
+    dirty,
+    reset: () => setDraft(saved),
+    saved: () => setToast(true),
+    toast,
+  };
 }
 
 function Row({ to, icon, title, hint }: { to: string; icon: IconName; title: string; hint: string }) {
@@ -101,6 +125,14 @@ export function PrivacySettings() {
   const { profile, setProfile } = useSession();
   const [messages, setMessages] = useSetting<'foelger' | 'gensidigt'>('beskeder', 'foelger');
   const [hidden, setHidden] = useSetting('skjul-aktiv', false);
+  const d = useDraft({ private: Boolean(profile.private), messages, hidden });
+  const save = () => {
+    setProfile({ ...profile, private: d.draft.private });
+    setMessages(d.draft.messages);
+    setHidden(d.draft.hidden);
+    d.saved();
+  };
+  const visibilityChanged = d.draft.private !== Boolean(profile.private);
   const [deleting, setDeleting] = useState(false);
   const [downloaded, setDownloaded] = useState(false);
 
@@ -111,15 +143,15 @@ export function PrivacySettings() {
         <h2 className="t-heading-m">Hvem kan se din profil?</h2>
         <SegmentedControl
           label="Hvem kan se din profil?"
-          value={profile.private ? 'privat' : 'offentlig'}
-          onChange={(v) => setProfile({ ...profile, private: v === 'privat' })}
+          value={d.draft.private ? 'privat' : 'offentlig'}
+          onChange={(v) => d.patch({ private: v === 'privat' })}
           options={[
             { value: 'offentlig', label: 'Offentlig' },
             { value: 'privat', label: 'Privat' },
           ]}
         />
         <p className="t-caption acc-muted" aria-live="polite">
-          {profile.private
+          {d.draft.private
             ? 'Kun dine følgere kan se dine opslag, moments og flicks. Nye følgere skal godkendes af dig. Opslag i grupper ses stadig af gruppens medlemmer.'
             : 'Alle kan se dine opslag, moments og flicks. Opslag i grupper ses kun af gruppens medlemmer.'}
         </p>
@@ -127,23 +159,23 @@ export function PrivacySettings() {
         <h2 className="t-heading-m">Hvem kan skrive til dig?</h2>
         <SegmentedControl
           label="Hvem kan skrive til dig?"
-          value={messages}
-          onChange={setMessages}
+          value={d.draft.messages}
+          onChange={(v) => d.patch({ messages: v })}
           options={[
             { value: 'foelger', label: 'Dem, jeg følger' },
             { value: 'gensidigt', label: 'Kun gensidigt' },
           ]}
         />
         <p className="t-caption acc-muted" aria-live="polite">
-          {messages === 'foelger'
+          {d.draft.messages === 'foelger'
             ? 'Folk, du følger, kan skrive til dig. Andre sender en anmodning først.'
             : 'Kun folk, hvor I følger hinanden, kan skrive til dig.'}
         </p>
 
         <ToggleList
           rows={[{ id: 'aktiv', title: 'Skjul hvornår jeg er aktiv', hint: 'Andre kan ikke se, om du er online.' }]}
-          values={{ aktiv: hidden }}
-          onToggle={() => setHidden(!hidden)}
+          values={{ aktiv: d.draft.hidden }}
+          onToggle={() => d.patch({ hidden: !d.draft.hidden })}
         />
 
         <h2 className="t-heading-m">Blokerede</h2>
@@ -184,6 +216,19 @@ export function PrivacySettings() {
           </Button>
         )}
       </main>
+      <SaveBar
+        dirty={d.dirty}
+        onSave={save}
+        onReset={d.reset}
+        note={
+          visibilityChanged
+            ? d.draft.private
+              ? 'Din profil bliver privat. Kun dine følgere kan se dit indhold.'
+              : 'Din profil bliver offentlig. Alle kan se dit indhold.'
+            : undefined
+        }
+      />
+      <SavedToast show={d.toast} />
     </div>
   );
 }
@@ -192,6 +237,7 @@ export function PrivacySettings() {
 export function LanguageSettings() {
   const [language, setLanguage] = useSetting('sprog', 'Dansk');
   const [toggles, setToggles] = useSetting<Record<string, boolean>>('oversaet', { 'oversaet-opslag': true, 'oversaet-beskeder': true });
+  const d = useDraft({ language, toggles });
   const [showOriginal, setShowOriginal] = useState(false);
 
   return (
@@ -202,13 +248,17 @@ export function LanguageSettings() {
         <h2 className="t-heading-m">Dit sprog</h2>
         <div className="acc-chips" role="group" aria-label="Dit sprog">
           {languages.map((l) => (
-            <Chip key={l} selected={l === language} onClick={() => setLanguage(l)} lang={langCode(l)}>
+            <Chip key={l} selected={l === d.draft.language} onClick={() => d.patch({ language: l })} lang={langCode(l)}>
               {l}
             </Chip>
           ))}
         </div>
 
-        <ToggleList rows={translationToggles} values={toggles} onToggle={(id) => setToggles({ ...toggles, [id]: !toggles[id] })} />
+        <ToggleList
+          rows={translationToggles}
+          values={d.draft.toggles}
+          onToggle={(id) => d.patch({ toggles: { ...d.draft.toggles, [id]: !d.draft.toggles[id] } })}
+        />
 
         <h2 className="t-heading-s">Sådan ser det ud</h2>
         <div className="translation-example">
@@ -225,6 +275,16 @@ export function LanguageSettings() {
           </Button>
         </div>
       </main>
+      <SaveBar
+        dirty={d.dirty}
+        onSave={() => {
+          setLanguage(d.draft.language);
+          setToggles(d.draft.toggles);
+          d.saved();
+        }}
+        onReset={d.reset}
+      />
+      <SavedToast show={d.toast} />
     </div>
   );
 }
@@ -233,13 +293,18 @@ export function LanguageSettings() {
 export function NetworkSettings() {
   const [toggles, setToggles] = useSetting<Record<string, boolean>>('netvaerk', { 'foelg-andre': true, 'del-offentlige': false });
   const [handle, setHandle] = useState('');
+  const d = useDraft({ toggles });
 
   return (
     <div className="acc-screen">
       <PageHeader title="Åbne netværk" fallback="/indstillinger" />
       <main className="acc-content">
         <p className="t-caption acc-muted">Følg folk på andre netværk, og lad dem følge dig, uden at skifte app.</p>
-        <ToggleList rows={networkToggles} values={toggles} onToggle={(id) => setToggles({ ...toggles, [id]: !toggles[id] })} />
+        <ToggleList
+          rows={networkToggles}
+          values={d.draft.toggles}
+          onToggle={(id) => d.patch({ toggles: { ...d.draft.toggles, [id]: !d.draft.toggles[id] } })}
+        />
         <TextField
           label="Følg en profil, fx @navn@netværk.eu"
           type="text"
@@ -250,6 +315,15 @@ export function NetworkSettings() {
           onChange={(e) => setHandle(e.target.value)}
         />
       </main>
+      <SaveBar
+        dirty={d.dirty}
+        onSave={() => {
+          setToggles(d.draft.toggles);
+          d.saved();
+        }}
+        onReset={d.reset}
+      />
+      <SavedToast show={d.toast} />
     </div>
   );
 }
