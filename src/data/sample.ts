@@ -13,6 +13,9 @@ export const img = (file: string) => `${import.meta.env.BASE_URL}img/figma/${fil
 /** Billeder til siderne (fra brugeren) i public/img/sider */
 export const side = (file: string) => `${import.meta.env.BASE_URL}img/sider/${file}`;
 
+/** Korte videoer i public/video (lavet ud fra appens egne billeder) */
+export const vid = (file: string) => `${import.meta.env.BASE_URL}video/${file}`;
+
 export type Person = { name: string; fullName: string; tone: AvatarTone; avatarSrc?: string };
 
 export const people: Record<string, Person> = {

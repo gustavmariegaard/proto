@@ -1,10 +1,11 @@
-import { img, side } from './sample';
+import { img, side, vid } from './sample';
 
 /*
- * Ekstra indhold på andres profiler: samlinger, tekstopslag, billeder og flicks.
+ * Ekstra indhold på andres profiler: samlinger (billeder og videoer), tekstopslag, billeder og flicks.
  * Eksempeldata til prototypen (ikke fra Figma). Billederne er fra Figma og fra brugeren.
  */
 
+/** photos kan indeholde både billeder og videoer (.mp4). Forsiden er det første billede. */
 export type ExtraCollection = { id: string; title: string; photos: string[] };
 export type ExtraText = { id: string; text: string; time: string };
 export type ProfileExtras = {
@@ -19,7 +20,7 @@ const extras: Record<string, ProfileExtras> = {
   'mette.lund': {
     pinned: 'Vinterbadning hver søndag klokken 9 ved broen. Alle er velkomne – tag en varm trøje med.',
     collections: [
-      { id: 'soen', title: 'Ved søen', photos: [img('soe.jpg'), img('familie-soe.jpg'), img('aften.jpg')] },
+      { id: 'soen', title: 'Ved søen', photos: [img('soe.jpg'), vid('soe.mp4'), img('familie-soe.jpg'), img('aften.jpg')] },
       { id: 'byen', title: 'Byen', photos: [img('nyhavn.jpg'), img('cykelsti.jpg')] },
       { id: 'haven', title: 'Haven', photos: [img('have.jpg'), img('mad.jpg')] },
     ],
@@ -33,7 +34,7 @@ const extras: Record<string, ProfileExtras> = {
   'jonas.krogh': {
     pinned: 'Træning tirsdag og torsdag klokken 18 i Hallen. Nye spillere er altid velkomne.',
     collections: [
-      { id: 'kampe', title: 'Kampe', photos: [img('haandbold.jpg'), side('hallen.jpg')] },
+      { id: 'kampe', title: 'Kampe', photos: [img('haandbold.jpg'), vid('haandbold.mp4'), side('hallen.jpg')] },
       { id: 'holdet', title: 'Holdet', photos: [img('begivenhed.jpg'), img('dans.jpg')] },
     ],
     texts: [
@@ -45,7 +46,7 @@ const extras: Record<string, ProfileExtras> = {
   },
   'anna.noergaard': {
     collections: [
-      { id: 'cykel', title: 'Cykelstier', photos: [img('cykelsti.jpg'), img('cykel.jpg')] },
+      { id: 'cykel', title: 'Cykelstier', photos: [img('cykelsti.jpg'), vid('cykel.mp4'), img('cykel.jpg')] },
       { id: 'byrum', title: 'Grønne byrum', photos: [img('have.jpg'), img('soe.jpg')] },
     ],
     texts: [
@@ -57,7 +58,7 @@ const extras: Record<string, ProfileExtras> = {
   'peter.holm': {
     collections: [
       { id: 'familie', title: 'Familien', photos: [img('familie-soe.jpg'), img('spisebord.jpg')] },
-      { id: 'musik', title: 'Musik', photos: [img('dans.jpg'), img('begivenhed.jpg')] },
+      { id: 'musik', title: 'Musik', photos: [img('dans.jpg'), vid('dans.mp4'), img('begivenhed.jpg')] },
     ],
     texts: [{ id: 't1', text: 'Hvem kommer med til koncert i Kulturhuset på fredag?', time: 'I går' }],
     photos: [img('familie-soe.jpg'), img('spisebord.jpg'), img('dans.jpg')],
@@ -87,7 +88,7 @@ const extras: Record<string, ProfileExtras> = {
   kulturhuset: {
     pinned: 'Se hele programmet for vinteren på vores side. Billetter i døren eller online.',
     collections: [
-      { id: 'scenen', title: 'Scenen', photos: [img('dans.jpg'), img('begivenhed.jpg')] },
+      { id: 'scenen', title: 'Scenen', photos: [img('dans.jpg'), vid('dans.mp4'), img('begivenhed.jpg')] },
       { id: 'teater', title: 'Teater', photos: [side('teater.jpg')] },
     ],
     texts: [{ id: 't1', text: 'Fredagens koncert er udsolgt. Vi lægger ekstra billetter ud ved døren.', time: 'I dag' }],
@@ -95,19 +96,19 @@ const extras: Record<string, ProfileExtras> = {
     flicks: [img('dans.jpg'), img('begivenhed.jpg')],
   },
   hallen: {
-    collections: [{ id: 'hallen', title: 'Hallen', photos: [side('hallen.jpg'), img('haandbold.jpg')] }],
+    collections: [{ id: 'hallen', title: 'Hallen', photos: [side('hallen.jpg'), vid('hallen.mp4'), img('haandbold.jpg'), vid('haandbold.mp4')] }],
     texts: [{ id: 't1', text: 'Åbent for fri leg i hal 1 søndag fra 10 til 14.', time: 'I går' }],
     photos: [side('hallen.jpg'), img('haandbold.jpg')],
     flicks: [img('haandbold.jpg')],
   },
   'det.lokale.bageri': {
-    collections: [{ id: 'bagvaerk', title: 'Bagværk', photos: [side('bageri.jpg'), img('mad.jpg'), img('spisebord.jpg')] }],
+    collections: [{ id: 'bagvaerk', title: 'Bagværk', photos: [side('bageri.jpg'), vid('bageri.mp4'), img('mad.jpg'), img('spisebord.jpg')] }],
     texts: [{ id: 't1', text: 'Dagens brød: rugbrød med solsikkekerner og surdejsbolle med rosmarin.', time: 'I dag' }],
     photos: [side('bageri.jpg'), img('mad.jpg'), img('spisebord.jpg')],
     flicks: [side('bageri.jpg')],
   },
   cykelvaerkstedet: {
-    collections: [{ id: 'vaerkstedet', title: 'Værkstedet', photos: [side('vaerksted.jpg'), img('cykel.jpg')] }],
+    collections: [{ id: 'vaerkstedet', title: 'Værkstedet', photos: [side('vaerksted.jpg'), img('cykel.jpg'), vid('cykel.mp4')] }],
     texts: [{ id: 't1', text: 'Vi har lukket mandag på grund af vareoptælling.', time: 'I går' }],
     photos: [side('vaerksted.jpg'), img('cykel.jpg'), img('cykelsti.jpg')],
     flicks: [img('cykel.jpg')],

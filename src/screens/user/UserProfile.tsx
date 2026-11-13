@@ -2,8 +2,8 @@ import { useState } from 'react';
 import { Link, Navigate, useNavigate, useParams, useSearchParams } from 'react-router-dom';
 import { Avatar } from '../../components/Avatar';
 import { Button } from '../../components/Button';
-import { Chip } from '../../components/Chip';
 import { Icon } from '../../components/Icon';
+import { isVideo } from '../../components/StoryViewer';
 import { Tag } from '../../components/Tag';
 import { PageHeader } from '../../components/PageHeader';
 import { PostCard } from '../../components/PostCard';
@@ -54,7 +54,6 @@ export function UserProfile() {
   const [params, setParams] = useSearchParams();
   const raw = params.get('fane');
   const tab: Tab = tabs.some((t) => t.value === raw) ? (raw as Tab) : 'alt';
-  const samling = params.get('samling');
   const [follows, setFollows] = useState<Record<string, boolean>>(() => keep('follows', {}));
 
   const myHandle = profile.username.trim().replace(/^@/, '') || handleOf(profile.name);
@@ -76,9 +75,7 @@ export function UserProfile() {
   const textPosts = history.filter((p) => typeof p.image !== 'string');
   const photos = [
     ...new Set([...history.map((p) => p.image).filter((x): x is string => typeof x === 'string'), ...extras.photos]),
-  ];
-  const collection = extras.collections.find((c) => c.id === samling);
-  const shownPhotos = collection ? collection.photos : photos;
+  ].filter((x) => !isVideo(x));
   const nothing = history.length + extras.texts.length + photos.length === 0 && !extras.pinned;
   const postCount = history.length + extras.texts.length + extras.photos.length + extras.flicks.length;
 
@@ -178,14 +175,10 @@ export function UserProfile() {
             <ul className="pf-collections">
               {extras.collections.map((c) => (
                 <li key={c.id} className="pf-collection">
-                  <Link
-                    to={`?fane=billeder&samling=${c.id}`}
-                    replace
-                    className="pf-collection__link"
-                    aria-current={samling === c.id ? 'true' : undefined}
-                  >
+                  <Link to={`/bruger/${handle}/samling/${c.id}`} className="pf-collection__link" aria-label={`Afspil samlingen ${c.title}`}>
                     <span className="pf-collection__photo">
-                      <img src={c.photos[0]} alt="" />
+                      <img src={c.photos.find((x) => !isVideo(x))} alt="" />
+                      {c.photos.some(isVideo) && <Icon name="clip" size={18} className="uprof__has-video" />}
                     </span>
                     <span className="t-label">{c.title}</span>
                   </Link>
@@ -242,14 +235,8 @@ export function UserProfile() {
 
           {tab === 'billeder' && (
             <>
-              {collection && (
-                <div className="uprof__filter">
-                  <h2 className="t-heading-s">{collection.title}</h2>
-                  <Chip onClick={() => setParams({ fane: 'billeder' }, { replace: true })}>Vis alle billeder</Chip>
-                </div>
-              )}
-              {shownPhotos.length ? (
-                <Masonry tiles={shownPhotos.map(photoTile)} label={collection ? collection.title : 'Billeder'} />
+              {photos.length ? (
+                <Masonry tiles={photos.map(photoTile)} label="Billeder" />
               ) : (
                 <p className="t-body-s uprof__muted">Ingen billeder endnu.</p>
               )}

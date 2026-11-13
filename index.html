@@ -16,7 +16,7 @@
       /* Mørke skærme: farv siden mørk allerede inden appen er indlæst,
          så Safari ser en mørk side fra første billede. */
       (function () {
-        var dark = /\/(flicks(\/|$)|moment\/|profil\/samling\/[^/]+\/vis$|opslag\/[^/]+\/del\/moment$)/.test(location.pathname);
+        var dark = /\/(flicks(\/|$)|moment\/|profil\/samling\/[^/]+\/vis$|opslag\/[^/]+\/del\/moment$|bruger\/[^/]+\/samling\/)/.test(location.pathname);
         if (!dark) return;
         document.documentElement.setAttribute('data-dark', '');
         document.documentElement.style.background = '#171717';

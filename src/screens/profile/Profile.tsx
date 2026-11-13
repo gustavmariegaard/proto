@@ -103,7 +103,7 @@ export function Profile() {
       <ul className="pf-collections">
         {collections.map((c) => (
           <li key={c.id} className="pf-collection">
-            <Link to={`/profil/samling/${c.id}`} className="pf-collection__link">
+            <Link to={`/profil/samling/${c.id}/vis`} aria-label={`Afspil samlingen ${c.title}`} className="pf-collection__link">
               <span className="pf-collection__photo">
                 <img src={photoById(c.cover)?.src} alt="" />
               </span>

@@ -1,0 +1,182 @@
+import { useCallback, useEffect, useRef, useState } from 'react';
+import { Icon } from './Icon';
+import '../screens/home/MomentViewer.css';
+import '../screens/profile/Screens.css';
+
+/** Et billede eller en video i en samling (videoer genkendes på .mp4) */
+export const isVideo = (src: string) => /\.(mp4|webm|mov)$/i.test(src);
+
+const DURATION = 5000; // 5 sekunder pr. billede; videoer varer, så længe de er
+const HOLD = 220;
+
+/* Rammen: 331 × 576 px med 36 px hjørner (som Moments). Starter øverst i midten. */
+const W = 331;
+const H = 576;
+const R = 36;
+const S = 2;
+const framePath = `M ${W / 2} ${S} H ${W - R} A ${R - S} ${R - S} 0 0 1 ${W - S} ${R} V ${H - R} A ${R - S} ${R - S} 0 0 1 ${W - R} ${H - S} H ${R} A ${R - S} ${R - S} 0 0 1 ${S} ${H - R} V ${R} A ${R - S} ${R - S} 0 0 1 ${R} ${S} Z`;
+
+type Props = {
+  items: string[];
+  title: string;
+  /** Under titlen, fx "@mette.lund" */
+  subtitle?: string;
+  startAt?: number;
+  onClose: () => void;
+  actions?: React.ReactNode;
+};
+
+/**
+ * Afspiller en samling som en story highlight: billeder i 5 sekunder, videoer i deres fulde længde.
+ * Tryk til højre for næste, til venstre for forrige. Hold fingeren nede for at pause.
+ */
+export function StoryViewer({ items, title, subtitle, startAt = 0, onClose, actions }: Props) {
+  const [index, setIndex] = useState(Math.min(Math.max(startAt, 0), Math.max(items.length - 1, 0)));
+  const [held, setHeld] = useState(false);
+  const [progress, setProgress] = useState(0);
+  const elapsed = useRef(0);
+  const pressStart = useRef(0);
+  const wasHold = useRef(false);
+  const videoRef = useRef<HTMLVideoElement>(null);
+  const current = items[index]!;
+  const video = isVideo(current);
+
+  const goTo = useCallback(
+    (i: number) => {
+      if (i >= items.length) return onClose();
+      elapsed.current = 0;
+      setProgress(0);
+      setIndex(Math.max(0, i));
+    },
+    [items.length, onClose],
+  );
+
+  // Billeder: fremdrift i JS, så en pause fortsætter præcis, hvor den slap
+  useEffect(() => {
+    if (held || video) return;
+    let last = performance.now();
+    let frame = requestAnimationFrame(function tick(now) {
+      elapsed.current += now - last;
+      last = now;
+      if (elapsed.current >= DURATION) return goTo(index + 1);
+      setProgress(elapsed.current / DURATION);
+      frame = requestAnimationFrame(tick);
+    });
+    return () => cancelAnimationFrame(frame);
+  }, [held, index, video, goTo]);
+
+  // Videoer: følg videoens egen tid, og pause den, når man holder
+  useEffect(() => {
+    const v = videoRef.current;
+    if (!video || !v) return;
+    if (held) {
+      v.pause();
+      return;
+    }
+    v.play().catch(() => {});
+    let frame = requestAnimationFrame(function tick() {
+      if (v.duration) setProgress(v.currentTime / v.duration);
+      frame = requestAnimationFrame(tick);
+    });
+    return () => cancelAnimationFrame(frame);
+  }, [held, index, video]);
+
+  useEffect(() => {
+    const onKey = (e: KeyboardEvent) => {
+      if (e.key === 'Escape') onClose();
+      if (e.key === 'ArrowRight') goTo(index + 1);
+      if (e.key === 'ArrowLeft') goTo(index - 1);
+    };
+    window.addEventListener('keydown', onKey);
+    return () => window.removeEventListener('keydown', onKey);
+  }, [onClose, goTo, index]);
+
+  const press = (e: React.PointerEvent) => {
+    if (e.button !== 0) return;
+    pressStart.current = performance.now();
+    wasHold.current = false;
+    setHeld(true);
+  };
+  const release = () => {
+    if (!held) return;
+    wasHold.current = performance.now() - pressStart.current > HOLD;
+    setHeld(false);
+  };
+  const tap = (dir: 1 | -1) => {
+    if (wasHold.current) {
+      wasHold.current = false;
+      return;
+    }
+    goTo(index + dir);
+  };
+  const holdProps = {
+    onPointerDown: press,
+    onPointerUp: release,
+    onPointerCancel: release,
+    onPointerLeave: release,
+    onContextMenu: (e: React.MouseEvent) => e.preventDefault(),
+  };
+
+  const cover = items.find((x) => !isVideo(x));
+  const videos = items.filter(isVideo).length;
+  const count = [items.length - videos && `${items.length - videos} ${items.length - videos === 1 ? 'billede' : 'billeder'}`, videos && `${videos} ${videos === 1 ? 'video' : 'videoer'}`]
+    .filter(Boolean)
+    .join(' · ');
+
+  return (
+    <div className="moment-view pf-viewer" role="dialog" aria-label={`Samlingen ${title}`}>
+      <div className="moment-view__bg" aria-hidden="true">
+        {cover && <img src={video ? cover : current} alt="" />}
+      </div>
+
+      <div className="moment-view__top">
+        {items.length > 1 && (
+          <ol className="moment-view__dots" aria-label={`${index + 1} af ${items.length}`}>
+            {items.map((p, i) => (
+              <li key={`${p}-${i}`} className={i === index ? 'is-active' : undefined} />
+            ))}
+          </ol>
+        )}
+        <button type="button" className="moment-view__close" aria-label="Luk" onClick={onClose}>
+          <Icon name="close" />
+        </button>
+      </div>
+
+      <div className="moment-view__stage">
+        <div className={['moment-view__frame', held && 'is-held'].filter(Boolean).join(' ')}>
+          <div className="moment-view__photo">
+            {video ? (
+              <video
+                key={`${current}-${index}`}
+                ref={videoRef}
+                src={current}
+                muted
+                playsInline
+                autoPlay
+                preload="auto"
+                onEnded={() => goTo(index + 1)}
+                aria-label={`Video ${index + 1}`}
+              />
+            ) : (
+              <img src={current} alt="" draggable={false} />
+            )}
+          </div>
+          <svg className="moment-view__progress" viewBox={`0 0 ${W} ${H}`} aria-hidden="true">
+            <path d={framePath} className="moment-view__track" />
+            <path d={framePath} pathLength={100} className="pf-viewer__bar" style={{ strokeDashoffset: 100 - progress * 100 }} />
+          </svg>
+          {video && <Icon name="clip" className="story-viewer__video-icon" />}
+          <button type="button" className="moment-view__tap moment-view__tap--prev pf-viewer__tap" aria-label="Forrige" onClick={() => tap(-1)} {...holdProps} />
+          <button type="button" className="moment-view__tap moment-view__tap--next pf-viewer__tap" aria-label="Næste" onClick={() => tap(1)} {...holdProps} />
+        </div>
+      </div>
+
+      <div className="moment-view__who">
+        <span className="t-heading-s">{title}</span>
+        <span className="t-caption moment-view__time">{subtitle ?? count}</span>
+      </div>
+
+      {actions && <div className="pf-viewer__actions">{actions}</div>}
+    </div>
+  );
+}

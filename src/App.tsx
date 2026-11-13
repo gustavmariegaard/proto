@@ -18,6 +18,7 @@ import { Create } from './screens/create/Create';
 import { Share } from './screens/share/Share';
 import { ShareMoment } from './screens/share/ShareMoment';
 import { UserProfile } from './screens/user/UserProfile';
+import { UserCollection } from './screens/user/UserCollection';
 import { Report } from './screens/share/Report';
 import { Messages } from './screens/messages/Messages';
 import { Conversation } from './screens/messages/Conversation';
@@ -105,6 +106,7 @@ export default function App() {
             <Route path="moment/:personId" element={<MomentViewer />} />
             <Route path="opslag/:id" element={<PostDetail />} />
             <Route path="bruger/:handle" element={<UserProfile />} />
+            <Route path="bruger/:handle/samling/:id" element={<UserCollection />} />
             {/* Trin 4: Opret, Del, Rapportér og Beskeder */}
             <Route path="opret" element={<Create />} />
             <Route path="opslag/:id/del" element={<Share />} />

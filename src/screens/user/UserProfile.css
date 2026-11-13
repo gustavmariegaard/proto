@@ -79,3 +79,13 @@
 
 .uprof__content > .pf-tabs,
 .uprof__content > .pf-collections { flex-shrink: 0; }
+
+/* Samlingen indeholder video */
+.pf-collection__photo { position: relative; }
+.uprof__has-video {
+  position: absolute;
+  left: 8px;
+  bottom: 8px;
+  color: #fff;
+  filter: drop-shadow(0 1px 3px rgb(0 0 0 / 0.5));
+}

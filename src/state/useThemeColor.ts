@@ -2,7 +2,7 @@ import { useEffect } from 'react';
 import { useLocation } from 'react-router-dom';
 
 /** Skærme med mørk baggrund helt ud til kanten */
-const DARK = [/^\/flicks(\/|$)/, /^\/moment\//, /^\/profil\/samling\/[^/]+\/vis$/, /^\/opslag\/[^/]+\/del\/moment$/];
+const DARK = [/^\/flicks(\/|$)/, /^\/moment\//, /^\/profil\/samling\/[^/]+\/vis$/, /^\/opslag\/[^/]+\/del\/moment$/, /^\/bruger\/[^/]+\/samling\//];
 
 const LIGHT_COLOR = '#ffffff';
 const DARK_COLOR = '#171717'; // --ink-900
