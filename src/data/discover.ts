@@ -1,16 +1,9 @@
 import { img, posts, type FeedPost } from './sample';
 
 /*
- * Eksempeldata til Opdag (Offentlig samtale).
+ * Eksempeldata til Opdag (Offentlig debat).
  * De to første opslag og alle emner er hentet fra Figma; resten er ekstra eksempelindhold.
  */
-
-/** Emner, man kan have i sit filter. Byudvikling og Kultur er valgt fra start (som i Figma). */
-export const allTopics = ['Byudvikling', 'Kultur', 'Musik', 'Cykling', 'Skole', 'Klima', 'Sport', 'Madlavning', 'Fotografi', 'Løb'];
-export const initialTopics = ['Byudvikling', 'Kultur'];
-
-/** Aktuelle emner: ens for alle i området */
-export const trends = ['Cykelstier', 'Julemarked', 'Skolevalg', 'Klima', 'Sport'];
 
 export type DiscoverPost = FeedPost & {
   topic: string;

@@ -27,13 +27,17 @@
   gap: 14px;
 }
 
-/* ---------- Interesser: Rediger emner + emnefiltre ---------- */
+/* ---------- Interesser: nyt fra sider ---------- */
+.home__pages {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+}
+
+.home__muted { color: var(--color-text-secondary); }
+
 .home__edit {
   gap: 6px;
   padding: 0 14px;
-}
-
-.home__topic {
-  gap: 6px;
-  padding: 0 12px 0 16px;
 }

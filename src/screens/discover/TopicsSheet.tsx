@@ -6,10 +6,10 @@ import { TextField } from '../../components/TextField';
 import { allTopics, trendingTopics } from '../../data/interests';
 import { suggestedInterests } from '../../data/onboarding';
 import { useSession } from '../../state/session';
-import './InterestsSheet.css';
+import './TopicsSheet.css';
 
-/** Rediger emner: søg efter nye emner, se hvad der trender, og vælg eller fravælg. */
-export function InterestsSheet({ open, onClose }: { open: boolean; onClose: () => void }) {
+/** Rediger emner (Offentlig debat): søg efter nye emner, se hvad der trender, og vælg eller fravælg. */
+export function TopicsSheet({ open, onClose }: { open: boolean; onClose: () => void }) {
   const { profile, setProfile } = useSession();
   const [query, setQuery] = useState('');
   const mine = profile.interests;

@@ -1,11 +1,11 @@
 /*
- * Emner man kan følge under Interesser.
+ * Emner man kan følge i Offentlig debat (Opdag).
  * Ikke i Figma: listen og "Trender lige nu" er eksempeldata til prototypen.
  */
 
 /** Alle emner, man kan søge i */
 export const allTopics = [
-  'Kultur', 'Byudvikling', 'Musik', 'Cykling', 'Madlavning', 'Fotografi', 'Film', 'Løb', 'Klima',
+  'Kultur', 'Byudvikling', 'Skole', 'Musik', 'Cykling', 'Madlavning', 'Fotografi', 'Film', 'Løb', 'Klima',
   'Sport', 'Litteratur', 'Politik', 'Gaming', 'Havearbejde', 'Fodbold', 'Håndbold', 'Kunst',
   'Arkitektur', 'Teater', 'Design', 'Mode', 'Rejser', 'Natur', 'Vandring', 'Svømning', 'Yoga',
   'Sundhed', 'Mental sundhed', 'Forældreskab', 'Skole og uddannelse', 'Teknologi', 'Kunstig intelligens',
@@ -14,11 +14,11 @@ export const allTopics = [
   'Foreningsliv', 'Boligindretning', 'Bil og trafik', 'Kollektiv trafik', 'Fiskeri', 'Sejlads',
 ];
 
-/** Det, mange skriver om lige nu */
+/** Det, mange skriver om lige nu (samme aktuelle emner som opslagene i Offentlig debat) */
 export const trendingTopics: { name: string; note: string }[] = [
-  { name: 'Kommunalvalg', note: '3.200 opslag i dag' },
-  { name: 'Julemarkeder', note: '1.850 opslag i dag' },
-  { name: 'Håndbold', note: '1.410 opslag i dag' },
-  { name: 'Vinterbadning', note: '960 opslag i dag' },
-  { name: 'Kollektiv trafik', note: '720 opslag i dag' },
+  { name: 'Cykelstier', note: '3.200 opslag i dag' },
+  { name: 'Julemarked', note: '1.850 opslag i dag' },
+  { name: 'Skolevalg', note: '1.410 opslag i dag' },
+  { name: 'Klima', note: '960 opslag i dag' },
+  { name: 'Sport', note: '720 opslag i dag' },
 ];

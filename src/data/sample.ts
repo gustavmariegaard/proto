@@ -53,7 +53,11 @@ export const initiallySeen = ['anna', 'peter', 'karen'];
 
 /* ---------- Opslag ---------- */
 
-export type FeedPost = Post & { feed: 'venner' | 'interesser'; topic?: string };
+/**
+ * venner = Hjem › Venner, interesser = Hjem › Interesser (nyt fra sider, man følger),
+ * debat = Opdag › Offentlig debat (opslag om emner)
+ */
+export type FeedPost = Post & { feed: 'venner' | 'interesser' | 'debat'; topic?: string };
 
 export const posts: FeedPost[] = [
   {
@@ -150,16 +154,15 @@ export const posts: FeedPost[] = [
   {
     id: 'p-kulturhuset',
     feed: 'interesser',
-    topic: 'Kultur',
     author: 'Kulturhuset',
     avatarSrc: img('dans.jpg'),
     tone: 'blue',
-    meta: 'Kultur · Offentligt',
+    meta: 'Side · for 1 time siden',
     text: 'Nye datoer for teater i byparken. Alle er velkomne, og det er gratis.',
   },
   {
     id: 'p-anna',
-    feed: 'interesser',
+    feed: 'debat',
     topic: 'Byudvikling',
     author: 'Anna Nørgaard',
     avatarSrc: img('anna.jpg'),
@@ -170,7 +173,7 @@ export const posts: FeedPost[] = [
   /* ---------- Ekstra eksempelindhold (ikke fra Figma) ---------- */
   {
     id: 'p-musik',
-    feed: 'interesser',
+    feed: 'debat',
     topic: 'Musik',
     author: 'Spillestedet Lyden',
     avatarSrc: img('begivenhed.jpg'),
@@ -181,7 +184,7 @@ export const posts: FeedPost[] = [
   },
   {
     id: 'p-cykling',
-    feed: 'interesser',
+    feed: 'debat',
     topic: 'Cykling',
     author: 'Cykelklubben Øst',
     avatarSrc: img('cykelsti.jpg'),
@@ -192,7 +195,7 @@ export const posts: FeedPost[] = [
   },
   {
     id: 'p-madlavning',
-    feed: 'interesser',
+    feed: 'debat',
     topic: 'Madlavning',
     author: 'Lene Dahl',
     avatarSrc: img('person-i.jpg'),
@@ -203,7 +206,7 @@ export const posts: FeedPost[] = [
   },
   {
     id: 'p-kultur-2',
-    feed: 'interesser',
+    feed: 'debat',
     topic: 'Kultur',
     author: 'Byens Bibliotek',
     avatarSrc: img('nyhavn.jpg'),
@@ -213,7 +216,7 @@ export const posts: FeedPost[] = [
   },
   {
     id: 'p-byudvikling-2',
-    feed: 'interesser',
+    feed: 'debat',
     topic: 'Byudvikling',
     author: 'Grønne Gader',
     avatarSrc: img('have.jpg'),
@@ -224,7 +227,7 @@ export const posts: FeedPost[] = [
   },
   {
     id: 'p-fotografi',
-    feed: 'interesser',
+    feed: 'debat',
     topic: 'Fotografi',
     author: 'Mikkel Aagaard',
     avatarSrc: img('person-g.jpg'),
@@ -235,7 +238,7 @@ export const posts: FeedPost[] = [
   },
   {
     id: 'p-loeb',
-    feed: 'interesser',
+    feed: 'debat',
     topic: 'Løb',
     author: 'Løbefællesskabet',
     avatarSrc: img('person-h.jpg'),
@@ -244,6 +247,52 @@ export const posts: FeedPost[] = [
     text: 'Nyt begynderhold starter i januar. Fra sofa til fem kilometer på otte uger, i dit eget tempo.',
   },
 
+  /* ---------- Interesser: nyt fra sider, du følger (ikke fra Figma) ---------- */
+  {
+    id: 'p-hallen',
+    feed: 'interesser',
+    author: 'Hallen',
+    tone: 'rose',
+    meta: 'Side · for 3 timer siden',
+    text: 'Hal 2 er lukket for vedligehold fra mandag til onsdag. Træninger flytter til hal 1, se de nye tider på opslagstavlen.',
+    image: img('haandbold.jpg'),
+  },
+  {
+    id: 'p-bageri',
+    feed: 'interesser',
+    author: 'Det lokale bageri',
+    tone: 'sand',
+    meta: 'Side · i morges',
+    text: 'Fastelavnsbollerne er tilbage fra lørdag. Bestil gerne på forhånd, hvis I skal bruge mange.',
+    image: img('spisebord.jpg'),
+  },
+  {
+    id: 'p-cykelvaerksted',
+    feed: 'interesser',
+    author: 'Cykelværkstedet',
+    tone: 'blue',
+    meta: 'Side · i går',
+    text: 'Gratis lygtetjek hele næste uge. Kig forbi med din cykel, så er du klar til de mørke morgener.',
+    image: img('cykel.jpg'),
+  },
+  {
+    id: 'p-bibliotek',
+    feed: 'interesser',
+    author: 'Byens bibliotek',
+    tone: 'sage',
+    meta: 'Side · i går',
+    text: 'Ny it-café hver onsdag klokken 14. Tag din telefon eller computer med, så hjælper vi med MitID, apps og alt det andet.',
+    image: img('computer.jpg'),
+  },
+  {
+    id: 'p-teater',
+    feed: 'interesser',
+    author: 'Teaterforeningen',
+    tone: 'sand',
+    meta: 'Side · for 2 dage siden',
+    text: 'Vi mangler frivillige til kostumer til forårets forestilling. Ingen erfaring nødvendig, kun lyst.',
+    image: img('toej.jpg'),
+  },
 ];
 
 /* ---------- Kommentarer ---------- */

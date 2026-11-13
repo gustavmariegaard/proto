@@ -1,4 +1,3 @@
-import { useState } from 'react';
 import { useNavigate, useSearchParams } from 'react-router-dom';
 import { Icon } from '../../components/Icon';
 import { Chip } from '../../components/Chip';
@@ -9,7 +8,6 @@ import { img, people } from '../../data/sample';
 import { usePosts } from '../../state/posts';
 import { useMoments } from '../../state/moments';
 import { useSession } from '../../state/session';
-import { InterestsSheet } from './InterestsSheet';
 import './Home.css';
 
 type Feed = 'venner' | 'interesser';
@@ -21,12 +19,8 @@ export function Home() {
   const feed: Feed = params.get('feed') === 'interesser' ? 'interesser' : 'venner';
   const { seen } = useMoments();
   const { profile } = useSession();
-  const [off, setOff] = useState<string[]>([]);
-  const [editing, setEditing] = useState(false);
-
-  const active = profile.interests.filter((i) => !off.includes(i));
   const posts = usePosts();
-  const shown = posts.filter((p) => p.feed === feed && (feed === 'venner' || !p.topic || active.includes(p.topic)));
+  const shown = posts.filter((p) => p.feed === feed);
   // Nye moments først, sete bagefter (som i Figma)
   const order = Object.keys(people).sort((a, b) => Number(seen.includes(a)) - Number(seen.includes(b)));
 
@@ -43,31 +37,13 @@ export function Home() {
       />
 
       {feed === 'interesser' && (
-        <ul className="home__chips" aria-label="Filtrér efter dine interesser">
-          {/* Rediger emner står først og ruller med væk, når man bladrer i emnerne */}
-          <li>
-            <Chip className="home__edit" onClick={() => setEditing(true)}>
-              <Icon name="sliders" size={18} />
-              Rediger emner
-            </Chip>
-          </li>
-          {profile.interests.map((i) => {
-            const on = !off.includes(i);
-            return (
-              <li key={i}>
-                <Chip
-                  selected={on}
-                  className="home__topic"
-                  aria-label={on ? `${i}, vises. Tryk for at fjerne` : `${i}, skjult. Tryk for at vise`}
-                  onClick={() => setOff((o) => (on ? [...o, i] : o.filter((x) => x !== i)))}
-                >
-                  {i}
-                  <Icon name={on ? 'close' : 'plus'} size={16} />
-                </Chip>
-              </li>
-            );
-          })}
-        </ul>
+        <div className="home__pages">
+          <p className="t-caption home__muted">Nyt fra de sider, du følger</p>
+          <Chip className="home__edit" onClick={() => navigate('/sider')}>
+            <Icon name="layout-grid" size={18} />
+            Dine sider
+          </Chip>
+        </div>
       )}
 
       <ul className="home__moments" aria-label="Moments">
@@ -106,7 +82,6 @@ export function Home() {
         ))}
       </div>
 
-      <InterestsSheet open={editing} onClose={() => setEditing(false)} />
     </div>
   );
 }

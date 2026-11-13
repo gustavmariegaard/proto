@@ -9,6 +9,28 @@
 .discover__intro,
 .discover__note { color: var(--color-text-secondary); }
 
+.discover__row {
+  display: flex;
+  gap: 8px;
+  margin: 0 -20px;
+  padding: 0 20px;
+  list-style: none;
+  overflow-x: auto;
+  scrollbar-width: none;
+}
+
+.discover__row::-webkit-scrollbar { display: none; }
+
+.discover__edit {
+  gap: 6px;
+  padding: 0 14px;
+}
+
+.discover__topic {
+  gap: 6px;
+  padding: 0 12px 0 16px;
+}
+
 .discover__chips {
   display: flex;
   flex-wrap: wrap;
