@@ -12,7 +12,7 @@ import { handleOf } from '../../data/handles';
 import { contacts } from '../../data/messages';
 import { photoHeights } from '../../data/profile';
 import { extrasFor } from '../../data/profileExtras';
-import { isPublicProfile } from '../../data/publicProfiles';
+import { publicKind, publicLabel } from '../../data/publicProfiles';
 import { keep, save } from '../../state/keep';
 import { usePosts } from '../../state/posts';
 import { useMoments } from '../../state/moments';
@@ -102,6 +102,7 @@ export function UserProfile() {
     );
   };
   const isSide = account.kind === 'side';
+  const pk = publicKind(account.handle) ?? (isSide ? 'side' : null);
   const contact = contacts.find((c) => handleOf(c.name) === handle);
   const hasMoments = Boolean(account.momentsId);
   const momentsSeen = account.momentsId ? seen.includes(account.momentsId) : true;
@@ -134,11 +135,10 @@ export function UserProfile() {
             <h1 className="t-title-l">{account.name}</h1>
             <p className="t-caption uprof__muted">
               @{account.handle}
-              {isSide && ' · Side'}
             </p>
-            {isPublicProfile(account.handle) && (
-              <span className="uprof__public t-caption-strong">
-                <Icon name="globe" size={14} /> Offentlig profil
+            {pk && (
+              <span className={`uprof__public uprof__public--${pk} t-caption-strong`}>
+                <Icon name={pk === 'person' ? 'megaphone' : 'building'} size={14} /> {publicLabel[pk]}
               </span>
             )}
             {account.followsMe && (

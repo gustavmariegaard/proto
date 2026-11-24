@@ -86,7 +86,7 @@ export function Create() {
     const id = addPost({
       feed: audience === 'debat' ? 'debat' : 'venner',
       topic: audience === 'debat' ? tags[0] : undefined,
-      tags: audience === 'debat' ? tags : undefined,
+      tags: tags.length ? tags : undefined,
       // Som på Reddit: dit eget opslag starter med din egen opstemme
       score: audience === 'debat' ? 0 : undefined,
       author: profile.name || 'Dig',
@@ -330,7 +330,8 @@ function AudiencePicker({ audience, onAudience, groups, groupId, onGroup, hint, 
       </div>
       <p className="t-caption modal-screen__muted" aria-live="polite">{hint}</p>
 
-      {audience === 'debat' && <TagInput tags={tags} onTags={onTags} error={tagError} />}
+      {/* Tags kan sættes på alle opslag; i Debat er mindst ét påkrævet */}
+      <TagInput tags={tags} onTags={onTags} error={tagError} required={audience === 'debat'} />
 
       {audience === 'gruppe' && (
         <ul className="create__groups" role="radiogroup" aria-label="Vælg gruppe">
@@ -365,7 +366,7 @@ function AudiencePicker({ audience, onAudience, groups, groupId, onGroup, hint, 
 const MAX_TAGS = 5;
 
 /** Tags til et debatopslag: skriv selv, eller vælg blandt forslag. Mindst ét, højst fem. */
-function TagInput({ tags, onTags, error }: { tags: string[]; onTags: (t: string[]) => void; error: boolean }) {
+function TagInput({ tags, onTags, error, required }: { tags: string[]; onTags: (t: string[]) => void; error: boolean; required: boolean }) {
   const [text, setText] = useState('');
   const q = text.trim().replace(/^#/, '');
   const known = [...new Set([...trendingTopics.map((t) => t.name), ...allTopics])];
@@ -385,11 +386,15 @@ function TagInput({ tags, onTags, error }: { tags: string[]; onTags: (t: string[
 
   return (
     <div className="create__tags" id="create-tags">
-      <h3 className="t-heading-s">Tags</h3>
+      <h3 className="t-heading-s">
+        Tags {!required && <span className="t-caption modal-screen__muted">(valgfrit)</span>}
+      </h3>
       <p className={['t-caption', error ? 'create__tags-error' : 'modal-screen__muted'].join(' ')} aria-live="polite">
         {error
           ? 'Tilføj mindst ét tag, så andre kan finde opslaget.'
-          : `Kategorisér opslaget. Det første tag er emnet. Højst ${MAX_TAGS}.`}
+          : required
+            ? `Kategorisér opslaget. Det første tag er emnet i Offentlig debat. Højst ${MAX_TAGS}.`
+            : `Gør opslaget lettere at finde, fx #Bagning eller #Håndbold. Højst ${MAX_TAGS}.`}
       </p>
       {tags.length > 0 && (
         <ul className="create__tag-list">
@@ -397,7 +402,7 @@ function TagInput({ tags, onTags, error }: { tags: string[]; onTags: (t: string[
             <li key={t}>
               <Chip selected className="create__tag" aria-label={`Fjern tagget ${t}`} onClick={() => onTags(tags.filter((x) => x !== t))}>
                 #{t}
-                {i === 0 && <span className="create__tag-main">emne</span>}
+                {i === 0 && required && <span className="create__tag-main">emne</span>}
                 <Icon name="close" size={16} />
               </Chip>
             </li>

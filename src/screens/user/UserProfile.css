@@ -119,3 +119,8 @@
 }
 
 .uprof__name { align-items: flex-start; }
+
+.uprof__public--side {
+  background: var(--color-bg-subtle);
+  color: var(--color-text-primary);
+}

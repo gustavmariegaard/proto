@@ -5,7 +5,7 @@ import { Icon, type IconName } from './Icon';
 import { PostMenu } from './PostMenu';
 import { setHidden, useHidden } from '../state/posts';
 import { scoreWith, useVotes, vote } from '../state/votes';
-import { isPublicProfile } from '../data/publicProfiles';
+import { publicKind, publicLabel, type PublicKind } from '../data/publicProfiles';
 import { handleOf } from '../data/handles';
 import './PostCard.css';
 
@@ -59,7 +59,8 @@ type PostCardProps = {
 export function PostCard({ post, onComment, onShare, onReport }: PostCardProps) {
   const [saved, setSaved] = useState(false);
   const [stats] = useState(() => post.stats ?? sampleStats(post.id));
-  const isPublic = !post.group && isPublicProfile(post.author);
+  const kind = post.group ? null : publicKind(post.author);
+  const isPublic = kind !== null;
   const handle = post.username || handleOf(post.author);
   // Egne opslag åbner din egen profil
   const profileHref = post.id.startsWith('mit-') ? '/profil' : `/bruger/${handle}`;
@@ -114,7 +115,7 @@ export function PostCard({ post, onComment, onShare, onReport }: PostCardProps) 
             <div className="post__meta">
               <h3 className="t-heading-s post__name">
                 {post.author}
-                {isPublic && <PublicBadge />}
+                {kind && <PublicBadge kind={kind} />}
               </h3>
               <p className="t-caption post__sub">
                 @{handle} · {post.meta}
@@ -236,11 +237,11 @@ function VoteControl({ id, base, allowDown }: { id: string; base: number; allowD
   );
 }
 
-/** Lille globus ved navnet: offentlig profil (kan stemmes både op og ned) */
-export function PublicBadge() {
+/** Lille mærke ved navnet: megafon = offentlig person, bygning = side. Begge kan stemmes op og ned. */
+export function PublicBadge({ kind }: { kind: PublicKind }) {
   return (
-    <span className="public-badge" role="img" aria-label="Offentlig profil" title="Offentlig profil">
-      <Icon name="globe" size={14} />
+    <span className={`public-badge public-badge--${kind}`} role="img" aria-label={publicLabel[kind]} title={publicLabel[kind]}>
+      <Icon name={kind === 'person' ? 'megaphone' : 'building'} size={13} />
     </span>
   );
 }

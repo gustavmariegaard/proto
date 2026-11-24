@@ -14,6 +14,14 @@ const paths = {
   globe:
     p('M12 21C16.9706 21 21 16.9706 21 12C21 7.02944 16.9706 3 12 3C7.02944 3 3 7.02944 3 12C3 16.9706 7.02944 21 12 21Z') +
     p('M3 12H21M12 3C14.5 5.5 15.5 8.5 15.5 12C15.5 15.5 14.5 18.5 12 21C9.5 18.5 8.5 15.5 8.5 12C8.5 8.5 9.5 5.5 12 3Z'),
+  /** Offentlig person (megafon). Ikke fra Figma. */
+  megaphone:
+    p('M4 10V14C4 14.5523 4.44772 15 5 15H7L13 19V5L7 9H5C4.44772 9 4 9.44772 4 10Z') +
+    p('M17 9C17.8 9.8 18.2 10.9 18.2 12C18.2 13.1 17.8 14.2 17 15M8 15L9 20'),
+  /** Side: virksomhed eller forening (bygning). Ikke fra Figma. */
+  building:
+    p('M4 21H20M6 21V5C6 4.44772 6.44772 4 7 4H17C17.5523 4 18 4.44772 18 5V21') +
+    p('M9.5 8H10.5M13.5 8H14.5M9.5 12H10.5M13.5 12H14.5M10.5 21V17H13.5V21'),
   'vote-up': p('M12 4L4 13H9V20H15V13H20L12 4Z'),
   'vote-down': p('M12 20L20 11H15V4H9V11H4L12 20Z'),
   /** Tre prikker (menu på opslag). Ikke fra Figma. */
