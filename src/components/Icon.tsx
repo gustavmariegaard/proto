@@ -9,6 +9,9 @@ const p = (d: string) => `<path d="${d}" ${S}/>`;
 const dot = (cx: number) => `<circle cx="${cx}" cy="12" r="1.6" fill="currentColor"/>`;
 
 const paths = {
+  /** Stem op / ned (Offentlig debat). Ikke fra Figma. */
+  'vote-up': p('M12 4L4 13H9V20H15V13H20L12 4Z'),
+  'vote-down': p('M12 20L20 11H15V4H9V11H4L12 20Z'),
   /** Tre prikker (menu på opslag). Ikke fra Figma. */
   dots: dot(5) + dot(12) + dot(19),
   /** Info (Hvorfor ser jeg dette?). Ikke fra Figma. */

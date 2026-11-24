@@ -4,6 +4,7 @@ import { Avatar, type AvatarTone } from './Avatar';
 import { Icon, type IconName } from './Icon';
 import { PostMenu } from './PostMenu';
 import { setHidden, useHidden } from '../state/posts';
+import { scoreWith, useVotes, vote } from '../state/votes';
 import { handleOf } from '../data/handles';
 import './PostCard.css';
 
@@ -20,6 +21,10 @@ export type Post = {
   /** true = grå pladsholder, eller en sti til et billede i public/img */
   image?: boolean | string;
   imageAlt?: string;
+  /** Offentlig debat: op/ned-stemmer i stedet for likes */
+  score?: number;
+  /** Tags (Offentlig debat), fx ['Byudvikling', 'Cykelstier'] */
+  tags?: string[];
   /** Brugernavn uden @. Udelades det, laves det ud fra navnet. */
   username?: string;
   /** Antal synes godt om, kommentarer, delinger og gemt. Udelades de, laves faste eksempeltal ud fra id. */
@@ -128,15 +133,29 @@ export function PostCard({ post, onComment, onShare, onReport }: PostCardProps) 
 
       <p className="t-body">{post.text}</p>
 
+      {post.tags && post.tags.length > 0 && (
+        <ul className="post__tags" aria-label="Tags">
+          {post.tags.map((t) => (
+            <li key={t} className="t-caption-strong post__tag">
+              #{t}
+            </li>
+          ))}
+        </ul>
+      )}
+
       <footer className="post__actions">
-        <Action
-          icon={liked ? 'heart-filled' : 'heart'}
-          label="Synes godt om"
-          count={stats.likes + (liked ? 1 : 0)}
-          pressed={liked}
-          className={liked ? 'post__liked' : undefined}
-          onClick={() => setLiked((v) => !v)}
-        />
+        {post.score !== undefined ? (
+          <VoteControl id={post.id} base={post.score} />
+        ) : (
+          <Action
+            icon={liked ? 'heart-filled' : 'heart'}
+            label="Synes godt om"
+            count={stats.likes + (liked ? 1 : 0)}
+            pressed={liked}
+            className={liked ? 'post__liked' : undefined}
+            onClick={() => setLiked((v) => !v)}
+          />
+        )}
         <Action icon="chat" label="Kommentarer" count={stats.comments} onClick={onComment} />
         <Action icon="send" label="Delinger" count={stats.shares} onClick={onShare} />
         <Action
@@ -195,5 +214,24 @@ function Action({ icon, label, count, pressed, className, onClick }: ActionProps
       <Icon name={icon} />
       {count > 0 && <span className="t-caption-strong post__count">{fmt(count)}</span>}
     </button>
+  );
+}
+
+/** Stem op / ned (Offentlig debat). Samme stemme igen fjerner den. */
+function VoteControl({ id, base }: { id: string; base: number }) {
+  const mine = useVotes()[id];
+  const score = scoreWith(base, mine);
+  return (
+    <div className={['post__vote', mine === 1 && 'post__vote--up', mine === -1 && 'post__vote--down'].filter(Boolean).join(' ')} role="group" aria-label={`Score ${score}`}>
+      <button type="button" className="post__vote-btn" aria-label="Stem op" aria-pressed={mine === 1} onClick={() => vote(id, 1)}>
+        <Icon name="vote-up" size={20} />
+      </button>
+      <span className="t-caption-strong post__score" aria-live="polite">
+        {fmt(score)}
+      </span>
+      <button type="button" className="post__vote-btn" aria-label="Stem ned" aria-pressed={mine === -1} onClick={() => vote(id, -1)}>
+        <Icon name="vote-down" size={20} />
+      </button>
+    </div>
   );
 }

@@ -60,6 +60,7 @@ export function addPost(post: Omit<FeedPost, 'id'>) {
   all = [next, ...all];
   save('posts', mine);
   listeners.forEach((l) => l());
+  return next.id;
 }
 
 /* ---------- "Ikke interesseret": skjulte opslag ---------- */

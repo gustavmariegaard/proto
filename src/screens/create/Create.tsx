@@ -18,6 +18,8 @@ import type { Community } from '../../data/more';
 import { img } from '../../data/sample';
 import { handleOf } from '../../data/handles';
 import { addPost } from '../../state/posts';
+import { vote } from '../../state/votes';
+import { allTopics, trendingTopics } from '../../data/interests';
 import { useSession } from '../../state/session';
 import { CloseHeader, ToggleList, useClose } from './parts';
 import './Create.css';
@@ -41,6 +43,8 @@ export function Create() {
   const startGroup = params.get('gruppe');
   const [audience, setAudience] = useState<Audience>(startGroup ? 'gruppe' : 'offentlig');
   const [groupId, setGroupId] = useState<string | null>(startGroup);
+  const [tags, setTags] = useState<string[]>([]);
+  const [tagError, setTagError] = useState(false);
   const groups = groupStore.use();
   const group = groups.find((g) => g.id === groupId) ?? null;
   const { profile } = useSession();
@@ -68,14 +72,23 @@ export function Create() {
       textRef.current?.focus({ preventScroll: true });
       return;
     }
+    if (audience === 'debat' && tags.length === 0) {
+      setTagError(true);
+      document.getElementById('create-tags')?.scrollIntoView({ behavior: 'smooth', block: 'center' });
+      return;
+    }
     if (audience === 'gruppe' && !group) {
       document.getElementById('create-audience')?.scrollIntoView({ behavior: 'smooth', block: 'center' });
       return;
     }
     setBusy(true);
     const image = media?.type === 'image' ? await shrink(media.url) : undefined;
-    addPost({
-      feed: 'venner',
+    const id = addPost({
+      feed: audience === 'debat' ? 'debat' : 'venner',
+      topic: audience === 'debat' ? tags[0] : undefined,
+      tags: audience === 'debat' ? tags : undefined,
+      // Som på Reddit: dit eget opslag starter med din egen opstemme
+      score: audience === 'debat' ? 0 : undefined,
       author: profile.name || 'Dig',
       username: profile.username.trim().replace(/^@/, '') || handleOf(profile.name) || 'dit.navn',
       avatarSrc: profile.avatar ?? img('mig.jpg'),
@@ -87,7 +100,10 @@ export function Create() {
         ? { name: group.name, initials: group.initials, tone: group.tone, avatarSrc: group.avatarSrc }
         : undefined,
     });
-    navigate('/', { replace: true });
+    if (audience === 'debat') {
+      vote(id, 1);
+      navigate('/opdag', { replace: true });
+    } else navigate('/', { replace: true });
   };
 
   const hint =
@@ -105,6 +121,12 @@ export function Create() {
       groupId={groupId}
       onGroup={setGroupId}
       hint={hint}
+      tags={tags}
+      onTags={(t) => {
+        setTags(t);
+        setTagError(false);
+      }}
+      tagError={tagError}
     />
   );
 
@@ -282,10 +304,13 @@ type AudiencePickerProps = {
   groupId: string | null;
   onGroup: (id: string) => void;
   hint: string;
+  tags: string[];
+  onTags: (t: string[]) => void;
+  tagError: boolean;
 };
 
 /** Vises for: Offentligt (din profil) eller en af dine grupper */
-function AudiencePicker({ audience, onAudience, groups, groupId, onGroup, hint }: AudiencePickerProps) {
+function AudiencePicker({ audience, onAudience, groups, groupId, onGroup, hint, tags, onTags, tagError }: AudiencePickerProps) {
   return (
     <section className="create__audience" aria-labelledby="create-audience">
       <h2 id="create-audience" className="t-heading-s">Vises for</h2>
@@ -304,6 +329,8 @@ function AudiencePicker({ audience, onAudience, groups, groupId, onGroup, hint }
         ))}
       </div>
       <p className="t-caption modal-screen__muted" aria-live="polite">{hint}</p>
+
+      {audience === 'debat' && <TagInput tags={tags} onTags={onTags} error={tagError} />}
 
       {audience === 'gruppe' && (
         <ul className="create__groups" role="radiogroup" aria-label="Vælg gruppe">
@@ -332,5 +359,90 @@ function AudiencePicker({ audience, onAudience, groups, groupId, onGroup, hint }
         </ul>
       )}
     </section>
+  );
+}
+
+const MAX_TAGS = 5;
+
+/** Tags til et debatopslag: skriv selv, eller vælg blandt forslag. Mindst ét, højst fem. */
+function TagInput({ tags, onTags, error }: { tags: string[]; onTags: (t: string[]) => void; error: boolean }) {
+  const [text, setText] = useState('');
+  const q = text.trim().replace(/^#/, '');
+  const known = [...new Set([...trendingTopics.map((t) => t.name), ...allTopics])];
+  const suggestions = (q ? known.filter((t) => t.toLowerCase().includes(q.toLowerCase())) : known.slice(0, 8))
+    .filter((t) => !tags.includes(t))
+    .slice(0, 8);
+  const full = tags.length >= MAX_TAGS;
+
+  const add = (raw: string) => {
+    const t = raw.trim().replace(/^#/, '');
+    if (!t || full) return;
+    const nice = t.charAt(0).toUpperCase() + t.slice(1);
+    const existing = known.find((k) => k.toLowerCase() === nice.toLowerCase()) ?? nice;
+    if (!tags.includes(existing)) onTags([...tags, existing]);
+    setText('');
+  };
+
+  return (
+    <div className="create__tags" id="create-tags">
+      <h3 className="t-heading-s">Tags</h3>
+      <p className={['t-caption', error ? 'create__tags-error' : 'modal-screen__muted'].join(' ')} aria-live="polite">
+        {error
+          ? 'Tilføj mindst ét tag, så andre kan finde opslaget.'
+          : `Kategorisér opslaget. Det første tag er emnet. Højst ${MAX_TAGS}.`}
+      </p>
+      {tags.length > 0 && (
+        <ul className="create__tag-list">
+          {tags.map((t, i) => (
+            <li key={t}>
+              <Chip selected className="create__tag" aria-label={`Fjern tagget ${t}`} onClick={() => onTags(tags.filter((x) => x !== t))}>
+                #{t}
+                {i === 0 && <span className="create__tag-main">emne</span>}
+                <Icon name="close" size={16} />
+              </Chip>
+            </li>
+          ))}
+        </ul>
+      )}
+      {!full && (
+        <input
+          className="field"
+          type="text"
+          placeholder="Skriv et tag, fx Cykelstier"
+          aria-label="Skriv et tag"
+          value={text}
+          enterKeyHint="done"
+          autoCapitalize="sentences"
+          onChange={(e) => {
+            const v = e.target.value;
+            // Komma eller mellemrum efter et ord laver et tag
+            if (/[,]$/.test(v)) add(v.slice(0, -1));
+            else setText(v);
+          }}
+          onKeyDown={(e) => {
+            if (e.key === 'Enter') {
+              e.preventDefault();
+              add(text);
+            }
+          }}
+        />
+      )}
+      {!full && suggestions.length > 0 && (
+        <div className="create__chips" aria-label="Forslag">
+          {q && !known.some((k) => k.toLowerCase() === q.toLowerCase()) && (
+            <Chip className="create__tag" onClick={() => add(q)}>
+              Nyt tag: #{q}
+              <Icon name="plus" size={16} />
+            </Chip>
+          )}
+          {suggestions.map((t) => (
+            <Chip key={t} className="create__tag" onClick={() => add(t)}>
+              #{t}
+              <Icon name="plus" size={16} />
+            </Chip>
+          ))}
+        </div>
+      )}
+    </div>
   );
 }

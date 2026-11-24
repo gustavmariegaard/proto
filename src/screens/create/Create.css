@@ -250,3 +250,32 @@
   background: var(--color-action-primary);
   color: var(--color-text-on-action);
 }
+
+/* ---------- Tags (debatopslag) ---------- */
+.create__tags {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  width: 100%;
+}
+
+.create__tag-list {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.create__tag { gap: 6px; padding: 0 12px 0 14px; }
+
+.create__tag-main {
+  padding: 1px 6px;
+  border-radius: var(--radius-pill);
+  background: var(--color-accent-highlight);
+  color: var(--ink-900);
+  font: 600 11px/14px var(--font-body);
+}
+
+.create__tags-error { color: #c62828; }

@@ -17,10 +17,15 @@ export const createKinds: { value: CreateKind; label: string }[] = [
  * Man deler enten på sin profil (offentligt) eller i en af sine grupper.
  * Om profilen er offentlig eller privat, vælger man på profilen – ikke pr. opslag.
  */
-export type Audience = 'offentlig' | 'gruppe';
+export type Audience = 'offentlig' | 'debat' | 'gruppe';
 export const audiences: { value: Audience; label: string; hint: string }[] = [
   // Ikke i Figma: forklaringerne er skrevet i samme tone.
   { value: 'offentlig', label: 'Offentligt', hint: 'Alle kan se opslaget.' },
+  {
+    value: 'debat',
+    label: 'Debat',
+    hint: 'Vises i Offentlig debat under dine tags. Andre kan stemme det op og ned.',
+  },
   { value: 'gruppe', label: 'Gruppe', hint: 'Vælg den gruppe, opslaget skal deles i.' },
 ];
 

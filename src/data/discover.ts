@@ -11,12 +11,23 @@ export type DiscoverPost = FeedPost & {
   trends: string[];
   /** true, når opslaget findes i sample.ts og kan åbnes på /opslag/:id */
   linkable: boolean;
+  /** Tags, opslaget er sat i (emnet og de aktuelle emner) */
+  tags: string[];
+  /** Op- minus nedstemmer fra andre (din egen stemme lægges til) */
+  score: number;
 };
+
+/** Faste eksempelscorer pr. opslag */
+function baseScore(id: string) {
+  let h = 5;
+  for (const c of id) h = (h * 31 + c.charCodeAt(0)) >>> 0;
+  return 3 + (h % 140);
+}
 
 /** Hent et opslag fra sample.ts, men vis kun emnet under navnet (som i Figma). */
 function fromSample(id: string, topic: string, trendTags: string[]): DiscoverPost {
   const p = posts.find((x) => x.id === id)!;
-  return { ...p, meta: topic, topic, trends: trendTags, linkable: true };
+  return { ...p, meta: topic, topic, trends: trendTags, linkable: true, tags: [topic, ...trendTags], score: baseScore(id) };
 }
 
 function extra(
@@ -39,6 +50,8 @@ function extra(
     topic,
     trends: trendTags,
     linkable: false,
+    tags: [topic, ...trendTags],
+    score: baseScore(id),
   };
 }
 
@@ -89,4 +102,14 @@ export const discoverPosts: DiscoverPost[] = [
   fromSample('p-madlavning', 'Madlavning', []),
   fromSample('p-fotografi', 'Fotografi', []),
   fromSample('p-loeb', 'Løb', ['Sport']),
+  /* Et omdiskuteret opslag lige over grænsen: én nedstemme mere, og det forsvinder fra emnet */
+  { ...extra(
+    'd-lars',
+    'Lars Møller',
+    '',
+    'sand',
+    'Byudvikling',
+    'Fjern cykelstierne på Vestergade, og lav dem om til parkering. Ingen cykler alligevel om vinteren.',
+    ['Cykelstier'],
+  ), avatarSrc: undefined, score: -4 },
 ];

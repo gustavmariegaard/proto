@@ -249,3 +249,53 @@
 
 .post-menu__back:focus-visible,
 .post-menu__ok:focus-visible { outline: none; box-shadow: var(--focus-ring); }
+
+/* ---------- Tags (Offentlig debat) ---------- */
+.post__tags {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.post__tag {
+  padding: 2px 10px;
+  border-radius: var(--radius-pill);
+  background: var(--color-bg-subtle);
+  color: var(--color-text-secondary);
+}
+
+/* ---------- Op/ned-stemmer ---------- */
+.post__vote {
+  display: inline-flex;
+  align-items: center;
+  margin-right: 4px;
+  border: 1px solid var(--color-border-default);
+  border-radius: var(--radius-pill);
+}
+
+.post__vote-btn {
+  display: grid;
+  place-items: center;
+  width: 44px;
+  height: 40px;
+  border-radius: var(--radius-pill);
+  color: var(--color-text-secondary);
+}
+
+.post__vote-btn:focus-visible { outline: none; box-shadow: var(--focus-ring); }
+
+.post__score {
+  min-width: 24px;
+  text-align: center;
+  font-variant-numeric: tabular-nums;
+}
+
+/* Stemt op: grøn pil og fyldt. Stemt ned: mørk pil og fyldt. */
+.post__vote--up .post__vote-btn:first-child { color: var(--green-700); }
+.post__vote--up .post__vote-btn:first-child svg path { fill: var(--color-accent-highlight); stroke: var(--green-700); }
+.post__vote--up .post__score { color: var(--green-700); }
+.post__vote--down .post__vote-btn:last-child { color: var(--ink-900); }
+.post__vote--down .post__vote-btn:last-child svg path { fill: var(--ink-700); stroke: var(--ink-900); }
