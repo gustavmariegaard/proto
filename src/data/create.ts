@@ -26,7 +26,7 @@ export const audiences: { value: Audience; label: string; hint: string; icon: 'u
     value: 'debat',
     label: 'Offentlig debat',
     icon: 'compass',
-    hint: 'Til alle, under dine tags. Kan stemmes op og ned.',
+    hint: 'Til alle',
   },
 ];
 
