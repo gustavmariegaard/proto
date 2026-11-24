@@ -49,7 +49,7 @@
   top: 0;
   left: 0;
   right: 0;
-  height: calc(var(--safe-top) + 140px);
+  height: calc(var(--safe-top) + 110px);
   background: linear-gradient(180deg, rgb(0 0 0 / 0.42) 0%, rgb(0 0 0 / 0.18) 55%, transparent 100%);
   pointer-events: none;
 }
@@ -60,76 +60,6 @@
   gap: 8px;
   margin-left: 20px;
   pointer-events: auto;
-}
-
-/* Vandret række af dine emner. Vises kun under "Dine emner". */
-.flicks__topics {
-  display: flex;
-  gap: 6px;
-  margin: 0;
-  padding: 4px 20px;
-  list-style: none;
-  overflow-x: auto;
-  scrollbar-width: none;
-  pointer-events: auto;
-  transition: opacity 0.2s ease, transform 0.2s ease;
-  -webkit-mask-image: linear-gradient(90deg, #000 calc(100% - 40px), transparent);
-  mask-image: linear-gradient(90deg, #000 calc(100% - 40px), transparent);
-}
-
-.flicks__topics::-webkit-scrollbar { display: none; }
-
-.flicks__topics--away {
-  opacity: 0;
-  transform: translateY(-6px);
-  pointer-events: none;
-}
-
-/* Emne-chip ovenpå video: glas med hvid tekst. 36 px synlig, 44 px trykflade. */
-.flicks__chip {
-  position: relative;
-  display: inline-flex;
-  flex-shrink: 0;
-  align-items: center;
-  gap: 4px;
-  height: 36px;
-  padding: 0 10px 0 14px;
-  border: 1px solid rgb(255 255 255 / 0.28);
-  border-radius: var(--radius-pill);
-  background: rgb(20 20 20 / 0.32);
-  -webkit-backdrop-filter: blur(14px);
-  backdrop-filter: blur(14px);
-  color: rgb(255 255 255 / 0.72);
-  font: 600 13px/18px var(--font-body);
-  white-space: nowrap;
-}
-
-.flicks__chip::before {
-  content: '';
-  position: absolute;
-  inset: -4px 0;
-}
-
-.flicks__chip--on {
-  border-color: rgb(255 255 255 / 0.7);
-  background: rgb(255 255 255 / 0.18);
-  color: #fff;
-}
-
-.flicks__chip--edit {
-  justify-content: center;
-  width: 36px;
-  padding: 0;
-  color: #fff;
-}
-
-.flicks__chip:focus-visible {
-  outline: 2px solid var(--color-accent-highlight);
-  outline-offset: 2px;
-}
-
-@media (prefers-reduced-motion: reduce) {
-  .flicks__topics { transition: none; }
 }
 
 /* Ingen flicks om dine emner */
@@ -163,6 +93,38 @@
   background: var(--color-bg-surface);
   border: 1px solid var(--color-border-strong);
   color: var(--color-text-primary);
+}
+
+.flicks__mode--split {
+  gap: 0;
+  padding: 0;
+}
+
+.flicks__mode-part {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  height: 100%;
+  padding: 0 var(--space-16);
+  color: inherit;
+  font: inherit;
+  border-radius: var(--radius-pill);
+}
+
+.flicks__mode-part:first-child { padding-right: 10px; }
+
+/* Justér-knappen i samme pille, adskilt af en tynd streg */
+.flicks__mode-edit {
+  min-width: 44px;
+  padding: 0 14px 0 10px;
+  border-left: 1px solid currentColor;
+  border-radius: 0 var(--radius-pill) var(--radius-pill) 0;
+  border-left-color: color-mix(in srgb, currentColor 30%, transparent);
+}
+
+.flicks__mode-part:focus-visible {
+  outline: 2px solid var(--color-accent-highlight);
+  outline-offset: 2px;
 }
 
 .flicks__mode:focus-visible {
@@ -275,52 +237,6 @@
 
 .flick__author { color: var(--color-text-on-action); }
 .flick__text { color: var(--color-bg-subtle); }
-
-/* "Swipe op": to pile, den øverste svag. Centreret, 18 px over panelet. */
-.flick__hint {
-  position: absolute;
-  z-index: 2;
-  left: 50%;
-  bottom: calc(var(--tabbar-bar) + 96px);
-  transform: translateX(-50%);
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  justify-content: center;
-  width: 56px;
-  min-height: 56px;
-  padding: 0;
-  border: 0;
-  border-radius: 28px;
-  background: none;
-  color: var(--color-text-on-action);
-  filter: drop-shadow(0 1px 3px rgb(0 0 0 / 0.45));
-  touch-action: none;
-  cursor: grab;
-  transition: transform 0.2s ease;
-}
-
-.flick__hint:focus-visible { outline: none; box-shadow: 0 0 0 2px var(--color-accent-highlight); }
-
-/* Mens man trækker, følger pilen fingeren uden forsinkelse og lyser op */
-.flick__hint--drag { transition: none; color: var(--color-accent-highlight); }
-
-/* Hopper let for at vise, at man kan swipe */
-.flick__hint--bounce { animation: flick-hint-bounce 1.6s ease-in-out infinite; }
-
-@keyframes flick-hint-bounce {
-  0%, 100% { transform: translate(-50%, 0); }
-  50% { transform: translate(-50%, -8px); }
-}
-
-@media (prefers-reduced-motion: reduce) {
-  .flick__hint--bounce { animation: none; }
-}
-
-.flick__chevron { transform: rotate(-90deg); opacity: 0.9; }
-.flick__chevron--faint { opacity: 0.35; margin-bottom: -10px; }
-
-.flick__author-link { color: inherit; text-decoration: none; }
 
 /* ---------- Ikoner uden ring: kun hvide ikoner med skygge ---------- */
 .flick__actions .icon-btn {

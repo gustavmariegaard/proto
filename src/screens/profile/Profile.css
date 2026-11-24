@@ -279,3 +279,45 @@
   color: var(--color-text-secondary);
   text-decoration: none;
 }
+
+/* Bio: tryk for at skrive eller rette */
+.pf-bio {
+  align-self: flex-start;
+  min-height: 44px;
+  margin: -10px 0;
+  padding: 10px 0;
+  text-align: left;
+  color: var(--color-text-primary);
+  white-space: pre-line;
+}
+
+.pf-bio--empty {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  color: var(--color-text-secondary);
+}
+
+.pf-bio:focus-visible { outline: none; box-shadow: var(--focus-ring); border-radius: 8px; }
+
+.pf-bio-form {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  padding: 16px 20px 12px;
+}
+
+.pf-bio-form__field {
+  width: 100%;
+  padding: 12px 14px;
+  border: 1px solid var(--color-border-default);
+  border-radius: 14px;
+  background: var(--color-bg-surface);
+  color: var(--color-text-primary);
+  resize: none;
+  font-family: var(--font-body);
+}
+
+.pf-bio-form__field:focus { outline: none; border-color: var(--color-text-primary); }
+
+.pf-bio-form__count { align-self: flex-end; margin-bottom: 8px; }

@@ -1,4 +1,7 @@
+import { useState } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
+import { Button } from '../../components/Button';
+import { Sheet } from '../../components/Sheet';
 import { Icon } from '../../components/Icon';
 import { IconButton } from '../../components/IconButton';
 import { useSession } from '../../state/session';
@@ -17,7 +20,18 @@ import './Profile.css';
 export function Profile() {
   const navigate = useNavigate();
   const me = useMe();
-  const { profile } = useSession();
+  const { profile, setProfile } = useSession();
+  const [editBio, setEditBio] = useState(false);
+  const [bioDraft, setBioDraft] = useState('');
+  const bio = profile.bio?.trim() ?? '';
+  const openBio = () => {
+    setBioDraft(bio);
+    setEditBio(true);
+  };
+  const saveBio = () => {
+    setProfile({ ...profile, bio: bioDraft.trim() });
+    setEditBio(false);
+  };
   const collections = useCollections();
   const all = usePosts();
   const mine = all.filter((p) => p.id.startsWith('mit-') && p.feed !== 'debat' && !p.group);
@@ -68,7 +82,15 @@ export function Profile() {
         <IconButton icon="settings" label="Indstillinger" onClick={() => navigate('/indstillinger')} />
       </section>
 
-      <p className="t-body-s">[Kort tekst om dig]</p>
+      {bio ? (
+        <button type="button" className="pf-bio t-body-s" aria-label="Rediger bio" onClick={openBio}>
+          {bio}
+        </button>
+      ) : (
+        <button type="button" className="pf-bio pf-bio--empty t-label" onClick={openBio}>
+          <Icon name="plus" size={16} /> Tilføj bio
+        </button>
+      )}
 
       <div className="pf-stats">
         <div className="pf-stats__item">
@@ -98,6 +120,31 @@ export function Profile() {
         debate={[...myDebate, ...myDebatePosts].map(asMe)}
         flicks={myFlicks.map((f, i) => ({ id: f.id, src: f.src, href: '/flicks', views: ['1,2 t.', '846', '2,4 t.', '310'][i % 4] }))}
       />
+
+      <Sheet open={editBio} onClose={() => setEditBio(false)} title="Bio" initialSize="auto">
+        <form
+          className="pf-bio-form"
+          onSubmit={(e) => {
+            e.preventDefault();
+            saveBio();
+          }}
+        >
+          <textarea
+            className="pf-bio-form__field t-body-s"
+            aria-label="Bio"
+            placeholder="Skriv lidt om dig selv"
+            maxLength={150}
+            rows={4}
+            value={bioDraft}
+            onChange={(e) => setBioDraft(e.target.value)}
+            autoFocus
+          />
+          <p className="t-caption pf-muted pf-bio-form__count">{bioDraft.length}/150</p>
+          <Button type="submit" block>
+            Gem
+          </Button>
+        </form>
+      </Sheet>
     </div>
   );
 }

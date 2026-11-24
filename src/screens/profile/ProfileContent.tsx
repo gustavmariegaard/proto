@@ -103,6 +103,17 @@ export function ProfileContent({ highlights, posts, debate, flicks, own = false,
             {!(locked && t.value !== 'debat') && <span className="pc-tab__count">{t.count}</span>}
           </button>
         ))}
+        {/* Gitter eller liste – kun på Opslag, i samme række som fanerne for at spare plads */}
+        {!locked && tab === 'opslag' && posts.length > 0 && (
+          <button
+            type="button"
+            className="pc-view__btn"
+            aria-label={view === 'gitter' ? 'Vis som liste' : 'Vis som gitter'}
+            onClick={() => setView(view === 'gitter' ? 'liste' : 'gitter')}
+          >
+            <Icon name={view === 'gitter' ? 'layout-list' : 'layout-grid'} size={20} />
+          </button>
+        )}
       </div>
 
       <div role="tabpanel" className="pc-panel">
@@ -125,14 +136,6 @@ export function ProfileContent({ highlights, posts, debate, flicks, own = false,
             />
           ) : (
             <>
-              <div className="pc-view" role="group" aria-label="Visning">
-                <button type="button" className="pc-view__btn" aria-pressed={view === 'gitter'} aria-label="Vis som gitter" onClick={() => setView('gitter')}>
-                  <Icon name="layout-grid" size={20} />
-                </button>
-                <button type="button" className="pc-view__btn" aria-pressed={view === 'liste'} aria-label="Vis som liste" onClick={() => setView('liste')}>
-                  <Icon name="layout-list" size={20} />
-                </button>
-              </div>
               {view === 'gitter' ? (
                 <ul className="pc-grid">
                   {posts.map((p) => (

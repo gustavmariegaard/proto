@@ -34,11 +34,10 @@ export function Flicks() {
   const navigate = useNavigate();
   const feedRef = useRef<HTMLDivElement>(null);
   const [index, setIndex] = useState(0);
-  const [hasSwiped, setHasSwiped] = useState(false);
   const [saved, setSaved] = useState<string[]>([]);
   const [commentsFor, setCommentsFor] = useState<string | null>(null);
   const [editing, setEditing] = useState(false);
-  const { topics, active, isOn, toggle: toggleTopic } = useTopics();
+  const { topics, active } = useTopics();
   // Flicks fra offentlige profiler med score -5 eller lavere forsvinder, som i Offentlig debat
   const votes = useVotes();
   const visible = allFlicks.filter((f) => !(publicKind(f.author) && isBuried(scoreWith(flickCounts(f.id).likes, votes[f.id]))));
@@ -50,7 +49,6 @@ export function Flicks() {
   ];
 
   const current = items[Math.min(index, items.length - 1)]!;
-  const onTopics = sourceOf(current) === 'tildig';
 
   // Hvilken flick er på skærmen? (rundet til nærmeste hele skærm)
   const onScroll = () => {
@@ -58,7 +56,6 @@ export function Flicks() {
     if (!el || !el.clientHeight) return;
     const i = Math.round(el.scrollTop / el.clientHeight);
     if (i !== index) setIndex(Math.min(Math.max(i, 0), items.length - 1));
-    if (el.scrollTop > 8 && !hasSwiped) setHasSwiped(true);
   };
 
   const scrollTo = (i: number, instant = false) => {
@@ -107,63 +104,35 @@ export function Flicks() {
       <h1 className="visually-hidden">Flicks</h1>
 
       <div className="flicks__chrome">
-        {/* Dine emner / Følger. Valgt = hvid. Følger den flick, der vises. */}
+        {/* Dine emner / Følger. Valgt = hvid. Følger den flick, der vises.
+            Dine emner har sin egen justér-knap i samme pille, som åbner de samme emner som Offentlig debat. */}
         <div className="flicks__top" role="group" aria-label="Vælg feed">
           {modes.map((m) => {
             const on = sourceOf(current) === m.source;
+            const go = () => {
+              const first = items.findIndex((it) => sourceOf(it) === m.source);
+              if (first >= 0) scrollTo(first);
+            };
+            const cls = ['flicks__mode', on && 'flicks__mode--on'].filter(Boolean).join(' ');
+            if (m.source !== 'tildig') {
+              return (
+                <button key={m.source} type="button" aria-pressed={on} className={cls} onClick={go}>
+                  {m.label}
+                </button>
+              );
+            }
             return (
-              <button
-                key={m.source}
-                type="button"
-                aria-pressed={on}
-                className={['flicks__mode', on && 'flicks__mode--on'].filter(Boolean).join(' ')}
-                onClick={() => {
-                  const first = items.findIndex((it) => sourceOf(it) === m.source);
-                  if (first >= 0) scrollTo(first);
-                }}
-              >
-                {m.label}
-              </button>
+              <div key={m.source} className={`${cls} flicks__mode--split`}>
+                <button type="button" aria-pressed={on} className="flicks__mode-part" onClick={go}>
+                  {m.label}
+                </button>
+                <button type="button" className="flicks__mode-part flicks__mode-edit" aria-label="Rediger dine emner" onClick={() => setEditing(true)}>
+                  <Icon name="sliders" size={18} />
+                </button>
+              </div>
             );
           })}
         </div>
-
-        {/* Dine emner som filter – samme emner og samme filter som i Offentlig debat */}
-        <ul
-          className={['flicks__topics', !onTopics && 'flicks__topics--away'].filter(Boolean).join(' ')}
-          aria-label="Filtrér efter dine emner"
-          aria-hidden={!onTopics}
-        >
-          <li>
-            <button
-              type="button"
-              className="flicks__chip flicks__chip--edit"
-              aria-label="Rediger emner"
-              tabIndex={onTopics ? undefined : -1}
-              onClick={() => setEditing(true)}
-            >
-              <Icon name="sliders" size={18} />
-            </button>
-          </li>
-          {topics.map((t) => {
-            const on = isOn(t);
-            return (
-              <li key={t}>
-                <button
-                  type="button"
-                  aria-pressed={on}
-                  tabIndex={onTopics ? undefined : -1}
-                  className={['flicks__chip', on && 'flicks__chip--on'].filter(Boolean).join(' ')}
-                  aria-label={on ? `${t}, vises. Tryk for at fjerne` : `${t}, skjult. Tryk for at vise`}
-                  onClick={() => toggleTopic(t)}
-                >
-                  {t}
-                  <Icon name={on ? 'close' : 'plus'} size={14} />
-                </button>
-              </li>
-            );
-          })}
-        </ul>
       </div>
 
       <div className="flicks__feed" ref={feedRef} onScroll={onScroll} aria-label="Flicks" role="feed" aria-busy="false">
@@ -176,15 +145,6 @@ export function Flicks() {
                   Rediger emner
                 </button>
               </div>
-              {i < items.length - 1 && (
-                <SwipeHint
-                  bounce={!hasSwiped}
-                  onNext={() => {
-                    setHasSwiped(true);
-                    scrollTo(i + 1);
-                  }}
-                />
-              )}
             </article>
           ) : (
             <FlickView
@@ -193,12 +153,6 @@ export function Flicks() {
               position={i + 1}
               total={items.length}
               why={whyFlick(it.flick, topics)}
-              showHint={i < items.length - 1}
-              bounce={!hasSwiped}
-              onNext={() => {
-                setHasSwiped(true);
-                scrollTo(i + 1);
-              }}
               saved={saved.includes(it.flick.id)}
               onSave={() => setSaved((s) => toggle(s, it.flick.id))}
               onComments={() => setCommentsFor(it.flick.id)}
@@ -222,17 +176,13 @@ type FlickViewProps = {
   position: number;
   total: number;
   why: string;
-  showHint: boolean;
-  /** Hopper let, indtil man har swipet første gang */
-  bounce: boolean;
-  onNext: () => void;
   saved: boolean;
   onSave: () => void;
   onComments: () => void;
   onShare: () => void;
 };
 
-function FlickView({ flick, position, total, why, showHint, bounce, onNext, saved, onSave, onComments, onShare }: FlickViewProps) {
+function FlickView({ flick, position, total, why, saved, onSave, onComments, onShare }: FlickViewProps) {
   const navigate = useNavigate();
   const [menu, setMenu] = useState(false);
   const hidden = useHidden(flick.id);
@@ -270,7 +220,6 @@ function FlickView({ flick, position, total, why, showHint, bounce, onNext, save
         </div>
       )}
 
-      {showHint && <SwipeHint bounce={bounce} onNext={onNext} />}
 
       <div className="flick__bottom">
         <div className="flick__actions">
@@ -297,55 +246,6 @@ function FlickView({ flick, position, total, why, showHint, bounce, onNext, save
   );
 }
 
-/**
- * Swipe-pilen er interaktiv: tryk på den, eller træk den opad, for at gå til næste flick.
- * Den følger fingeren, og slipper man over 40 px oppe, skifter den.
- */
-function SwipeHint({ bounce, onNext }: { bounce: boolean; onNext: () => void }) {
-  const [drag, setDrag] = useState(0);
-  const start = useRef<number | null>(null);
-  const moved = useRef(false);
-
-  return (
-    <button
-      type="button"
-      className={['flick__hint', bounce && drag === 0 && 'flick__hint--bounce', drag < 0 && 'flick__hint--drag'].filter(Boolean).join(' ')}
-      style={drag ? { transform: `translate(-50%, ${drag}px)` } : undefined}
-      aria-label="Næste flick"
-      onPointerDown={(e) => {
-        (e.currentTarget as HTMLElement).setPointerCapture(e.pointerId);
-        start.current = e.clientY;
-        moved.current = false;
-      }}
-      onPointerMove={(e) => {
-        if (start.current === null) return;
-        const dy = Math.min(0, Math.max(-90, e.clientY - start.current));
-        if (dy < -4) moved.current = true;
-        setDrag(dy);
-      }}
-      onPointerUp={() => {
-        const go = drag < -40;
-        start.current = null;
-        setDrag(0);
-        if (go) onNext();
-      }}
-      onPointerCancel={() => {
-        start.current = null;
-        setDrag(0);
-      }}
-      onClick={() => {
-        if (moved.current) {
-          moved.current = false;
-          return;
-        }
-        onNext();
-      }}
-    >
-      <Icon name="chevron-right" className="flick__chevron flick__chevron--faint" />
-      <Icon name="chevron-right" className="flick__chevron" />
-    </button>
-  );
-}
 
 /** Forklaringen bag "Hvorfor ser jeg denne flick?" (tidligere den grønne linje) */
 function whyFlick(f: Flick, topics: string[]) {

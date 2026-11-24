@@ -10,6 +10,8 @@ export type Profile = {
   name: string;
   username: string;
   interests: string[];
+  /** Kort tekst om dig på din profil */
+  bio?: string;
   /** Billede valgt fra telefonen (kun gemt lokalt) */
   avatar?: string;
   /** Privat profil: kun følgere kan se ens opslag, moments og flicks (som på Instagram) */

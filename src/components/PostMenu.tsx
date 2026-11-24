@@ -80,12 +80,6 @@ export function PostMenu({ open, onClose, why, mine = false, onHide, onReport, n
               </button>
             </li>
           )}
-          <li className="post-menu__cancel">
-            <button type="button" className="post-menu__item" onClick={() => close()}>
-              <Icon name="close" />
-              Luk
-            </button>
-          </li>
         </ul>
       )}
     </Sheet>
