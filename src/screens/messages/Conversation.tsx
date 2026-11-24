@@ -99,7 +99,7 @@ export function Conversation() {
             <p className="t-caption msg-muted msg-ellipsis">{thread.members}</p>
           )}
         </div>
-        {!isCircle && (
+        {!isCircle && !thread.page && (
           <>
             <IconButton icon="phone" label="Ring op" variant="outline" onClick={() => setCall("lyd")} />
             <IconButton icon="video" label="Videoopkald" variant="outline" onClick={() => setCall("video")} />
@@ -128,6 +128,15 @@ export function Conversation() {
             End-to-end-krypteret
           </p>
         </div>
+        {thread.request && (
+          <div className="msg-center-row">
+            <p className="msg-request t-caption">
+              {thread.messages.some((m) => m.from === "me")
+                ? `Sendt som anmodning. ${thread.name} ser din besked, når de godkender den.`
+                : `${thread.name} følger dig ikke, så din besked sendes som en anmodning.`}
+            </p>
+          </div>
+        )}
         {thread.disappearing && (
           <div className="msg-center-row">
             <Tag>Beskeder forsvinder efter 24 timer</Tag>

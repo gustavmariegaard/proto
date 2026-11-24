@@ -44,6 +44,10 @@ export type Thread = {
   members?: string;
   /** Beskeder forsvinder efter 24 timer */
   disappearing?: boolean;
+  /** Samtale med en side (virksomhed eller forening) */
+  page?: boolean;
+  /** Sendt som anmodning: siden følger dig ikke, så den skal godkende først */
+  request?: boolean;
   /** Teksten i listen, fx "Mor: Kommer I søndag klokken 12?" */
   preview: string;
   time: string;

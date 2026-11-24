@@ -17,7 +17,7 @@ import { keep, save } from '../../state/keep';
 import { usePosts } from '../../state/posts';
 import { useMoments } from '../../state/moments';
 import { useSession } from '../../state/session';
-import { openConversation } from '../messages/store';
+import { openConversation, openPageConversation } from '../messages/store';
 import { Masonry, type Tile } from '../profile/shared';
 import '../profile/Profile.css';
 import './UserProfile.css';
@@ -108,7 +108,8 @@ export function UserProfile() {
   const momentsSeen = account.momentsId ? seen.includes(account.momentsId) : true;
 
   const message = () => {
-    if (contact) navigate(`/beskeder/${openConversation([contact.id])}`);
+    if (isSide) navigate(`/beskeder/${openPageConversation(account)}`);
+    else if (contact) navigate(`/beskeder/${openConversation([contact.id])}`);
     else navigate('/beskeder/ny');
   };
 
@@ -172,11 +173,9 @@ export function UserProfile() {
           <Button variant={following ? 'secondary' : 'primary'} block onClick={toggleFollow} aria-pressed={following}>
             {following ? 'Følger' : account.followsMe ? 'Følg tilbage' : 'Følg'}
           </Button>
-          {!isSide && (
-            <Button variant="secondary" block onClick={message}>
-              Besked
-            </Button>
-          )}
+          <Button variant="secondary" block onClick={message}>
+            Besked
+          </Button>
         </div>
 
         {extras.collections.length > 0 && (

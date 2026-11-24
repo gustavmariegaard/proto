@@ -165,3 +165,8 @@
   color: var(--color-text-primary);
   box-shadow: 0 1px 3px rgb(0 0 0 / 0.08);
 }
+
+/* Titel i midten øverst (ingen profil-mærke) */
+.newflick__title { color: #fff; text-shadow: 0 1px 3px rgb(0 0 0 / 0.5); }
+.newflick__spacer { width: 44px; }
+.newflick__hint--warn { color: var(--color-accent-highlight); font-weight: 600; }

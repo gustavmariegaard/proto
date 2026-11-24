@@ -12,12 +12,13 @@ import { matches } from './hooks';
 import { useThreads } from './store';
 import './Messages.css';
 
-type Tab = 'alle' | 'personer' | 'cirkler';
+type Tab = 'alle' | 'personer' | 'cirkler' | 'anmodninger';
 
 const tabs: { value: Tab; label: string }[] = [
   { value: 'alle', label: 'Alle' },
   { value: 'personer', label: 'Personer' },
   { value: 'cirkler', label: 'Cirkler' },
+  { value: 'anmodninger', label: 'Anmodninger' },
 ];
 
 /** Beskeder: alle samtaler, filtreret med fanerne Alle / Personer / Cirkler. */
@@ -30,7 +31,8 @@ export function Messages() {
 
   const shown = threads.filter(
     (t) =>
-      (tab === 'alle' || (tab === 'personer' ? t.kind === 'person' : t.kind === 'circle')) &&
+      (tab === 'alle' ||
+        (tab === 'anmodninger' ? Boolean(t.request) : tab === 'personer' ? t.kind === 'person' && !t.request : t.kind === 'circle')) &&
       (!query.trim() || matches(t.name, query) || matches(t.preview, query)),
   );
 
@@ -54,6 +56,12 @@ export function Messages() {
             </Chip>
           ))}
         </div>
+
+        {tab === 'anmodninger' && (
+          <p className="t-body-s msg-muted">
+            Beskeder til sider, der ikke følger dig. De ser dem, når de godkender anmodningen.
+          </p>
+        )}
 
         {tab === 'cirkler' && (
           <p className="t-body-s msg-muted">
@@ -92,6 +100,7 @@ function ThreadRow({ thread }: { thread: Thread }) {
       <span className={['msg-card__text', thread.kind === 'circle' && 'msg-card__text--circle'].filter(Boolean).join(' ')}>
         <span className="t-heading-s msg-ellipsis">{thread.name}</span>
         {thread.preview && <span className="t-caption msg-muted msg-ellipsis">{thread.preview}</span>}
+        {thread.request && <Tag>Anmodning sendt</Tag>}
         {thread.disappearing && <Tag>Forsvinder efter 24 timer</Tag>}
       </span>
       <span className="msg-thread__meta">

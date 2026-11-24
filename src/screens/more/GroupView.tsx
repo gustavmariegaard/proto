@@ -1,5 +1,8 @@
 import { useState } from 'react';
-import { Navigate, useNavigate, useParams } from 'react-router-dom';
+import { Link, Navigate, useNavigate, useParams } from 'react-router-dom';
+import { Avatar } from '../../components/Avatar';
+import { handleOf } from '../../data/handles';
+import { img, people } from '../../data/sample';
 import { Button } from '../../components/Button';
 import { Icon } from '../../components/Icon';
 import { PageHeader } from '../../components/PageHeader';
@@ -26,9 +29,17 @@ export function GroupView() {
   const group = groupStore.use().find((g) => g.id === id);
   const posts = usePosts();
   const [member, setMember] = useState(true);
+  const [showAll, setShowAll] = useState(false);
   if (!group) return <Navigate to="/grupper" replace />;
 
   const groupPosts = posts.filter((p) => p.group?.name === group.name);
+  // Eksempel: medlemmerne er de personer, appen kender, i en fast rækkefølge pr. gruppe. Forfattere af opslag står først.
+  const authors = new Set(groupPosts.map((p) => p.author));
+  const all = Object.values(people).map((p) => ({ name: p.fullName, tone: p.tone, avatarSrc: p.avatarSrc }));
+  const groupMembers = [
+    ...all.filter((p) => authors.has(p.name)),
+    ...rotate(all.filter((p) => !authors.has(p.name)), membersFor(group.id)),
+  ].map((m, i) => ({ ...m, admin: i === 0 }));
   const mine = groupActivity.filter((a) => a.group === group.name);
   const members = membersFor(group.id) + (member ? 0 : -1);
 
@@ -58,6 +69,37 @@ export function GroupView() {
           </Button>
         </div>
 
+        {/* Hvem er ellers med? */}
+        <section className="group-members" aria-labelledby="group-members-title">
+          <div className="group-members__head">
+            <h2 id="group-members-title" className="t-heading-s">
+              Medlemmer
+            </h2>
+            <button type="button" className="t-caption-strong group-members__all" onClick={() => setShowAll((v) => !v)}>
+              {showAll ? 'Vis færre' : `Se alle ${members}`}
+            </button>
+          </div>
+          <ul className="group-members__list">
+            {member && (
+              <li>
+                <Link to="/profil" className="group-member">
+                  <Avatar name={profile.name || 'Dig'} src={profile.avatar ?? img('mig.jpg')} size="L" />
+                  <span className="t-caption-strong">Dig</span>
+                </Link>
+              </li>
+            )}
+            {groupMembers.slice(0, showAll ? undefined : 7).map((m) => (
+              <li key={m.name}>
+                <Link to={`/bruger/${handleOf(m.name)}`} className="group-member">
+                  <Avatar name={m.name} tone={m.tone} src={m.avatarSrc} size="L" />
+                  <span className="t-caption-strong">{m.name.split(' ')[0]}</span>
+                  {m.admin && <span className="t-caption group-member__role">Admin</span>}
+                </Link>
+              </li>
+            ))}
+          </ul>
+        </section>
+
         <h2 className="t-heading-s">Opslag i gruppen</h2>
         {groupPosts.length === 0 && mine.length === 0 && (
           <p className="t-body-s more-muted">Der er ingen opslag endnu. Skriv det første.</p>
@@ -83,4 +125,10 @@ export function GroupView() {
       </main>
     </div>
   );
+}
+
+function rotate<T>(list: T[], n: number) {
+  if (!list.length) return list;
+  const k = n % list.length;
+  return [...list.slice(k), ...list.slice(0, k)];
 }

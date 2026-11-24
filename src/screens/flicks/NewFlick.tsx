@@ -3,7 +3,6 @@ import { useNavigate, useSearchParams } from 'react-router-dom';
 import { TagInput } from '../../components/TagInput';
 import { Button } from '../../components/Button';
 import { IconButton } from '../../components/IconButton';
-import { useSession } from '../../state/session';
 import './NewFlick.css';
 
 const HOLD_MS = 350; // så længe skal man holde, før der optages video
@@ -17,7 +16,6 @@ type Captured = { kind: 'image' | 'video'; url: string };
  */
 export function NewFlick() {
   const navigate = useNavigate();
-  const { profile } = useSession();
   const videoRef = useRef<HTMLVideoElement>(null);
   const captureInput = useRef<HTMLInputElement>(null);
   const galleryInput = useRef<HTMLInputElement>(null);
@@ -31,7 +29,9 @@ export function NewFlick() {
   const [captured, setCaptured] = useState<Captured | null>(null);
   // Flick eller moment: begge laves her og får tags, ligesom opslag
   const [params] = useSearchParams();
-  const [kind, setKind] = useState<'flick' | 'moment'>(params.get('som') === 'moment' ? 'moment' : 'flick');
+  // Flick = kun video (som Reels). Moment = billede eller video. Bestemmes af, hvor man kom fra.
+  const kind: 'flick' | 'moment' = params.get('som') === 'moment' ? 'moment' : 'flick';
+  const [videoOnly, setVideoOnly] = useState(false);
   const [tags, setTags] = useState<string[]>([]);
 
   const close = () => navigate(kind === 'moment' ? '/' : '/flicks', { replace: true });
@@ -127,10 +127,11 @@ export function NewFlick() {
   const onShutterUp = () => {
     if (!stream) return;
     if (holdTimer.current !== null) {
-      // Kort tryk: foto
+      // Kort tryk: foto (kun moments). Flicks er altid video.
       window.clearTimeout(holdTimer.current);
       holdTimer.current = null;
-      takePhoto();
+      if (kind === 'flick') setVideoOnly(true);
+      else takePhoto();
     } else if (recorder.current) {
       recorder.current.stop();
       recorder.current = null;
@@ -152,11 +153,15 @@ export function NewFlick() {
     const file = e.target.files?.[0];
     e.target.value = '';
     if (!file) return;
+    if (kind === 'flick' && !file.type.startsWith('video')) {
+      setVideoOnly(true);
+      return;
+    }
     setCaptured({ kind: file.type.startsWith('video') ? 'video' : 'image', url: URL.createObjectURL(file) });
   };
 
   return (
-    <div className="newflick" role="dialog" aria-label="Ny flick">
+    <div className="newflick" role="dialog" aria-label={kind === 'flick' ? 'Ny flick' : 'Nyt moment'}>
       <div className="newflick__viewfinder">
         {captured ? (
           captured.kind === 'image' ? (
@@ -178,7 +183,15 @@ export function NewFlick() {
             ) : (
               <div className="newflick__placeholder" aria-hidden="true" />
             )}
-            {!recording && <p className="newflick__hint t-body-s">Tryk for foto. Hold nede for at optage.</p>}
+            {!recording && (
+              <p className={['newflick__hint t-body-s', videoOnly && 'newflick__hint--warn'].filter(Boolean).join(' ')} aria-live="polite">
+                {kind === 'flick'
+                  ? videoOnly
+                    ? 'Flicks er videoer. Hold knappen nede for at optage.'
+                    : 'Hold nede for at optage en flick.'
+                  : 'Tryk for foto. Hold nede for at optage.'}
+              </p>
+            )}
           </>
         )}
 
@@ -189,24 +202,28 @@ export function NewFlick() {
             className="newflick__btn"
             onClick={() => (captured ? setCaptured(null) : close())}
           />
-          <span className="newflick__audience">{profile.private ? 'Privat profil' : 'Offentlig profil'}</span>
+          <span className="newflick__title t-heading-s">{kind === 'flick' ? 'Ny flick' : 'Nyt moment'}</span>
+          <span className="newflick__spacer" aria-hidden="true" />
         </div>
 
         <div className="newflick__controls">
           {captured ? null : (
             <>
-              <IconButton icon="image" label="Vælg fra billeder" className="newflick__btn" onClick={() => galleryInput.current?.click()} />
+              <IconButton icon="image" label={kind === 'flick' ? 'Vælg video' : 'Vælg fra billeder'} className="newflick__btn" onClick={() => galleryInput.current?.click()} />
               <button
                 type="button"
                 className={['newflick__shutter', recording && 'newflick__shutter--recording'].filter(Boolean).join(' ')}
-                aria-label={recording ? 'Stop optagelse' : 'Tag foto'}
+                aria-label={recording ? 'Stop optagelse' : kind === 'flick' ? 'Hold nede for at optage' : 'Tag foto'}
                 onPointerDown={onShutterDown}
                 onPointerUp={onShutterUp}
                 onPointerCancel={onShutterCancel}
                 onContextMenu={(e) => e.preventDefault()}
                 onClick={(e) => {
                   // Tastatur (detail = 0) eller ingen kamerastrøm: tag foto / åbn kameraet
-                  if (e.detail === 0 || !stream) takePhoto();
+                  if (e.detail === 0 || !stream) {
+                    if (kind === 'flick') captureInput.current?.click();
+                    else takePhoto();
+                  }
                 }}
               >
                 <span className="newflick__shutter-inner" />
@@ -225,20 +242,6 @@ export function NewFlick() {
       {/* Efter optagelse: vælg flick eller moment, tilføj tags, og del */}
       {captured && (
         <div className="newflick__panel">
-          <div className="newflick__kinds" role="radiogroup" aria-label="Del som">
-            {(['flick', 'moment'] as const).map((k) => (
-              <button
-                key={k}
-                type="button"
-                role="radio"
-                aria-checked={kind === k}
-                className={['newflick__kind', kind === k && 'newflick__kind--on'].filter(Boolean).join(' ')}
-                onClick={() => setKind(k)}
-              >
-                {k === 'flick' ? 'Flick' : 'Moment'}
-              </button>
-            ))}
-          </div>
           <TagInput
             tags={tags}
             onTags={setTags}
@@ -250,8 +253,8 @@ export function NewFlick() {
         </div>
       )}
 
-      <input ref={captureInput} type="file" accept="image/*,video/*" capture="environment" hidden onChange={onFile} />
-      <input ref={galleryInput} type="file" accept="image/*,video/*" hidden onChange={onFile} />
+      <input ref={captureInput} type="file" accept={kind === 'flick' ? 'video/*' : 'image/*,video/*'} capture="environment" hidden onChange={onFile} />
+      <input ref={galleryInput} type="file" accept={kind === 'flick' ? 'video/*' : 'image/*,video/*'} hidden onChange={onFile} />
     </div>
   );
 }

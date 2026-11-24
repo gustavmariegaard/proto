@@ -407,3 +407,13 @@ img.msg-photo { display: block; object-fit: cover; }
 
 .msg-call__end svg { transform: rotate(135deg); }
 .msg-call__end:focus-visible { outline: none; box-shadow: var(--focus-ring); }
+
+/* Besked til en side, der ikke følger dig */
+.msg-request {
+  max-width: 300px;
+  padding: 8px 14px;
+  border-radius: var(--radius-md);
+  background: var(--color-bg-subtle);
+  color: var(--color-text-secondary);
+  text-align: center;
+}

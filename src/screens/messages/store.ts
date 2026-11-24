@@ -79,6 +79,33 @@ export function sendMedia(id: string, message: { kind: 'image'; src: string } | 
   set([updated, ...threads.filter((t) => t.id !== id)]);
 }
 
+/** Sider, der følger dig tilbage. Beskeder til dem går direkte igennem (eksempel). */
+const pagesFollowingMe = ['kulturhuset'];
+
+/**
+ * Åbner (eller opretter) en samtale med en side.
+ * Følger siden dig ikke, ender din besked i sidens anmodninger.
+ */
+export function openPageConversation(page: { handle: string; name: string; tone: Thread['tone']; avatarSrc?: string }): string {
+  const id = `side-${page.handle}`;
+  if (threads.some((t) => t.id === id)) return id;
+  const thread: Thread = {
+    id,
+    kind: 'person',
+    page: true,
+    request: !pagesFollowingMe.includes(page.handle),
+    name: page.name,
+    tone: page.tone,
+    avatarSrc: page.avatarSrc,
+    preview: '',
+    time: now(),
+    unread: false,
+    messages: [],
+  };
+  set([thread, ...threads]);
+  return id;
+}
+
 /** Finder (eller opretter) samtalen med de valgte personer. Returnerer dens id. */
 export function openConversation(contactIds: string[]): string {
   const picked = contacts.filter((c) => contactIds.includes(c.id));
