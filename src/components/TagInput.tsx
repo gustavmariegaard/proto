@@ -47,7 +47,7 @@ export function TagInput({ tags, onTags, error = false, required = false, hint }
           ? 'Tilføj mindst ét tag, så andre kan finde opslaget.'
           : hint ??
             (required
-            ? `Kategorisér opslaget. Det første tag er emnet i Offentlig debat. Højst ${MAX_TAGS}.`
+            ? `Højst ${MAX_TAGS} tags pr. opslag`
             : `Gør opslaget lettere at finde, fx #Bagning eller #Håndbold. Højst ${MAX_TAGS}.`)}
       </p>
       {tags.length > 0 && (
