@@ -41,3 +41,20 @@
   gap: 6px;
   padding: 0 14px;
 }
+
+/* Brugere / Interesser: klæber øverst, glider væk ved scroll ned og frem ved scroll op */
+.home__switch {
+  position: sticky;
+  top: 0;
+  z-index: 5;
+  margin: 0 -20px;
+  padding: 0 20px 8px;
+  background: var(--color-bg-app);
+  transition: transform 0.25s ease, opacity 0.2s ease;
+}
+
+.home__switch--hidden {
+  transform: translateY(-110%);
+  opacity: 0;
+  pointer-events: none;
+}

@@ -50,24 +50,35 @@
 .post__actions {
   display: flex;
   align-items: center;
-  gap: 2px;
-  /* Rapportér-ikonet står helt ude ved kanten; trykfladen er stadig 44 px. */
-  margin-right: -10px;
+  gap: 8px;
 }
 
 .post__spacer { flex: 1; }
 
 /* Ikon + antal. Trykfladen er mindst 44 × 44 px. */
+/* Alle handlinger har samme ramme som stemme-pillen (strømlinet, inspireret af Reddit) */
 .post__act {
   display: inline-flex;
   align-items: center;
-  gap: 4px;
+  justify-content: center;
+  gap: 6px;
   min-width: 44px;
-  min-height: 44px;
-  padding: 0 8px;
+  height: 40px;
+  padding: 0 12px;
+  border: 1px solid var(--color-border-default);
   border-radius: var(--radius-pill);
   color: var(--color-text-primary);
+  position: relative;
 }
+
+/* Trykfladen når op på 44 px, selv om pillen er 40 px høj */
+.post__act::before {
+  content: '';
+  position: absolute;
+  inset: -2px 0;
+}
+
+.post__act svg { width: 20px; height: 20px; }
 
 .post__act:focus-visible { outline: none; box-shadow: var(--focus-ring); }
 
@@ -271,7 +282,7 @@
 .post__vote {
   display: inline-flex;
   align-items: center;
-  margin-right: 4px;
+  height: 40px;
   border: 1px solid var(--color-border-default);
   border-radius: var(--radius-pill);
 }
@@ -279,7 +290,7 @@
 .post__vote-btn {
   display: grid;
   place-items: center;
-  width: 44px;
+  width: 40px;
   height: 40px;
   border-radius: var(--radius-pill);
   color: var(--color-text-secondary);
@@ -303,7 +314,7 @@
 .post__vote-btn { color: var(--ink-900); }
 
 /* Kun opstemme (almindelige brugere): luft efter tallet */
-.post__score--end { padding-right: 14px; }
+.post__score--end { padding-right: 12px; }
 
 .post__name {
   display: inline-flex;

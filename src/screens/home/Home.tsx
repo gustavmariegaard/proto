@@ -1,3 +1,4 @@
+import { useEffect, useRef, useState } from 'react';
 import { useNavigate, useSearchParams } from 'react-router-dom';
 import { Icon } from '../../components/Icon';
 import { Chip } from '../../components/Chip';
@@ -21,6 +22,23 @@ export function Home() {
   const { seen } = useMoments();
   const { profile } = useSession();
   const posts = usePosts();
+  const switchRef = useRef<HTMLDivElement>(null);
+  const [switchHidden, setSwitchHidden] = useState(false);
+
+  useEffect(() => {
+    const scroller = switchRef.current?.closest('.shell__content');
+    if (!scroller) return;
+    let last = scroller.scrollTop;
+    const onScroll = () => {
+      const top = scroller.scrollTop;
+      const delta = top - last;
+      if (Math.abs(delta) < 6) return;
+      setSwitchHidden(delta > 0 && top > 120);
+      last = top;
+    };
+    scroller.addEventListener('scroll', onScroll, { passive: true });
+    return () => scroller.removeEventListener('scroll', onScroll);
+  }, []);
   const shown = posts.filter((p) => p.feed === feed);
   // Nye moments først, sete bagefter (som i Figma)
   const accounts = feed === 'interesser' ? pageAccounts : people;
@@ -28,6 +46,8 @@ export function Home() {
 
   return (
     <div className="home">
+      {/* Forsvinder, når man ruller ned, og kommer igen, når man ruller op */}
+      <div ref={switchRef} className={['home__switch', switchHidden && 'home__switch--hidden'].filter(Boolean).join(' ')}>
       <SegmentedControl
         label="Vis opslag fra"
         value={feed}
@@ -37,6 +57,7 @@ export function Home() {
           { value: 'interesser', label: 'Interesser' },
         ]}
       />
+      </div>
 
       {feed === 'interesser' && (
         <div className="home__pages">
