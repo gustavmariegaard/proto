@@ -1,0 +1,232 @@
+/* ---------- Sælg noget (fuld skærm) ---------- */
+.sell-screen {
+  /* Der findes ingen fejlfarve i tokens endnu; denne bruges kun her */
+  --sell-error: #b42318;
+  display: flex;
+  flex-direction: column;
+  height: 100%;
+  background: var(--color-bg-app);
+}
+
+.sell-screen__content {
+  flex: 1;
+  min-height: 0;
+  overflow-x: hidden;
+  overflow-y: auto;
+  display: flex;
+  flex-direction: column;
+  gap: 18px;
+  padding: 4px 20px calc(24px + var(--safe-bottom));
+}
+
+.sell-screen__content > * { flex-shrink: 0; }
+
+.sell__muted { color: var(--color-text-secondary); }
+
+.sell__group {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  min-width: 0;
+}
+
+.sell__label-row {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: 12px;
+}
+
+.sell__error {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  color: var(--sell-error);
+}
+
+.sell__error::before {
+  content: '!';
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+  width: 16px;
+  height: 16px;
+  border-radius: 50%;
+  background: var(--sell-error);
+  color: var(--white);
+  font-size: 11px;
+}
+
+.sell-screen .field[aria-invalid='true'] { border-color: var(--sell-error); }
+
+/* ---------- Billeder ---------- */
+.sell-photos {
+  display: flex;
+  gap: 10px;
+  margin: 0 -20px;
+  padding: 8px 20px 4px;
+  overflow-x: auto;
+  scroll-snap-type: x proximity;
+  scrollbar-width: none;
+  list-style: none;
+}
+
+.sell-photos::-webkit-scrollbar { display: none; }
+.sell-photos > li { flex-shrink: 0; scroll-snap-align: start; }
+
+.sell-photos__add,
+.sell-photos__thumb {
+  display: flex;
+  width: 96px;
+  height: 96px;
+  border-radius: var(--radius-md);
+}
+
+.sell-photos__add {
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 4px;
+  border: 1.5px dashed var(--color-border-strong);
+  background: var(--color-bg-surface);
+  color: var(--color-text-primary);
+}
+
+.sell-photos__add--error { border-color: var(--sell-error); }
+.sell-photos__add:disabled { opacity: 0.6; }
+.sell-photos__add:focus-visible,
+.sell-photos__thumb:focus-visible { outline: none; box-shadow: var(--focus-ring); }
+
+.sell-photos__item { position: relative; }
+
+.sell-photos__thumb {
+  position: relative;
+  overflow: hidden;
+  padding: 0;
+  background: var(--color-bg-subtle);
+}
+
+.sell-photos__thumb img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+
+.sell-photos__cover {
+  position: absolute;
+  left: 6px;
+  bottom: 6px;
+  padding: 2px 7px;
+  border-radius: var(--radius-pill);
+  background: var(--color-action-primary);
+  color: var(--color-text-on-action);
+}
+
+/* ✕: 44 px trykflade med en lille rund knap i hjørnet */
+.sell-photos__remove {
+  position: absolute;
+  top: -8px;
+  right: -8px;
+  display: flex;
+  align-items: flex-start;
+  justify-content: flex-end;
+  width: 44px;
+  height: 44px;
+  padding: 2px;
+}
+
+.sell-photos__x {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 24px;
+  height: 24px;
+  border: 2px solid var(--color-bg-app);
+  border-radius: 50%;
+  background: var(--color-action-primary);
+  color: var(--color-text-on-action);
+}
+
+.sell-photos__remove:focus-visible { outline: none; }
+.sell-photos__remove:focus-visible .sell-photos__x { box-shadow: 0 0 0 2px var(--color-bg-app), 0 0 0 4px var(--color-text-primary); }
+
+/* ---------- Felter ---------- */
+.sell__price,
+.sell__place { position: relative; }
+
+.sell__price .field { padding-right: 48px; }
+
+.sell__unit {
+  position: absolute;
+  right: 18px;
+  top: 50%;
+  transform: translateY(-50%);
+  color: var(--color-text-secondary);
+  pointer-events: none;
+}
+
+.sell__place .field { padding-left: 42px; }
+
+.sell__place-icon {
+  position: absolute;
+  left: 14px;
+  top: 50%;
+  display: inline-flex;
+  transform: translateY(-50%);
+  color: var(--color-text-secondary);
+  pointer-events: none;
+}
+
+.sell__chips {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+}
+
+.sell__desc {
+  display: block;
+  width: 100%;
+  height: 120px;
+  padding: 14px;
+  resize: none;
+  border: 1px solid var(--color-border-strong);
+  border-radius: var(--radius-lg);
+  background: var(--color-bg-surface);
+  color: var(--color-text-primary);
+  font: 400 15px/22px var(--font-body);
+  outline: none;
+  -webkit-appearance: none;
+  appearance: none;
+}
+
+.sell__desc::placeholder { color: var(--color-text-secondary); opacity: 1; }
+.sell__desc:focus { border-color: var(--color-text-primary); box-shadow: 0 0 0 1px var(--color-text-primary); }
+
+.sell__switch {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  width: 100%;
+  min-height: 44px;
+  padding: 14px 16px;
+  text-align: left;
+  color: var(--color-text-primary);
+  border: 1px solid var(--color-border-default);
+  border-radius: var(--radius-xl);
+  background: var(--color-bg-surface);
+}
+
+.sell__switch:focus-visible { outline: none; box-shadow: var(--focus-ring); }
+
+.sell__switch-text {
+  flex: 1;
+  min-width: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+
+@media (pointer: coarse) {
+  .sell__desc { font-size: 16px; }
+}

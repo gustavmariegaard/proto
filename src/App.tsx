@@ -32,6 +32,8 @@ import { SessionProvider, useSession } from './state/session';
 import { useThemeColor } from './state/useThemeColor';
 import { Discover } from './screens/discover/Discover';
 import { Market } from './screens/market/Market';
+import { ListingDetail } from './screens/market/ListingDetail';
+import { SellListing } from './screens/market/SellListing';
 import { Events } from './screens/events/Events';
 import { EventDetail } from './screens/events/EventDetail';
 import { NewEvent } from './screens/events/NewEvent';
@@ -147,6 +149,8 @@ export default function App() {
             <Route path="profil/samling/:id/vis" element={<CollectionViewer />} />
             <Route path="profil/samling/:id/rediger" element={<CollectionEdit />} />
             <Route path="profil/interesser" element={<Interests />} />
+            <Route path="torvet/saelg" element={<SellListing />} />
+            <Route path="torvet/:id" element={<ListingDetail />} />
             <Route element={<AppShell />}>
               <Route index element={<Home />} />
               <Route path="komponenter" element={<Showcase />} />

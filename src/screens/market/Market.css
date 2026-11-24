@@ -44,13 +44,6 @@
   list-style: none;
 }
 
-.market__info {
-  padding: 12px 14px;
-  border-radius: var(--radius-lg);
-  background: var(--color-accent-note-bg);
-  color: var(--color-accent-note-text);
-}
-
 .market__grid {
   display: grid;
   grid-template-columns: repeat(2, minmax(0, 1fr));
@@ -60,7 +53,7 @@
   list-style: none;
 }
 
-/* ---------- Listing card ---------- */
+/* ---------- Annoncekort ---------- */
 .listing {
   display: flex;
   flex-direction: column;
@@ -75,45 +68,83 @@
 }
 
 .listing:focus-visible { outline: none; box-shadow: var(--focus-ring); }
+.listing:active { transform: scale(0.98); }
+
+.listing__media {
+  position: relative;
+  display: block;
+  aspect-ratio: 1 / 1;
+  background: var(--color-bg-subtle);
+}
 
 .listing__photo {
   display: block;
   width: 100%;
-  height: 112px;
+  height: 100%;
   object-fit: cover;
-  background: var(--color-bg-subtle);
+}
+
+.listing--sold .listing__photo { opacity: 0.55; }
+
+.listing__count,
+.listing__sold {
+  position: absolute;
+  top: 8px;
+  display: inline-flex;
+  align-items: center;
+  gap: 3px;
+  padding: 3px 7px;
+  border-radius: var(--radius-pill);
+}
+
+.listing__count {
+  right: 8px;
+  background: rgba(0, 0, 0, 0.55);
+  color: var(--white);
+}
+
+.listing__sold {
+  left: 8px;
+  background: var(--color-action-primary);
+  color: var(--color-text-on-action);
 }
 
 .listing__info {
   display: flex;
   flex-direction: column;
-  gap: 3px;
+  gap: 2px;
   padding: 10px 12px 12px;
+}
+
+.listing__title {
+  display: -webkit-box;
+  overflow: hidden;
+  -webkit-line-clamp: 2;
+  -webkit-box-orient: vertical;
 }
 
 .listing__km { color: var(--color-text-secondary); }
 
-/* ---------- Annonce-ark ---------- */
-.listing-detail {
+.market__sell { gap: 6px; padding-left: 14px; }
+
+/* Kategorier på én linje, der kan rulles sidelæns */
+.market__chips--scroll {
+  flex-wrap: nowrap;
+  margin: 0 -20px;
+  padding: 2px 20px;
+  overflow-x: auto;
+  scrollbar-width: none;
+}
+
+.market__chips--scroll::-webkit-scrollbar { display: none; }
+.market__chips--scroll > li { flex-shrink: 0; }
+
+.market__empty {
   display: flex;
   flex-direction: column;
-  gap: 14px;
-  padding: 16px 20px 32px;
-}
-
-.listing-detail__photo {
-  display: block;
-  width: 100%;
-  height: 200px;
-  object-fit: cover;
-  border-radius: var(--radius-md);
-  background: var(--color-bg-subtle);
-}
-
-.listing-detail__seller {
-  display: flex;
-  align-items: center;
-  gap: 10px;
+  align-items: flex-start;
+  gap: 12px;
+  padding: 8px 0 24px;
 }
 
 /* ---------- Radius-ark (ligger over bundmenuen) ---------- */
