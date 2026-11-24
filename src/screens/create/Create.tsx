@@ -13,8 +13,9 @@ import {
   type CreateKind,
   type PhotoFormat,
 } from '../../data/create';
-import { groupStore } from '../more/store';
-import type { Community } from '../../data/more';
+import type { AvatarTone } from '../../components/Avatar';
+import { groupStore, initialsOf } from '../more/store';
+import { useEvents } from '../events/store';
 import { img } from '../../data/sample';
 import { handleOf } from '../../data/handles';
 import { addPost } from '../../state/posts';
@@ -38,20 +39,31 @@ export function Create() {
   const close = useClose('/');
   const [kind, setKind] = useState<CreateKind>('opslag');
   const [text, setText] = useState('');
-  // Fra en gruppe: "Skriv i gruppen" vælger gruppen på forhånd
+  /*
+   * Hvor man deler, bestemmes af, hvor man starter:
+   * - Plus-knappen: normale opslag (Din profil eller Offentlig debat) med tags
+   * - "Skriv i gruppen" / "Skriv i begivenheden": låst til stedet, uden tags
+   */
   const [params] = useSearchParams();
-  const startGroup = params.get('gruppe');
-  const [audience, setAudience] = useState<Audience>(startGroup ? 'gruppe' : 'offentlig');
-  const [groupId, setGroupId] = useState<string | null>(startGroup);
+  const placeKind: PlaceKind | null = params.get('gruppe') ? 'gruppe' : params.get('begivenhed') ? 'begivenhed' : null;
+  const [placeId, setPlaceId] = useState<string | null>(params.get('gruppe') ?? params.get('begivenhed'));
+  const [audience, setAudience] = useState<Audience>('offentlig');
   const [tags, setTags] = useState<string[]>([]);
   const [tagError, setTagError] = useState(false);
   const groups = groupStore.use();
-  const group = groups.find((g) => g.id === groupId) ?? null;
+  const events = useEvents();
+  const places: Place[] =
+    placeKind === 'gruppe'
+      ? groups.map((g) => ({ id: g.id, name: g.name, initials: g.initials, tone: g.tone, avatarSrc: g.avatarSrc, meta: g.meta }))
+      : placeKind === 'begivenhed'
+        ? events.map((e) => ({ id: e.id, name: e.title, initials: initialsOf(e.title), tone: 'sand' as const, avatarSrc: e.image, meta: e.place }))
+        : [];
+  const place = places.find((p) => p.id === placeId) ?? null;
   const { profile } = useSession();
   const [busy, setBusy] = useState(false);
   const [more, setMore] = useState(false);
   const [settings, setSettings] = useState(() => initialValues(postSettings));
-  const [place, setPlace] = useState(false);
+  const [location, setLocation] = useState(false);
   const [media, setMedia] = useState<Media | null>(null);
   const [format, setFormat] = useState<PhotoFormat>('portraet');
   const [photoValues, setPhotoValues] = useState(() => initialValues(photoSettings));
@@ -72,23 +84,25 @@ export function Create() {
       textRef.current?.focus({ preventScroll: true });
       return;
     }
-    if (audience === 'debat' && tags.length === 0) {
+    if (!placeKind && audience === 'debat' && tags.length === 0) {
       setTagError(true);
       document.getElementById('create-tags')?.scrollIntoView({ behavior: 'smooth', block: 'center' });
       return;
     }
-    if (audience === 'gruppe' && !group) {
+    if (placeKind && !place) {
       document.getElementById('create-audience')?.scrollIntoView({ behavior: 'smooth', block: 'center' });
       return;
     }
+    const debat = !placeKind && audience === 'debat';
     setBusy(true);
     const image = media?.type === 'image' ? await shrink(media.url) : undefined;
     const id = addPost({
-      feed: audience === 'debat' ? 'debat' : 'venner',
-      topic: audience === 'debat' ? tags[0] : undefined,
-      tags: tags.length ? tags : undefined,
+      feed: debat ? 'debat' : 'venner',
+      topic: debat ? tags[0] : undefined,
+      // Tags kun på normale opslag, ikke i grupper og begivenheder
+      tags: !placeKind && tags.length ? tags : undefined,
       // Som på Reddit: dit eget opslag starter med din egen opstemme
-      score: audience === 'debat' ? 0 : undefined,
+      score: debat ? 0 : undefined,
       author: profile.name || 'Dig',
       username: profile.username.trim().replace(/^@/, '') || handleOf(profile.name) || 'dit.navn',
       avatarSrc: profile.avatar ?? img('mig.jpg'),
@@ -96,31 +110,29 @@ export function Create() {
       meta: 'lige nu',
       text: text.trim(),
       image,
-      group: audience === 'gruppe' && group
-        ? { name: group.name, initials: group.initials, tone: group.tone, avatarSrc: group.avatarSrc }
+      group: place && placeKind
+        ? { name: place.name, initials: place.initials, tone: place.tone, avatarSrc: place.avatarSrc, kind: placeKind }
         : undefined,
     });
-    if (audience === 'debat') {
+    if (debat) {
       vote(id, 1);
       navigate('/opdag', { replace: true });
-    } else navigate('/', { replace: true });
+    } else if (place && placeKind) navigate(placeKind === 'gruppe' ? `/grupper/${place.id}` : `/begivenheder/${place.id}`, { replace: true });
+    else navigate('/', { replace: true });
   };
 
   // Kun en ekstra linje, når den siger noget nyt (kortene forklarer resten)
   const hint =
-    audience === 'gruppe' && group
-      ? `Kun medlemmer af ${group.name} kan se opslaget.`
-      : audience === 'offentlig' && profile.private
+    audience === 'offentlig' && profile.private
         ? 'Din profil er privat, så kun dine følgere kan se opslaget. Det kan du ændre på din profil.'
         : '';
 
-  const audiencePicker = (
+  const audiencePicker = placeKind ? (
+    <PlacePicker kind={placeKind} places={places} place={place} onPlace={setPlaceId} />
+  ) : (
     <AudiencePicker
       audience={audience}
       onAudience={setAudience}
-      groups={groups}
-      groupId={groupId}
-      onGroup={setGroupId}
       hint={hint}
       tags={tags}
       onTags={(t) => {
@@ -196,7 +208,7 @@ export function Create() {
   const addButtons: { label: string; icon: IconName; onClick: () => void; pressed?: boolean }[] = [
     { label: 'Foto', icon: 'image', onClick: () => photoRef.current?.click() },
     { label: 'Video', icon: 'clip', onClick: () => videoRef.current?.click() },
-    { label: 'Sted', icon: 'pin', onClick: () => setPlace((p) => !p), pressed: place },
+    { label: 'Sted', icon: 'pin', onClick: () => setLocation((p) => !p), pressed: location },
   ];
 
   return (
@@ -205,6 +217,7 @@ export function Create() {
         <Button onClick={publish} disabled={busy}>Publicér</Button>
       </CloseHeader>
       <main className="modal-screen__content create__content">
+        {!placeKind && (
         <div className="create__tabs" role="tablist" aria-label="Hvad vil du oprette?">
           {createKinds.map((k) => (
             <button
@@ -223,6 +236,7 @@ export function Create() {
             </button>
           ))}
         </div>
+        )}
 
         <textarea
           ref={textRef}
@@ -301,17 +315,14 @@ function shrink(url: string): Promise<string | undefined> {
 type AudiencePickerProps = {
   audience: Audience;
   onAudience: (a: Audience) => void;
-  groups: Community[];
-  groupId: string | null;
-  onGroup: (id: string) => void;
   hint: string;
   tags: string[];
   onTags: (t: string[]) => void;
   tagError: boolean;
 };
 
-/** Vises for: Offentligt (din profil) eller en af dine grupper */
-function AudiencePicker({ audience, onAudience, groups, groupId, onGroup, hint, tags, onTags, tagError }: AudiencePickerProps) {
+/** Plus-knappen: Din profil eller Offentlig debat, med tags */
+function AudiencePicker({ audience, onAudience, hint, tags, onTags, tagError }: AudiencePickerProps) {
   return (
     <section className="create__audience" aria-labelledby="create-audience">
       <h2 id="create-audience" className="t-heading-s">Hvor skal det deles?</h2>
@@ -344,36 +355,88 @@ function AudiencePicker({ audience, onAudience, groups, groupId, onGroup, hint, 
       </div>
       {hint && <p className="t-caption modal-screen__muted" aria-live="polite">{hint}</p>}
 
-      {/* Tags kan sættes på alle opslag; i Debat er mindst ét påkrævet */}
+      {/* Tags på normale opslag; i Offentlig debat er mindst ét påkrævet */}
       <TagInput tags={tags} onTags={onTags} error={tagError} required={audience === 'debat'} />
 
-      {audience === 'gruppe' && (
-        <ul className="create__groups" role="radiogroup" aria-label="Vælg gruppe">
-          {groups.map((g) => {
-            const on = g.id === groupId;
-            return (
-              <li key={g.id}>
-                <button
-                  type="button"
-                  role="radio"
-                  aria-checked={on}
-                  className={['create__group', on && 'create__group--on'].filter(Boolean).join(' ')}
-                  onClick={() => onGroup(g.id)}
-                >
-                  <span className={`create__group-pic avatar--${g.tone}`} aria-hidden="true">
-                    {g.avatarSrc ? <img src={g.avatarSrc} alt="" /> : g.initials}
-                  </span>
-                  <span className="t-label create__group-name">{g.name}</span>
-                  <span className="create__group-check" aria-hidden="true">
-                    {on && <Icon name="check" size={16} />}
-                  </span>
-                </button>
-              </li>
-            );
-          })}
-        </ul>
-      )}
     </section>
   );
 }
 
+
+type PlaceKind = 'gruppe' | 'begivenhed';
+type Place = { id: string; name: string; initials: string; tone: AvatarTone; avatarSrc?: string; meta: string };
+
+/**
+ * Opslag i en gruppe eller begivenhed: stedet er valgt på forhånd (man kommer fra det).
+ * "Skift" åbner en søgning, fordi man kan være med i mange grupper.
+ */
+function PlacePicker({ kind, places, place, onPlace }: { kind: PlaceKind; places: Place[]; place: Place | null; onPlace: (id: string) => void }) {
+  const [searching, setSearching] = useState(!place);
+  const [q, setQ] = useState('');
+  const noun = kind === 'gruppe' ? 'gruppe' : 'begivenhed';
+  const query = q.trim().toLowerCase();
+  const hits = query ? places.filter((p) => p.name.toLowerCase().includes(query)).slice(0, 6) : [];
+
+  return (
+    <section className="create__audience" aria-labelledby="create-audience">
+      <h2 id="create-audience" className="t-heading-s">
+        Deles i {kind === 'gruppe' ? 'gruppen' : 'begivenheden'}
+      </h2>
+      {place && (
+        <div className="create__place">
+          <span className={`create__group-pic avatar--${place.tone}`} aria-hidden="true">
+            {place.avatarSrc ? <img src={place.avatarSrc} alt="" /> : place.initials}
+          </span>
+          <span className="create__dest-text">
+            <span className="t-label">{place.name}</span>
+            <span className="t-caption create__dest-hint">
+              {kind === 'gruppe' ? 'Kun gruppens medlemmer kan se det.' : 'Kun dem, der er med i begivenheden, kan se det.'}
+            </span>
+          </span>
+          <button type="button" className="t-caption-strong create__place-change" onClick={() => setSearching((v) => !v)}>
+            {searching ? 'Luk' : 'Skift'}
+          </button>
+        </div>
+      )}
+      {searching && (
+        <>
+          <input
+            className="field"
+            type="search"
+            placeholder={`Søg efter ${noun}`}
+            aria-label={`Søg efter ${noun}`}
+            value={q}
+            autoFocus={!place}
+            onChange={(e) => setQ(e.target.value)}
+          />
+          {query && hits.length === 0 && <p className="t-caption modal-screen__muted">Ingen {noun === 'gruppe' ? 'grupper' : 'begivenheder'} matcher “{q.trim()}”.</p>}
+          {hits.length > 0 && (
+            <ul className="create__groups" aria-label="Resultater">
+              {hits.map((p) => (
+                <li key={p.id}>
+                  <button
+                    type="button"
+                    className="create__group"
+                    onClick={() => {
+                      onPlace(p.id);
+                      setSearching(false);
+                      setQ('');
+                    }}
+                  >
+                    <span className={`create__group-pic avatar--${p.tone}`} aria-hidden="true">
+                      {p.avatarSrc ? <img src={p.avatarSrc} alt="" /> : p.initials}
+                    </span>
+                    <span className="create__dest-text">
+                      <span className="t-label create__group-name">{p.name}</span>
+                      <span className="t-caption create__dest-hint">{p.meta}</span>
+                    </span>
+                  </button>
+                </li>
+              ))}
+            </ul>
+          )}
+        </>
+      )}
+    </section>
+  );
+}

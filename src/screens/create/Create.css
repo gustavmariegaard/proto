@@ -317,3 +317,21 @@
   background: var(--color-action-primary);
   color: var(--color-text-on-action);
 }
+
+/* ---------- Deles i gruppen / begivenheden ---------- */
+.create__place {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 10px 12px 10px 10px;
+  border: 1.5px solid var(--color-text-primary);
+  border-radius: var(--radius-lg);
+  background: var(--color-bg-surface);
+}
+
+.create__place-change {
+  flex: none;
+  min-height: 44px;
+  padding: 0 10px;
+  text-decoration: underline;
+}

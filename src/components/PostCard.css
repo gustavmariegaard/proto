@@ -344,3 +344,5 @@
 }
 
 .post__name .post__group-name { min-width: 0; }
+
+.public-badge--begivenhed { background: var(--color-bg-subtle); color: var(--color-text-primary); }

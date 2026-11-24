@@ -17,7 +17,8 @@ export type Post = {
   /** Fx "for 2 timer siden". Ved gruppeopslag kun tiden, fx "i går". */
   meta: string;
   /** Opslaget er delt i en gruppe (vises som på Facebook: gruppen øverst, forfatteren under) */
-  group?: { name: string; initials: string; tone?: AvatarTone; avatarSrc?: string };
+  /** Opslaget er delt i en gruppe eller en begivenhed */
+  group?: { name: string; initials: string; tone?: AvatarTone; avatarSrc?: string; kind?: 'gruppe' | 'begivenhed' };
   text: string;
   /** true = grå pladsholder, eller en sti til et billede i public/img */
   image?: boolean | string;
@@ -103,7 +104,7 @@ export function PostCard({ post, onComment, onShare, onReport }: PostCardProps) 
           <div className="post__meta">
             <h3 className="t-heading-s post__name">
               <span className="post__group-name">{post.group.name}</span>
-              <PublicBadge kind="gruppe" />
+              <PublicBadge kind={post.group.kind ?? 'gruppe'} />
             </h3>
             <p className="t-caption post__sub">
               <Link to={profileHref} className="post__name-link">{post.author}</Link> · {post.meta}
@@ -221,8 +222,8 @@ function Action({ icon, label, count, pressed, className, onClick }: ActionProps
 
 
 /** Lille mærke ved navnet: megafon = offentlig person, bygning = side, to personer = gruppe. */
-export function PublicBadge({ kind }: { kind: PublicKind | 'gruppe' }) {
-  const label = kind === 'gruppe' ? 'Gruppe' : publicLabel[kind];
+export function PublicBadge({ kind }: { kind: PublicKind | 'gruppe' | 'begivenhed' }) {
+  const label = kind === 'gruppe' ? 'Gruppe' : kind === 'begivenhed' ? 'Begivenhed' : publicLabel[kind];
   return (
     <span className={`public-badge public-badge--${kind}`} role="img" aria-label={label} title={label}>
       <Icon name={badgeIcon[kind]} size={13} />
@@ -231,4 +232,4 @@ export function PublicBadge({ kind }: { kind: PublicKind | 'gruppe' }) {
 }
 
 /** Ét ikon pr. slags fællesskab: offentlig person, side og gruppe */
-export const badgeIcon = { person: 'megaphone', side: 'building', gruppe: 'circles' } as const;
+export const badgeIcon = { person: 'megaphone', side: 'building', gruppe: 'circles', begivenhed: 'calendar' } as const;

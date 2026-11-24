@@ -1,4 +1,6 @@
-import { Link, useParams } from 'react-router-dom';
+import { Link, useNavigate, useParams } from 'react-router-dom';
+import { PostCard } from '../../components/PostCard';
+import { usePosts } from '../../state/posts';
 import { Avatar } from '../../components/Avatar';
 import { Button } from '../../components/Button';
 import { Icon } from '../../components/Icon';
@@ -32,6 +34,8 @@ function guestRows(event: EventItem, rsvp: Rsvp) {
 export function EventDetail() {
   const { id } = useParams();
   const event = useEvent(id);
+  const navigate = useNavigate();
+  const posts = usePosts();
 
   if (!event) {
     return (
@@ -48,6 +52,7 @@ export function EventDetail() {
   }
 
   const { rsvp } = event;
+  const eventPosts = posts.filter((p) => p.group?.kind === 'begivenhed' && p.group.name === event.title);
   const toggle = (value: Exclude<Rsvp, 'none'>) => setRsvp(event.id, rsvp === value ? 'none' : value);
   const isPublic = event.visibility === 'offentlig';
 
@@ -139,6 +144,29 @@ export function EventDetail() {
               <span className="t-caption event-guests__names">{names(row.list)}</span>
             </div>
           ))}
+        </section>
+
+        {/* Opslag i begivenheden: man deler herinde, ikke via plus-knappen */}
+        <section className="event-posts" aria-labelledby="event-posts-title">
+          <h3 id="event-posts-title" className="t-heading-m">
+            Opslag
+          </h3>
+          <Button variant="secondary" block onClick={() => navigate(`/opret?begivenhed=${event.id}`)}>
+            Skriv i begivenheden
+          </Button>
+          {eventPosts.length === 0 ? (
+            <p className="t-caption event-screen__muted">Ingen opslag endnu. Skriv det første.</p>
+          ) : (
+            eventPosts.map((p) => (
+              <PostCard
+                key={p.id}
+                post={p}
+                onComment={() => navigate(`/opslag/${p.id}?kommentarer`)}
+                onShare={() => navigate(`/opslag/${p.id}/del`)}
+                onReport={() => navigate(`/opslag/${p.id}/rapporter`)}
+              />
+            ))
+          )}
         </section>
       </main>
     </div>

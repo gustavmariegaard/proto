@@ -18,6 +18,7 @@ export const createKinds: { value: CreateKind; label: string }[] = [
  * Om profilen er offentlig eller privat, vælger man på profilen – ikke pr. opslag.
  */
 export type Audience = 'offentlig' | 'debat' | 'gruppe';
+/** Plus-knappen: kun normale opslag. Grupper og begivenheder deler man inde fra dem selv. */
 export const audiences: { value: Audience; label: string; hint: string; icon: 'user' | 'compass' | 'circles' }[] = [
   // Ikke i Figma: forklaringerne er skrevet i samme tone.
   { value: 'offentlig', label: 'Din profil', icon: 'user', hint: 'Til dem, der følger dig.' },
@@ -27,7 +28,6 @@ export const audiences: { value: Audience; label: string; hint: string; icon: 'u
     icon: 'compass',
     hint: 'Til alle, under dine tags. Kan stemmes op og ned.',
   },
-  { value: 'gruppe', label: 'En gruppe', icon: 'circles', hint: 'Kun til gruppens medlemmer.' },
 ];
 
 export type PhotoFormat = 'kvadrat' | 'portraet' | 'landskab';
