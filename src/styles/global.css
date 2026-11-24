@@ -20,6 +20,9 @@
  */
 html,
 body {
+  /* Ingen vandret elastik-scroll på hele appen */
+  overscroll-behavior: none;
+  touch-action: pan-x pan-y;
   position: fixed;
   inset: 0;
   height: 100%;

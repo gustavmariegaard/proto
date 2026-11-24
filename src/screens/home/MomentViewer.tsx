@@ -62,6 +62,28 @@ function Viewer({ personId }: { personId: string }) {
   }, [person, personId, markSeen]);
 
   /* Hold fingeren nede = pause. Slip = fortsæt, hvor den slap. Et kort tryk skifter moment. */
+  /* Træk nedad for at lukke (som stories på Instagram) */
+  const [dragY, setDragY] = useState(0);
+  const startPoint = useRef<{ x: number; y: number } | null>(null);
+  const onMove = (e: React.PointerEvent) => {
+    const s = startPoint.current;
+    if (!s) return;
+    const dy = e.clientY - s.y;
+    const dx = e.clientX - s.x;
+    if (dy > 8 && dy > Math.abs(dx)) {
+      // Det er et træk, ikke et tryk eller hold
+      window.clearTimeout(holdTimer.current);
+      wasHeld.current = true;
+      setHeld(true);
+      setDragY(dy);
+    }
+  };
+  const onUp = () => {
+    startPoint.current = null;
+    if (dragY > 110) close();
+    else setDragY(0);
+  };
+
   const pressStart = () => {
     wasHeld.current = false;
     window.clearTimeout(holdTimer.current);
@@ -97,13 +119,26 @@ function Viewer({ personId }: { personId: string }) {
   if (!person || !current) return <Navigate to="/" replace />;
 
   return (
-    <div className="moment-view moment-view--full" role="dialog" aria-label={`Moment fra ${person.name}`}>
+    <div
+      className={['moment-view moment-view--full', dragY > 0 && 'is-dragging'].filter(Boolean).join(' ')}
+      style={dragY ? { transform: `translateY(${dragY}px) scale(${1 - Math.min(dragY, 400) / 2000})`, borderRadius: 28 } : undefined}
+      role="dialog" aria-label={`Moment fra ${person.name}`}>
       {/* Billedet fylder hele skærmen. Tryk til siden skifter, hold nede = pause. */}
       <div
         className={['moment-full__photo', held && 'is-held'].filter(Boolean).join(' ')}
-        onPointerDown={pressStart}
-        onPointerUp={pressEnd}
-        onPointerCancel={pressEnd}
+        onPointerDown={(e) => {
+          startPoint.current = { x: e.clientX, y: e.clientY };
+          pressStart();
+        }}
+        onPointerMove={onMove}
+        onPointerUp={() => {
+          onUp();
+          pressEnd();
+        }}
+        onPointerCancel={() => {
+          onUp();
+          pressEnd();
+        }}
         onPointerLeave={pressEnd}
         onContextMenu={(e) => e.preventDefault()}
       >

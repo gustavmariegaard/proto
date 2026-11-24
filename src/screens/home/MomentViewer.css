@@ -331,3 +331,8 @@
 .moment-edge__bar { vector-effect: non-scaling-stroke; }
 
 .moment-full__link { color: inherit; text-decoration: none; }
+
+/* Træk nedad for at lukke: momentet følger fingeren og glider tilbage, hvis man slipper tidligt */
+.moment-view--full { transition: transform 0.2s ease, border-radius 0.2s ease; }
+.moment-view--full.is-dragging { transition: none; overflow: hidden; }
+.moment-full__photo { touch-action: none; }
