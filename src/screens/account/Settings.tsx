@@ -150,11 +150,23 @@ export function PrivacySettings() {
             { value: 'privat', label: 'Privat' },
           ]}
         />
-        <p className="t-caption acc-muted" aria-live="polite">
-          {d.draft.private
-            ? 'Kun dine følgere kan se dine opslag, moments og flicks. Nye følgere skal godkendes af dig. Opslag i grupper ses stadig af gruppens medlemmer.'
-            : 'Alle kan se dine opslag, moments og flicks. Opslag i grupper ses kun af gruppens medlemmer.'}
-        </p>
+        {/* Præcis hvad der låses, og hvad der altid er synligt */}
+        <div className="acc-panel privacy-scope" aria-live="polite">
+          <p className="t-heading-s">{d.draft.private ? 'Kun for dine følgere' : 'Synligt for alle'}</p>
+          <ul className="privacy-scope__list t-body-s">
+            <li>Opslag på din profil</li>
+            <li>Flicks</li>
+            <li>Moments og highlights</li>
+            <li>Hvem du følger, og hvem der følger dig</li>
+          </ul>
+          <p className="t-heading-s">Altid synligt</p>
+          <ul className="privacy-scope__list t-body-s">
+            <li>Navn, brugernavn, profilbillede og kort tekst</li>
+            <li>Dine indlæg og kommentarer i Offentlig debat</li>
+            <li>Opslag i grupper og begivenheder (for deres medlemmer)</li>
+          </ul>
+          {d.draft.private && <p className="t-caption acc-muted">Nye følgere skal godkendes af dig.</p>}
+        </div>
 
         <h2 className="t-heading-m">Hvem kan skrive til dig?</h2>
         <SegmentedControl

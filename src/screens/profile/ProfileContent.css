@@ -229,3 +229,28 @@
   overflow: hidden;
   font: 500 13px/17px var(--font-body);
 }
+
+/* ---------- Privat profil, du ikke følger ---------- */
+.pc-locked {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 6px;
+  padding: 28px 20px;
+  border: 1px solid var(--color-border-default);
+  border-radius: var(--radius-lg);
+  background: var(--color-bg-surface);
+  text-align: center;
+}
+
+.pc-locked .t-body-s { color: var(--color-text-secondary); }
+
+.pc-locked__icon {
+  display: grid;
+  place-items: center;
+  width: 52px;
+  height: 52px;
+  margin-bottom: 4px;
+  border-radius: 50%;
+  border: 1.5px solid var(--color-text-primary);
+}

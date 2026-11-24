@@ -227,12 +227,33 @@ export const initialEvents: EventItem[] = [
 ];
 
 /** Grupper, man kan invitere til en privat begivenhed (Ny begivenhed · Privat) */
-export const inviteGroups: { id: string; label: string; members: Guest[] }[] = [
-  { id: 'familien', label: 'Familien', members: [g.anna!, g.peter!] },
-  { id: 'naboerne', label: 'Naboerne', members: [g.karen!, g.sofie!] },
-  { id: 'haandbold', label: 'Håndboldholdet', members: [g.jonas!, g.ahmed!] },
-  { id: 'venner', label: '+ Følgere', members: [g.mette!, g.soeren!, g.pernille!] },
-];
+/** Fulde navne til søgning, når man inviterer */
+export const guestFullNames: Record<string, string> = {
+  mette: 'Mette Lund',
+  jonas: 'Jonas Krogh',
+  karen: 'Karen Bech',
+  soeren: 'Søren Vang',
+  pernille: 'Pernille Sørensen',
+  anna: 'Anna Nørgaard',
+  peter: 'Peter Holm',
+  sofie: 'Sofie Holm',
+  ahmed: 'Ahmed Rahimi',
+};
+
+/** Dem, der følger dig (til "Alle dine følgere") */
+export const myFollowers: Guest[] = [g.mette!, g.jonas!, g.soeren!, g.pernille!, g.anna!, g.peter!];
+
+/** Medlemmer i dine grupper (eksempel) – til "Inviter alle medlemmer" */
+export const groupMembers: Record<string, Guest[]> = {
+  haandbold: [g.jonas!, g.ahmed!, g.peter!, g.sofie!],
+  vestergade: [g.karen!, g.sofie!, g.mette!],
+  loeb: [g.anna!, g.peter!, g.jonas!],
+  mad: [g.sofie!, g.karen!, g.pernille!],
+  foto: [g.mette!, g.anna!],
+  foraeldre: [g.pernille!, g.soeren!, g.karen!],
+  bog: [g.anna!, g.mette!, g.pernille!],
+  lokalhistorie: [g.soeren!, g.karen!],
+};
 
 export const rsvpLabel: Record<Exclude<Rsvp, 'none'>, string> = {
   interesseret: 'Interesseret',

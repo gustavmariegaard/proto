@@ -108,6 +108,11 @@ export function UserProfile() {
             <p className="t-caption uprof__muted">
               @{account.handle}
             </p>
+            {account.private && (
+              <span className="uprof__relation t-caption-strong">
+                <Icon name="lock" size={12} /> Privat profil
+              </span>
+            )}
             {pk && (
               <span className={`uprof__public uprof__public--${pk} t-caption-strong`}>
                 <Icon name={pk === 'person' ? 'globe' : 'building'} size={14} /> {publicLabel[pk]}
@@ -142,7 +147,7 @@ export function UserProfile() {
 
         <div className="uprof__actions">
           <Button variant={following ? 'secondary' : 'primary'} block onClick={toggleFollow} aria-pressed={following}>
-            {following ? 'Følger' : account.followsMe ? 'Følg tilbage' : 'Følg'}
+            {following ? 'Følger' : account.private ? 'Anmod om at følge' : account.followsMe ? 'Følg tilbage' : 'Følg'}
           </Button>
           <Button variant="secondary" block onClick={message}>
             Besked
@@ -150,6 +155,7 @@ export function UserProfile() {
         </div>
 
         <ProfileContent
+          locked={Boolean(account.private) && !following}
           name={account.name.split(' ')[0]!}
           highlights={extras.collections.map((c) => ({
             id: c.id,

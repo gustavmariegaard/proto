@@ -22,6 +22,8 @@ type Props = {
   own?: boolean;
   /** Navn til tomme tilstande, fx "Mette" */
   name: string;
+  /** Privat profil, du ikke følger: kun Debat er åben */
+  locked?: boolean;
 };
 
 /**
@@ -29,11 +31,12 @@ type Props = {
  * 1. Highlights (runde bobler) – moments, man har gemt
  * 2. Faner: Opslag · Debat · Flicks
  */
-export function ProfileContent({ highlights, posts, debate, flicks, own = false, name }: Props) {
+export function ProfileContent({ highlights, posts, debate, flicks, own = false, name, locked = false }: Props) {
   const navigate = useNavigate();
   const [params, setParams] = useSearchParams();
   const raw = params.get('fane');
-  const tab: Tab = raw === 'debat' || raw === 'flicks' ? raw : 'opslag';
+  // Låst profil: Debat er altid offentlig, så den vises som udgangspunkt
+  const tab: Tab = raw === 'debat' || raw === 'flicks' || raw === 'opslag' ? raw : locked ? 'debat' : 'opslag';
   const [openAll, setOpenAll] = useState(false);
   // Opslag som gitter (Instagram/VSCO) eller liste. Gitter er standard.
   const [view, setView] = useState<'gitter' | 'liste'>('gitter');
@@ -58,7 +61,7 @@ export function ProfileContent({ highlights, posts, debate, flicks, own = false,
 
   return (
     <>
-      {(highlights.length > 0 || own) && (
+      {!locked && (highlights.length > 0 || own) && (
         <section className="pc-highlights" aria-label="Highlights">
           <ul className="pc-highlights__row">
             {own && (
@@ -93,17 +96,28 @@ export function ProfileContent({ highlights, posts, debate, flicks, own = false,
             role="tab"
             aria-selected={tab === t.value}
             className="pc-tab"
-            onClick={() => setParams(t.value === 'opslag' ? {} : { fane: t.value }, { replace: true })}
+            onClick={() => setParams(t.value === (locked ? 'debat' : 'opslag') ? {} : { fane: t.value }, { replace: true })}
           >
-            <Icon name={t.icon} size={18} />
+            <Icon name={locked && t.value !== 'debat' ? 'lock' : t.icon} size={18} />
             <span>{t.label}</span>
-            <span className="pc-tab__count">{t.count}</span>
+            {!(locked && t.value !== 'debat') && <span className="pc-tab__count">{t.count}</span>}
           </button>
         ))}
       </div>
 
       <div role="tabpanel" className="pc-panel">
-        {tab === 'opslag' &&
+        {locked && tab !== 'debat' && (
+          <div className="pc-locked">
+            <span className="pc-locked__icon" aria-hidden="true">
+              <Icon name="lock" size={22} />
+            </span>
+            <p className="t-heading-s">Profilen er privat</p>
+            <p className="t-body-s">
+              Følg {name} for at se {tab === 'opslag' ? 'opslag' : 'flicks'} og highlights. Indlæg i Offentlig debat er altid synlige.
+            </p>
+          </div>
+        )}
+        {!locked && tab === 'opslag' &&
           (posts.length === 0 ? (
             <Empty
               text={own ? 'Du har ikke delt noget endnu.' : `${name} har ikke delt noget endnu.`}
@@ -150,7 +164,7 @@ export function ProfileContent({ highlights, posts, debate, flicks, own = false,
           <>
             <p className="t-caption pc-note">
               <Icon name="compass" size={14} />
-              {own ? 'Dine indlæg i Offentlig debat. Alle kan se og stemme på dem.' : `${name}s indlæg i Offentlig debat.`}
+              {own ? 'Dine indlæg i Offentlig debat. Alle kan se og stemme på dem.' : `${genitive(name)} indlæg i Offentlig debat.`}
             </p>
             {debate.length === 0 ? (
               <Empty
@@ -163,7 +177,7 @@ export function ProfileContent({ highlights, posts, debate, flicks, own = false,
           </>
         )}
 
-        {tab === 'flicks' &&
+        {!locked && tab === 'flicks' &&
           (flicks.length === 0 ? (
             <Empty
               text={own ? 'Du har ikke lavet nogen flicks endnu.' : `${name} har ingen flicks endnu.`}
@@ -199,4 +213,9 @@ function Empty({ text, action }: { text: string; action?: { label: string; to: s
       )}
     </div>
   );
+}
+
+/** Dansk ejefald: "Mette" → "Mettes", "Lars" → "Lars'" */
+function genitive(name: string) {
+  return /[sxz]$/i.test(name) ? `${name}'` : `${name}s`;
 }

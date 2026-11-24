@@ -336,3 +336,11 @@ a.notif:focus-visible { outline: none; box-shadow: var(--focus-ring); }
   flex-direction: column;
   gap: 10px;
 }
+
+.privacy-scope__list {
+  margin: -4px 0 4px;
+  padding-left: 20px;
+  color: var(--color-text-secondary);
+}
+
+.privacy-scope__list li { margin: 2px 0; }

@@ -3,7 +3,8 @@ import { useNavigate } from 'react-router-dom';
 import { Button } from '../../components/Button';
 import { Chip } from '../../components/Chip';
 import { TextField } from '../../components/TextField';
-import { inviteGroups, type Guest, type Visibility } from '../../data/events';
+import { type Guest, type Visibility } from '../../data/events';
+import { InvitePicker, resolveInvites, type Invites } from './InvitePicker';
 import { img } from '../../data/sample';
 import { useSession } from '../../state/session';
 import { CloseHeader, Toggle, useClose } from '../create/parts';
@@ -43,19 +44,13 @@ export function NewEvent() {
   const [place, setPlace] = useState('');
   const [visibility, setVisibility] = useState<Visibility>('offentlig');
   const [allowShare, setAllowShare] = useState(true);
-  const [groups, setGroups] = useState<string[]>(['familien']);
+  const [invites, setInvites] = useState<Invites>({ allFollowers: false, people: [], groups: [] });
   const [description, setDescription] = useState('');
 
   const isPublic = visibility === 'offentlig';
-  const toggleGroup = (id: string) => setGroups((l) => (l.includes(id) ? l.filter((x) => x !== id) : [...l, id]));
 
   const create = () => {
-    const invited: Guest[] = [];
-    if (!isPublic) {
-      for (const group of inviteGroups.filter((gr) => groups.includes(gr.id))) {
-        for (const m of group.members) if (!invited.some((x) => x.id === m.id)) invited.push(m);
-      }
-    }
+    const invited: Guest[] = isPublic ? [] : resolveInvites(invites);
     const id = addEvent({
       title: title.trim(),
       date: date || todayIso(),
@@ -133,13 +128,7 @@ export function NewEvent() {
             <h2 className="t-heading-s" id="new-event-invite">
               Inviter
             </h2>
-            <div className="new-event__chips new-event__full" role="group" aria-labelledby="new-event-invite">
-              {inviteGroups.map((gr) => (
-                <Chip key={gr.id} selected={groups.includes(gr.id)} onClick={() => toggleGroup(gr.id)}>
-                  {gr.label}
-                </Chip>
-              ))}
-            </div>
+            <InvitePicker value={invites} onChange={setInvites} />
           </>
         )}
 

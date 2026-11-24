@@ -23,6 +23,8 @@ export type Account = {
   followed: boolean;
   /** Personen følger dig (sider følger aldrig tilbage) */
   followsMe: boolean;
+  /** Privat profil: kun følgere ser opslag, flicks og highlights */
+  private?: boolean;
 };
 
 /** Korte tekster om nogle af profilerne (eksempler, ikke fra Figma) */
@@ -81,9 +83,13 @@ function build() {
   return map;
 }
 
+/** Private profiler i prototypen (eksempel) */
+const privateHandles = ['lars.moeller'];
+
 export function findAccount(handle: string): Account | undefined {
   cache ??= build();
-  return cache.get(handle);
+  const a = cache.get(handle);
+  return a && privateHandles.includes(handle) ? { ...a, private: true, followed: false, followsMe: false } : a;
 }
 
 /** Opslag fra en profil: fra feedet og fra Offentlig debat */
