@@ -104,3 +104,18 @@
   background: var(--color-accent-note-bg);
   color: var(--color-accent-note-text);
 }
+
+/* Offentlig profil: kan stemmes både op og ned */
+.uprof__public {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  align-self: flex-start;
+  margin-top: 6px;
+  padding: 3px 10px;
+  border-radius: var(--radius-pill);
+  background: var(--color-accent-note-bg);
+  color: var(--color-accent-note-text);
+}
+
+.uprof__name { align-items: flex-start; }

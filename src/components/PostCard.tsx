@@ -5,6 +5,7 @@ import { Icon, type IconName } from './Icon';
 import { PostMenu } from './PostMenu';
 import { setHidden, useHidden } from '../state/posts';
 import { scoreWith, useVotes, vote } from '../state/votes';
+import { isPublicProfile } from '../data/publicProfiles';
 import { handleOf } from '../data/handles';
 import './PostCard.css';
 
@@ -56,9 +57,9 @@ type PostCardProps = {
 
 /** Opslag i feedet. Handlinger: kan lide, kommentér, del, rapportér og gem. */
 export function PostCard({ post, onComment, onShare, onReport }: PostCardProps) {
-  const [liked, setLiked] = useState(false);
   const [saved, setSaved] = useState(false);
   const [stats] = useState(() => post.stats ?? sampleStats(post.id));
+  const isPublic = !post.group && isPublicProfile(post.author);
   const handle = post.username || handleOf(post.author);
   // Egne opslag åbner din egen profil
   const profileHref = post.id.startsWith('mit-') ? '/profil' : `/bruger/${handle}`;
@@ -111,7 +112,10 @@ export function PostCard({ post, onComment, onShare, onReport }: PostCardProps) 
           <Link to={profileHref} className="post__who" aria-label={`Gå til profilen for ${post.author}`}>
             <Avatar name={post.author} tone={post.tone} src={post.avatarSrc} />
             <div className="post__meta">
-              <h3 className="t-heading-s">{post.author}</h3>
+              <h3 className="t-heading-s post__name">
+                {post.author}
+                {isPublic && <PublicBadge />}
+              </h3>
               <p className="t-caption post__sub">
                 @{handle} · {post.meta}
               </p>
@@ -144,18 +148,12 @@ export function PostCard({ post, onComment, onShare, onReport }: PostCardProps) 
       )}
 
       <footer className="post__actions">
-        {post.score !== undefined ? (
-          <VoteControl id={post.id} base={post.score} />
-        ) : (
-          <Action
-            icon={liked ? 'heart-filled' : 'heart'}
-            label="Synes godt om"
-            count={stats.likes + (liked ? 1 : 0)}
-            pressed={liked}
-            className={liked ? 'post__liked' : undefined}
-            onClick={() => setLiked((v) => !v)}
-          />
-        )}
+        {/* Debat og offentlige profiler: op og ned. Almindelige brugere: kun op. */}
+        <VoteControl
+          id={post.id}
+          base={post.score ?? stats.likes}
+          allowDown={post.score !== undefined || isPublic}
+        />
         <Action icon="chat" label="Kommentarer" count={stats.comments} onClick={onComment} />
         <Action icon="send" label="Delinger" count={stats.shares} onClick={onShare} />
         <Action
@@ -218,7 +216,7 @@ function Action({ icon, label, count, pressed, className, onClick }: ActionProps
 }
 
 /** Stem op / ned (Offentlig debat). Samme stemme igen fjerner den. */
-function VoteControl({ id, base }: { id: string; base: number }) {
+function VoteControl({ id, base, allowDown }: { id: string; base: number; allowDown: boolean }) {
   const mine = useVotes()[id];
   const score = scoreWith(base, mine);
   return (
@@ -226,12 +224,23 @@ function VoteControl({ id, base }: { id: string; base: number }) {
       <button type="button" className="post__vote-btn" aria-label="Stem op" aria-pressed={mine === 1} onClick={() => vote(id, 1)}>
         <Icon name="vote-up" size={20} />
       </button>
-      <span className="t-caption-strong post__score" aria-live="polite">
+      <span className={['t-caption-strong post__score', !allowDown && 'post__score--end'].filter(Boolean).join(' ')} aria-live="polite">
         {fmt(score)}
       </span>
-      <button type="button" className="post__vote-btn" aria-label="Stem ned" aria-pressed={mine === -1} onClick={() => vote(id, -1)}>
-        <Icon name="vote-down" size={20} />
-      </button>
+      {allowDown && (
+        <button type="button" className="post__vote-btn" aria-label="Stem ned" aria-pressed={mine === -1} onClick={() => vote(id, -1)}>
+          <Icon name="vote-down" size={20} />
+        </button>
+      )}
     </div>
+  );
+}
+
+/** Lille globus ved navnet: offentlig profil (kan stemmes både op og ned) */
+export function PublicBadge() {
+  return (
+    <span className="public-badge" role="img" aria-label="Offentlig profil" title="Offentlig profil">
+      <Icon name="globe" size={14} />
+    </span>
   );
 }

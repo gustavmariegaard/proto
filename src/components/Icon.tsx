@@ -10,6 +10,10 @@ const dot = (cx: number) => `<circle cx="${cx}" cy="12" r="1.6" fill="currentCol
 
 const paths = {
   /** Stem op / ned (Offentlig debat). Ikke fra Figma. */
+  /** Offentlig profil. Ikke fra Figma. */
+  globe:
+    p('M12 21C16.9706 21 21 16.9706 21 12C21 7.02944 16.9706 3 12 3C7.02944 3 3 7.02944 3 12C3 16.9706 7.02944 21 12 21Z') +
+    p('M3 12H21M12 3C14.5 5.5 15.5 8.5 15.5 12C15.5 15.5 14.5 18.5 12 21C9.5 18.5 8.5 15.5 8.5 12C8.5 8.5 9.5 5.5 12 3Z'),
   'vote-up': p('M12 4L4 13H9V20H15V13H20L12 4Z'),
   'vote-down': p('M12 20L20 11H15V4H9V11H4L12 20Z'),
   /** Tre prikker (menu på opslag). Ikke fra Figma. */

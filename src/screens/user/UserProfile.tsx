@@ -12,6 +12,7 @@ import { handleOf } from '../../data/handles';
 import { contacts } from '../../data/messages';
 import { photoHeights } from '../../data/profile';
 import { extrasFor } from '../../data/profileExtras';
+import { isPublicProfile } from '../../data/publicProfiles';
 import { keep, save } from '../../state/keep';
 import { usePosts } from '../../state/posts';
 import { useMoments } from '../../state/moments';
@@ -135,6 +136,11 @@ export function UserProfile() {
               @{account.handle}
               {isSide && ' · Side'}
             </p>
+            {isPublicProfile(account.handle) && (
+              <span className="uprof__public t-caption-strong">
+                <Icon name="globe" size={14} /> Offentlig profil
+              </span>
+            )}
             {account.followsMe && (
               <span className={['uprof__relation t-caption-strong', following && 'uprof__relation--mutual'].filter(Boolean).join(' ')}>
                 {following ? 'I følger hinanden' : 'Følger dig'}

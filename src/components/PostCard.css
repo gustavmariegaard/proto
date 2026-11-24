@@ -293,9 +293,31 @@
   font-variant-numeric: tabular-nums;
 }
 
-/* Stemt op: grøn pil og fyldt. Stemt ned: mørk pil og fyldt. */
-.post__vote--up .post__vote-btn:first-child { color: var(--green-700); }
-.post__vote--up .post__vote-btn:first-child svg path { fill: var(--color-accent-highlight); stroke: var(--green-700); }
-.post__vote--up .post__score { color: var(--green-700); }
-.post__vote--down .post__vote-btn:last-child { color: var(--ink-900); }
-.post__vote--down .post__vote-btn:last-child svg path { fill: var(--ink-700); stroke: var(--ink-900); }
+/* Valgt stemme: pilen fyldes sort, uanset op eller ned */
+.post__vote--up .post__vote-btn:first-child svg path,
+.post__vote--down .post__vote-btn:last-child svg path {
+  fill: var(--ink-900);
+  stroke: var(--ink-900);
+}
+
+.post__vote-btn { color: var(--ink-900); }
+
+/* Kun opstemme (almindelige brugere): luft efter tallet */
+.post__score--end { padding-right: 14px; }
+
+.post__name {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+}
+
+/* Offentlig profil */
+.public-badge {
+  display: inline-grid;
+  place-items: center;
+  width: 20px;
+  height: 20px;
+  border-radius: 50%;
+  background: var(--color-accent-note-bg);
+  color: var(--color-accent-note-text);
+}
