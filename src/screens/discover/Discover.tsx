@@ -43,9 +43,6 @@ export function Discover() {
   return (
     <div className="discover">
       <h1 className="t-title-xl">Offentlig debat</h1>
-      <p className="t-body-s discover__intro">
-        Kun verificerede personer. Stem opslag op eller ned. Får et opslag for mange nedstemmer, forsvinder det fra emnet.
-      </p>
 
       <ul ref={rowRef} className="discover__row" aria-label="Filtrér efter dine emner">
         {/* Rediger emner står først og ruller med væk, når man bladrer i emnerne */}

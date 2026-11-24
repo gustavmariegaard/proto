@@ -101,7 +101,10 @@ export function PostCard({ post, onComment, onShare, onReport }: PostCardProps) 
             </span>
           </span>
           <div className="post__meta">
-            <h3 className="t-heading-s post__group-name">{post.group.name}</h3>
+            <h3 className="t-heading-s post__name">
+              <span className="post__group-name">{post.group.name}</span>
+              <PublicBadge kind="gruppe" />
+            </h3>
             <p className="t-caption post__sub">
               <Link to={profileHref} className="post__name-link">{post.author}</Link> · {post.meta}
             </p>
@@ -237,11 +240,15 @@ function VoteControl({ id, base, allowDown }: { id: string; base: number; allowD
   );
 }
 
-/** Lille mærke ved navnet: megafon = offentlig person, bygning = side. Begge kan stemmes op og ned. */
-export function PublicBadge({ kind }: { kind: PublicKind }) {
+/** Lille mærke ved navnet: megafon = offentlig person, bygning = side, to personer = gruppe. */
+export function PublicBadge({ kind }: { kind: PublicKind | 'gruppe' }) {
+  const label = kind === 'gruppe' ? 'Gruppe' : publicLabel[kind];
   return (
-    <span className={`public-badge public-badge--${kind}`} role="img" aria-label={publicLabel[kind]} title={publicLabel[kind]}>
-      <Icon name={kind === 'person' ? 'megaphone' : 'building'} size={13} />
+    <span className={`public-badge public-badge--${kind}`} role="img" aria-label={label} title={label}>
+      <Icon name={badgeIcon[kind]} size={13} />
     </span>
   );
 }
+
+/** Ét ikon pr. slags fællesskab: offentlig person, side og gruppe */
+export const badgeIcon = { person: 'megaphone', side: 'building', gruppe: 'circles' } as const;

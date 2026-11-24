@@ -1,6 +1,7 @@
 import { useState } from 'react';
 import { Navigate, useNavigate, useParams } from 'react-router-dom';
 import { Button } from '../../components/Button';
+import { Icon } from '../../components/Icon';
 import { PageHeader } from '../../components/PageHeader';
 import { PostCard } from '../../components/PostCard';
 import { groupActivity } from '../../data/more';
@@ -40,8 +41,11 @@ export function GroupView() {
           <div>
             <h1 className="t-heading-m">{group.name}</h1>
             <p className="t-caption more-muted">
-              Gruppe · {members} medlemmer · {member ? 'Du er medlem' : 'Ikke medlem'}
+              {members} medlemmer · {member ? 'Du er medlem' : 'Ikke medlem'}
             </p>
+            <span className="group-badge t-caption-strong">
+              <Icon name="circles" size={14} /> Gruppe
+            </span>
           </div>
         </div>
 
