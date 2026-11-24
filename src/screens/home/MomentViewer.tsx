@@ -4,6 +4,7 @@ import { Avatar } from '../../components/Avatar';
 import { Icon } from '../../components/Icon';
 import { SideProgress } from '../../components/SideProgress';
 import { VoteControl } from '../../components/VoteControl';
+import { isBuried, scoreWith, useVotes } from '../../state/votes';
 import { publicKind } from '../../data/publicProfiles';
 import { at, handleOf } from '../../data/handles';
 import { moments, pageAccounts, people } from '../../data/sample';
@@ -36,7 +37,11 @@ function Viewer({ personId }: { personId: string }) {
   const accounts = isPage ? pageAccounts : people;
   const personIds = Object.keys(accounts);
   const person = accounts[personId];
-  const own = moments.filter((m) => m.personId === personId);
+  // Moments fra offentlige profiler med score -5 eller lavere forsvinder, som i Offentlig debat
+  const votes = useVotes();
+  const own = moments.filter(
+    (m) => m.personId === personId && !(person && publicKind(person.fullName) && isBuried(scoreWith(momentScore(m.id), votes[m.id]))),
+  );
   const current = own[index];
 
   const close = useCallback(

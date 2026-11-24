@@ -251,3 +251,69 @@
   color: var(--color-text-on-action);
 }
 
+
+/* ---------- Hvor skal det deles? Tre kort ---------- */
+.create__dest {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.create__dest-item {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  width: 100%;
+  min-height: 64px;
+  padding: 10px 14px 10px 10px;
+  border: 1.5px solid var(--color-border-default);
+  border-radius: var(--radius-lg);
+  background: var(--color-bg-surface);
+  text-align: left;
+}
+
+.create__dest-item--on {
+  border-color: var(--color-text-primary);
+}
+
+.create__dest-item:focus-visible { outline: none; box-shadow: var(--focus-ring); }
+
+.create__dest-icon {
+  display: grid;
+  flex: none;
+  place-items: center;
+  width: 42px;
+  height: 42px;
+  border-radius: 12px;
+  background: var(--color-bg-subtle);
+  color: var(--color-text-primary);
+}
+
+.create__dest-item--on .create__dest-icon {
+  background: var(--color-accent-verified-bg);
+}
+
+.create__dest-text {
+  display: flex;
+  flex: 1;
+  flex-direction: column;
+  min-width: 0;
+}
+
+.create__dest-hint { color: var(--color-text-secondary); }
+
+.create__dest-check {
+  display: grid;
+  flex: none;
+  place-items: center;
+  width: 22px;
+  height: 22px;
+  border: 1.5px solid var(--color-border-strong);
+  border-radius: 50%;
+}
+
+.create__dest-item--on .create__dest-check {
+  border-color: var(--color-action-primary);
+  background: var(--color-action-primary);
+  color: var(--color-text-on-action);
+}

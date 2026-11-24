@@ -106,12 +106,13 @@ export function Create() {
     } else navigate('/', { replace: true });
   };
 
+  // Kun en ekstra linje, når den siger noget nyt (kortene forklarer resten)
   const hint =
     audience === 'gruppe' && group
       ? `Kun medlemmer af ${group.name} kan se opslaget.`
       : audience === 'offentlig' && profile.private
         ? 'Din profil er privat, så kun dine følgere kan se opslaget. Det kan du ændre på din profil.'
-        : audiences.find((a) => a.value === audience)!.hint;
+        : '';
 
   const audiencePicker = (
     <AudiencePicker
@@ -313,22 +314,35 @@ type AudiencePickerProps = {
 function AudiencePicker({ audience, onAudience, groups, groupId, onGroup, hint, tags, onTags, tagError }: AudiencePickerProps) {
   return (
     <section className="create__audience" aria-labelledby="create-audience">
-      <h2 id="create-audience" className="t-heading-s">Vises for</h2>
-      <div className="create__seg" role="radiogroup" aria-labelledby="create-audience">
-        {audiences.map((a) => (
-          <button
-            key={a.value}
-            type="button"
-            role="radio"
-            aria-checked={audience === a.value}
-            className={['create__seg-item', audience === a.value && 'create__seg-item--on'].filter(Boolean).join(' ')}
-            onClick={() => onAudience(a.value)}
-          >
-            {a.label}
-          </button>
-        ))}
+      <h2 id="create-audience" className="t-heading-s">Hvor skal det deles?</h2>
+      {/* Tre tydelige kort i stedet for tre ens knapper: ikon, navn og hvem der ser det */}
+      <div className="create__dest" role="radiogroup" aria-labelledby="create-audience">
+        {audiences.map((a) => {
+          const on = audience === a.value;
+          return (
+            <button
+              key={a.value}
+              type="button"
+              role="radio"
+              aria-checked={on}
+              className={['create__dest-item', on && 'create__dest-item--on'].filter(Boolean).join(' ')}
+              onClick={() => onAudience(a.value)}
+            >
+              <span className="create__dest-icon" aria-hidden="true">
+                <Icon name={a.icon} size={20} />
+              </span>
+              <span className="create__dest-text">
+                <span className="t-label">{a.label}</span>
+                <span className="t-caption create__dest-hint">{a.hint}</span>
+              </span>
+              <span className="create__dest-check" aria-hidden="true">
+                {on && <Icon name="check" size={14} />}
+              </span>
+            </button>
+          );
+        })}
       </div>
-      <p className="t-caption modal-screen__muted" aria-live="polite">{hint}</p>
+      {hint && <p className="t-caption modal-screen__muted" aria-live="polite">{hint}</p>}
 
       {/* Tags kan sættes på alle opslag; i Debat er mindst ét påkrævet */}
       <TagInput tags={tags} onTags={onTags} error={tagError} required={audience === 'debat'} />

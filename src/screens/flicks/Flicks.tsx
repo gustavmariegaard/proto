@@ -6,7 +6,8 @@ import { publicKind } from '../../data/publicProfiles';
 import { setHidden, useHidden } from '../../state/posts';
 import { Icon } from '../../components/Icon';
 import { TabBar } from '../../components/TabBar';
-import { flicks, type Flick, type FlickSource } from '../../data/flicks';
+import { flicks as allFlicks, type Flick, type FlickSource } from '../../data/flicks';
+import { isBuried, scoreWith, useVotes } from '../../state/votes';
 import { FlickCommentsSheet } from './FlickCommentsSheet';
 import { at, handleOf } from '../../data/handles';
 import './Flicks.css';
@@ -28,6 +29,9 @@ export function Flicks() {
   const [hasSwiped, setHasSwiped] = useState(false);
   const [saved, setSaved] = useState<string[]>([]);
   const [commentsFor, setCommentsFor] = useState<string | null>(null);
+  // Flicks fra offentlige profiler med score -5 eller lavere forsvinder, som i Offentlig debat
+  const votes = useVotes();
+  const flicks = allFlicks.filter((f) => !(publicKind(f.author) && isBuried(scoreWith(flickCounts(f.id).likes, votes[f.id]))));
 
   const current = flicks[index] ?? flicks[0]!;
 
@@ -143,7 +147,7 @@ function FlickView({ flick, position, showHint, bounce, onNext, saved, onSave, o
     <article
       className={`flick flick--${flick.placeholder}`}
       aria-posinset={position}
-      aria-setsize={flicks.length}
+      aria-setsize={allFlicks.length}
       aria-label={`${flick.author}: ${flick.text}`}
     >
       {flick.image && <img className="flick__photo" src={flick.image} alt="" />}

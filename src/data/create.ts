@@ -18,15 +18,16 @@ export const createKinds: { value: CreateKind; label: string }[] = [
  * Om profilen er offentlig eller privat, vælger man på profilen – ikke pr. opslag.
  */
 export type Audience = 'offentlig' | 'debat' | 'gruppe';
-export const audiences: { value: Audience; label: string; hint: string }[] = [
+export const audiences: { value: Audience; label: string; hint: string; icon: 'user' | 'compass' | 'circles' }[] = [
   // Ikke i Figma: forklaringerne er skrevet i samme tone.
-  { value: 'offentlig', label: 'Offentligt', hint: 'Alle kan se opslaget.' },
+  { value: 'offentlig', label: 'Din profil', icon: 'user', hint: 'Til dem, der følger dig.' },
   {
     value: 'debat',
-    label: 'Debat',
-    hint: 'Vises i Offentlig debat under dine tags. Andre kan stemme det op og ned.',
+    label: 'Offentlig debat',
+    icon: 'compass',
+    hint: 'Til alle, under dine tags. Kan stemmes op og ned.',
   },
-  { value: 'gruppe', label: 'Gruppe', hint: 'Vælg den gruppe, opslaget skal deles i.' },
+  { value: 'gruppe', label: 'En gruppe', icon: 'circles', hint: 'Kun til gruppens medlemmer.' },
 ];
 
 export type PhotoFormat = 'kvadrat' | 'portraet' | 'landskab';
