@@ -16,7 +16,7 @@ import { usePosts } from '../../state/posts';
 import { useMoments } from '../../state/moments';
 import { useSession } from '../../state/session';
 import { block, removeFollower, unblock, useRelations } from '../../state/blocks';
-import { openConversation, openPageConversation } from '../messages/store';
+import { openConversation, openPageConversation, openPersonConversation } from '../messages/store';
 import { ProfileContent } from '../profile/ProfileContent';
 import '../profile/Profile.css';
 import { UserMenu } from './UserMenu';
@@ -97,7 +97,8 @@ export function UserProfile() {
   const message = () => {
     if (isSide) navigate(`/beskeder/${openPageConversation(account)}`);
     else if (contact) navigate(`/beskeder/${openConversation([contact.id])}`);
-    else navigate('/beskeder/ny');
+    // Direkte samtale med personen – følger de dig ikke, ender den i deres anmodninger
+    else navigate(`/beskeder/${openPersonConversation(account, !account.followsMe)}`);
   };
 
   return (

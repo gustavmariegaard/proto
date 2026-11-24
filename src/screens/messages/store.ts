@@ -114,13 +114,15 @@ export function openPageConversation(page: { handle: string; name: string; tone:
  * Åbner (eller opretter) en 1:1-samtale med en person, der ikke er i
  * dine kontakter – fx en sælger på Torvet. Returnerer dens id.
  */
-export function openPersonConversation(person: { name: string; tone: Thread['tone']; avatarSrc?: string }): string {
+/** Følger personen dig ikke, ender din besked i personens anmodninger (request). */
+export function openPersonConversation(person: { name: string; tone: Thread['tone']; avatarSrc?: string }, request = false): string {
   const existing = threads.find((t) => t.kind === 'person' && !t.page && t.name === person.name);
   if (existing) return existing.id;
   const slug = person.name.toLowerCase().replace(/æ/g, 'ae').replace(/ø/g, 'oe').replace(/å/g, 'aa').normalize('NFKD').replace(/[^a-z0-9]+/g, '-').replace(/^-+|-+$/g, '');
   const thread: Thread = {
     id: `person-${slug || Date.now().toString(36)}`,
     kind: 'person',
+    request: request || undefined,
     name: person.name,
     tone: person.tone,
     avatarSrc: person.avatarSrc,
