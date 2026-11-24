@@ -10,6 +10,16 @@ import { img, side } from './sample';
 export const categories = ['Alle', 'Møbler', 'Cykler', 'Børn', 'Elektronik', 'Fritid'] as const;
 export type Category = (typeof categories)[number];
 export type ListingCategory = Exclude<Category, 'Alle'>;
+/** Kategori ud fra titel og beskrivelse (bruges til "Til dig" – sælgeren vælger ikke selv) */
+export function guessCategory(text: string): ListingCategory {
+  const t = text.toLowerCase();
+  if (/cykel|ladcykel|racer|mtb/.test(t)) return 'Cykler';
+  if (/barne|børne|klapvogn|legetøj|autostol|baby/.test(t)) return 'Børn';
+  if (/telefon|iphone|computer|tv|højttaler|skærm|kamera|playstation|tablet/.test(t)) return 'Elektronik';
+  if (/bord|stol|sofa|seng|skab|reol|lampe|kommode/.test(t)) return 'Møbler';
+  return 'Fritid';
+}
+
 export const listingCategories = categories.filter((c): c is ListingCategory => c !== 'Alle');
 
 export const conditions = ['Ny', 'Som ny', 'God', 'Brugt'] as const;

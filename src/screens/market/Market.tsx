@@ -58,13 +58,12 @@ function ListingCard({ listing, onOpen }: { listing: Listing; onOpen: () => void
   return (
     <button
       type="button"
-      className={['listing', listing.sold && 'listing--sold'].filter(Boolean).join(' ')}
+      className="listing"
       onClick={onOpen}
-      aria-label={`${listing.title}, ${formatPrice(listing.price)}${listing.sold ? ', solgt' : ''}`}
+      aria-label={`${listing.title}, ${formatPrice(listing.price)}`}
     >
       <span className="listing__media">
         <img className="listing__photo" src={listing.images[0]} alt="" />
-        {listing.sold && <span className="listing__sold t-micro">Solgt</span>}
         {count > 1 && (
           <span className="listing__count t-micro" aria-hidden="true">
             <Icon name="image" size={12} />1/{count}
@@ -101,9 +100,6 @@ function Grid({ items, label }: { items: Listing[]; label: string }) {
   );
 }
 
-/** Solgte til sidst */
-const soldLast = (a: Listing, b: Listing) => Number(!!a.sold) - Number(!!b.sold);
-
 /** Torvet: køb og sælg i nærheden. */
 export function Market() {
   const navigate = useNavigate();
@@ -122,7 +118,7 @@ export function Market() {
   let shown: Listing[];
   if (view === 'dine') shown = all.filter((l) => l.mine);
   else if (view === 'gemte') shown = saved.map((id) => all.find((l) => l.id === id)).filter((l): l is Listing => !!l);
-  else shown = all.filter((l) => !l.mine && (radius === null || l.km <= radius) && matches(l)).sort(soldLast);
+  else shown = all.filter((l) => !l.mine && (radius === null || l.km <= radius) && matches(l));
 
   // Uden søgning: annoncer i det, du senest har kigget på, først
   const { forYou, rest } = view === 'salg' && !q ? relatedFirst(shown, recent) : { forYou: [], rest: shown };

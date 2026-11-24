@@ -92,10 +92,7 @@
   object-fit: cover;
 }
 
-.listing--sold .listing__photo { opacity: 0.55; }
-
-.listing__count,
-.listing__sold {
+.listing__count {
   position: absolute;
   top: 8px;
   display: inline-flex;
@@ -103,18 +100,9 @@
   gap: 3px;
   padding: 3px 7px;
   border-radius: var(--radius-pill);
-}
-
-.listing__count {
   right: 8px;
   background: rgba(0, 0, 0, 0.55);
   color: var(--white);
-}
-
-.listing__sold {
-  left: 8px;
-  background: var(--color-action-primary);
-  color: var(--color-text-on-action);
 }
 
 .listing__info {

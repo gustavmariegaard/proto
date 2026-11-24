@@ -105,7 +105,7 @@ export function Flicks() {
 
       <div className="flicks__chrome">
         {/* Dine emner / Følger. Valgt = hvid. Følger den flick, der vises.
-            Dine emner har sin egen justér-knap i samme pille, som åbner de samme emner som Offentlig debat. */}
+            Dine emner har et justér-ikon og åbner de samme emner som Offentlig debat. */}
         <div className="flicks__top" role="group" aria-label="Vælg feed">
           {modes.map((m) => {
             const on = sourceOf(current) === m.source;
@@ -121,15 +121,19 @@ export function Flicks() {
                 </button>
               );
             }
+            // Dine emner: ikon til venstre. Er man der allerede, åbner et tryk de samme emner som Offentlig debat.
             return (
-              <div key={m.source} className={`${cls} flicks__mode--split`}>
-                <button type="button" aria-pressed={on} className="flicks__mode-part" onClick={go}>
-                  {m.label}
-                </button>
-                <button type="button" className="flicks__mode-part flicks__mode-edit" aria-label="Rediger dine emner" onClick={() => setEditing(true)}>
-                  <Icon name="sliders" size={18} />
-                </button>
-              </div>
+              <button
+                key={m.source}
+                type="button"
+                aria-pressed={on}
+                aria-label={on ? 'Dine emner – rediger emner' : 'Dine emner'}
+                className={cls}
+                onClick={on ? () => setEditing(true) : go}
+              >
+                <Icon name="sliders" size={18} />
+                {m.label}
+              </button>
             );
           })}
         </div>

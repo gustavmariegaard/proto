@@ -15,7 +15,7 @@ import { deleteListing, markViewed, messageSeller, setPrice, setSold, toggleSave
 import './ListingDetail.css';
 
 /** Billeder, man kan swipe igennem, med prikker og tæller. */
-function Gallery({ images, title, sold }: { images: string[]; title: string; sold?: boolean }) {
+function Gallery({ images, title }: { images: string[]; title: string }) {
   const ref = useRef<HTMLDivElement>(null);
   const [index, setIndex] = useState(0);
   const count = images.length;
@@ -52,7 +52,6 @@ function Gallery({ images, title, sold }: { images: string[]; title: string; sol
           />
         ))}
       </div>
-      {sold && <span className="gallery__sold t-label">Solgt</span>}
       {count > 1 && (
         <>
           <span className="gallery__counter t-caption-strong" aria-live="polite">
@@ -212,7 +211,6 @@ function ListingView({ listing }: { listing: Listing }) {
 
   const facts: [string, string][] = [
     ['Stand', listing.condition],
-    ['Kategori', listing.category],
     ['Afhentning', listing.location],
     ['Forsendelse', listing.shipping ? 'Kan sendes' : 'Kun afhentning'],
   ];
@@ -225,14 +223,13 @@ function ListingView({ listing }: { listing: Listing }) {
       </PageHeader>
 
       <main className="ld-content">
-        <Gallery images={listing.images} title={listing.title} sold={listing.sold} />
+        <Gallery images={listing.images} title={listing.title} />
 
         <div className="ld-body">
           <section className="ld-head">
             <h2 className="t-title-l">{listing.title}</h2>
             <p className="ld-price t-title-l">
               {formatPrice(listing.price)}
-              {listing.sold && <span className="ld-badge t-caption-strong">Solgt</span>}
             </p>
             <p className="t-caption ld-muted">
               {listing.mine ? listing.location : `${listing.km} km væk · ${listing.location}`} · Sat til salg {listedText(listing).toLowerCase()}
@@ -241,12 +238,16 @@ function ListingView({ listing }: { listing: Listing }) {
 
           {listing.mine ? (
             <section className="ld-owner" aria-label="Din annonce">
-              <p className="ld-note t-caption">
-                {listing.sold ? 'Du har markeret annoncen som solgt. Den vises stadig på Torvet med "Solgt".' : 'Det er din annonce. Købere kan skrive til dig fra den.'}
-              </p>
-              <Button block onClick={() => { setSold(listing.id, !listing.sold); showToast(listing.sold ? 'Annoncen er til salg igen' : 'Markeret som solgt'); }}>
+              <Button
+                block
+                onClick={() => {
+                  // Solgt = fjernet fra Torvet
+                  setSold(listing.id, true);
+                  navigate('/torvet?vis=dine', { replace: true });
+                }}
+              >
                 <Icon name="check" size={20} />
-                {listing.sold ? 'Sæt til salg igen' : 'Marker som solgt'}
+                Marker som solgt
               </Button>
               <div className="ld-owner__row">
                 <Button variant="secondary" onClick={() => setSheet('pris')}>
@@ -264,14 +265,12 @@ function ListingView({ listing }: { listing: Listing }) {
               <div className="ld-actions">
                 <Action icon="bookmark" label={saved ? 'Gemt' : 'Gem'} pressed={saved} filled={saved} onClick={() => { toggleSaved(listing.id); showToast(saved ? 'Fjernet fra Gemte' : 'Gemt – find den under Gemte'); }} />
                 <Action icon="send" label="Del" onClick={share} />
-                {!listing.sold && <Action icon="shop" label="Giv et bud" onClick={() => setSheet('bud')} />}
+                <Action icon="shop" label="Giv et bud" onClick={() => setSheet('bud')} />
               </div>
-              {!listing.sold && (
-                <Button block className="ld-write" onClick={() => write()}>
-                  <Icon name="chat" size={20} />
-                  Skriv til {listing.seller.name.split(' ')[0]}
-                </Button>
-              )}
+              <Button block className="ld-write" onClick={() => write()}>
+                <Icon name="chat" size={20} />
+                Skriv til {listing.seller.name.split(' ')[0]}
+              </Button>
 
             </>
           )}

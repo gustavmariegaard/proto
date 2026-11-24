@@ -4,7 +4,7 @@ import { Button } from '../../components/Button';
 import { Chip } from '../../components/Chip';
 import { Icon } from '../../components/Icon';
 import { TextField } from '../../components/TextField';
-import { conditions, listingCategories, maxPhotos, myCity, type Condition, type ListingCategory } from '../../data/market';
+import { conditions, guessCategory, maxPhotos, myCity, type Condition } from '../../data/market';
 import { img } from '../../data/sample';
 import { useSession } from '../../state/session';
 import { CloseHeader, Toggle, useClose } from '../create/parts';
@@ -55,7 +55,6 @@ export function SellListing() {
   const [busy, setBusy] = useState(false);
   const [title, setTitle] = useState('');
   const [price, setPriceText] = useState('');
-  const [category, setCategory] = useState<ListingCategory>('Møbler');
   const [condition, setCondition] = useState<Condition>('God');
   const [description, setDescription] = useState('');
   const [location, setLocation] = useState(myCity);
@@ -98,7 +97,7 @@ export function SellListing() {
     const id = addListing({
       title: title.trim(),
       price: Math.round(kr),
-      category,
+      category: guessCategory(`${title} ${description}`),
       condition,
       description: description.trim(),
       location: location.trim() || myCity,
@@ -228,19 +227,6 @@ export function SellListing() {
           )}
         </div>
 
-        <section className="sell__group" aria-labelledby="sell-category">
-          <h2 id="sell-category" className="t-heading-s">
-            Kategori
-          </h2>
-          <div className="sell__chips" role="radiogroup" aria-labelledby="sell-category">
-            {listingCategories.map((c) => (
-              <Chip key={c} role="radio" aria-checked={category === c} aria-pressed={undefined} selected={category === c} onClick={() => setCategory(c)}>
-                {c}
-              </Chip>
-            ))}
-          </div>
-        </section>
-
         <section className="sell__group" aria-labelledby="sell-condition">
           <h2 id="sell-condition" className="t-heading-s">
             Stand
@@ -284,7 +270,6 @@ export function SellListing() {
         <Button type="submit" block disabled={busy}>
           Sæt til salg
         </Button>
-        <p className="t-caption sell__muted">Annoncen vises på Torvet for folk i nærheden af {location.trim() || myCity}.</p>
       </form>
     </div>
   );

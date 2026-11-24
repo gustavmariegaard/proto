@@ -49,7 +49,7 @@ export function useRadius() {
 /** Alle annoncer: dine egne først, derefter eksemplerne */
 export function useListings() {
   const { own } = useMarket();
-  return useMemo(() => [...own, ...sampleListings], [own]);
+  return useMemo(() => [...own, ...sampleListings].filter((l) => !l.sold), [own]);
 }
 
 export function useListing(id: string | undefined) {
