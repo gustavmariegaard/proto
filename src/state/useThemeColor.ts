@@ -5,7 +5,7 @@ import { useLocation } from 'react-router-dom';
 const DARK = [/^\/flicks(\/|$)/, /^\/moment\//, /^\/profil\/samling\/[^/]+\/vis$/, /^\/opslag\/[^/]+\/del\/moment$/, /^\/bruger\/[^/]+\/samling\//];
 
 const LIGHT_COLOR = '#fafaf9';
-const DARK_COLOR = '#171717'; // --ink-900
+const DARK_COLOR = '#000000'; // helt sort som Flicks
 
 /** Var siden mørk, da den blev indlæst? (sat af det lille script i index.html) */
 const loadedDark = document.documentElement.hasAttribute('data-dark');

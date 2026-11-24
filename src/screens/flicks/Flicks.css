@@ -7,7 +7,7 @@
   position: relative;
   height: 100%;
   overflow: hidden;
-  background: var(--ink-900);
+  background: #000;
   color: var(--color-text-on-action);
   overflow: clip;
 }
@@ -115,6 +115,9 @@
   scroll-snap-align: start;
   scroll-snap-stop: always;
 }
+
+/* Ingen flicks: helt sort */
+.flick.flick--empty { background: #000; }
 
 /* Grå/mørke pladsholdere i stedet for fotos */
 .flick--dark {

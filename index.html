@@ -19,9 +19,9 @@
         var dark = /\/(flicks(\/|$)|moment\/|profil\/samling\/[^/]+\/vis$|opslag\/[^/]+\/del\/moment$|bruger\/[^/]+\/samling\/)/.test(location.pathname);
         if (!dark) return;
         document.documentElement.setAttribute('data-dark', '');
-        document.documentElement.style.background = '#171717';
+        document.documentElement.style.background = '#000';
         var m = document.querySelector('meta[name="theme-color"]');
-        if (m) m.content = '#171717';
+        if (m) m.content = '#000000';
       })();
     </script>
   </head>

@@ -118,7 +118,7 @@ html[data-dark] #root,
 html:has(.flicks, .newflick, .moment-view, .cviewer, .smoment),
 html:has(.flicks, .newflick, .moment-view, .cviewer, .smoment) body,
 html:has(.flicks, .newflick, .moment-view, .cviewer, .smoment) #root {
-  background: var(--ink-900);
+  background: #000;
 }
 
 /*
