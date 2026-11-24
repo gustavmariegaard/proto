@@ -1,223 +1,53 @@
-import { useCallback, useEffect, useId, useLayoutEffect, useRef, useState, type RefObject } from 'react';
-import { createPortal } from 'react-dom';
+import { useState } from 'react';
 import { useNavigate, useSearchParams } from 'react-router-dom';
 import { Button } from '../../components/Button';
 import { Chip } from '../../components/Chip';
 import { Icon } from '../../components/Icon';
 import { SegmentedControl } from '../../components/SegmentedControl';
+import { Sheet } from '../../components/Sheet';
 import { TextField } from '../../components/TextField';
-import {
-  categories,
-  formatPrice,
-  initialRadius,
-  listedText,
-  maxRadius,
-  minRadius,
-  myCity,
-  radiusPresets,
-  type Category,
-  type Listing,
-} from '../../data/market';
-import { useListings, useMarket } from './store';
+import { formatPrice, listedText, myCity, radiusOptions, radiusText, type Listing } from '../../data/market';
+import { relatedFirst, setRadius, useListings, useMarket, useRadius } from './store';
 import './Market.css';
 
-/*
- * Skyderen er ikke lineær: i Figma står 25 km ved 40 % af banen.
- * Punkterne herunder (km → position 0–1) giver en jævn fornemmelse fra 1 til 100 km.
- */
-const STOPS: [number, number][] = [
-  [minRadius, 0],
-  [5, 0.1],
-  [10, 0.2],
-  [25, 0.4],
-  [50, 0.7],
-  [maxRadius, 1],
-];
-const STEPS = 1000;
-
-function kmToPos(km: number) {
-  for (let i = 1; i < STOPS.length; i++) {
-    const [k0, p0] = STOPS[i - 1]!;
-    const [k1, p1] = STOPS[i]!;
-    if (km <= k1) return p0 + ((km - k0) / (k1 - k0)) * (p1 - p0);
-  }
-  return 1;
-}
-
-function posToKm(pos: number) {
-  for (let i = 1; i < STOPS.length; i++) {
-    const [k0, p0] = STOPS[i - 1]!;
-    const [k1, p1] = STOPS[i]!;
-    if (pos <= p1) return Math.round(k0 + ((pos - p0) / (p1 - p0)) * (k1 - k0));
-  }
-  return maxRadius;
-}
-
-/** Pil, der drejer og bliver til et kryds, når arket er åbent */
-function ToggleIcon({ open }: { open: boolean }) {
-  return (
-    <span className={['market__toggle', open && 'market__toggle--open'].filter(Boolean).join(' ')} aria-hidden="true">
-      <Icon name="chevron-right" size={20} className="market__toggle-chevron" />
-      <Icon name="close" size={20} className="market__toggle-close" />
-    </span>
-  );
-}
-
-type RadiusButtonProps = {
-  km: number;
-  open: boolean;
-  onClick: () => void;
-  buttonRef?: RefObject<HTMLButtonElement | null>;
-  style?: React.CSSProperties;
-  className?: string;
-  /** Kopien oven på sløret, der lukker arket */
-  floating?: boolean;
-};
-
-/** "Inden for 25 km · Aarhus ⌄" – bliver til "… ✕", mens arket er åbent */
-function RadiusButton({ km, open, onClick, buttonRef, style, className, floating }: RadiusButtonProps) {
-  return (
-    <button
-      ref={buttonRef}
-      type="button"
-      className={['market__radius', className].filter(Boolean).join(' ')}
-      aria-haspopup="dialog"
-      aria-expanded={open}
-      aria-label={floating ? 'Luk Søg i nærheden' : undefined}
-      onClick={onClick}
-      style={style}
-    >
-      <Icon name="pin" size={20} />
-      <span className="t-label">Inden for {km} km</span>
-      <span className="t-caption market__muted">· {myCity}</span>
-      <ToggleIcon open={open} />
-    </button>
-  );
-}
-
-type RadiusSheetProps = {
-  open: boolean;
-  value: number;
-  onClose: () => void;
-  onApply: (km: number) => void;
-  /** Knappen, der åbnede arket. En kopi af den lægges over sløret som luk-knap. */
-  anchorRef: RefObject<HTMLButtonElement | null>;
-};
-
-/** Torvet · Radius: vælg, hvor langt væk annoncerne må være. */
-function RadiusSheet({ open, value, onClose, onApply, anchorRef }: RadiusSheetProps) {
-  const titleId = useId();
-  const ref = useRef<HTMLDivElement>(null);
+/** Torvet · Afstand: vælg, hvor langt væk annoncerne må være. */
+function RadiusSheet({ open, value, onClose }: { open: boolean; value: number | null; onClose: () => void }) {
   const [draft, setDraft] = useState(value);
-  const [anchor, setAnchor] = useState<React.CSSProperties | null>(null);
-  const [shown, setShown] = useState(false);
-
-  // Placér luk-knappen præcis oven på knappen, der åbnede arket
-  useLayoutEffect(() => {
-    if (!open) {
-      setAnchor(null);
-      setShown(false);
-      return;
-    }
-    const measure = () => {
-      const btn = anchorRef.current;
-      const host = document.getElementById('root') ?? document.body;
-      if (!btn) return;
-      const b = btn.getBoundingClientRect();
-      const h = host.getBoundingClientRect();
-      setAnchor({ top: b.top - h.top, left: b.left - h.left, width: b.width, height: b.height });
-    };
-    measure();
-    // Dækker arket knappen? Så rul siden lidt op, så krydset står frit over arket.
-    const btn = anchorRef.current;
-    const sheet = ref.current;
-    if (btn && sheet) {
-      // offsetTop, ikke getBoundingClientRect: arket glider stadig ind (transform)
-      const sheetTop = (sheet.parentElement?.getBoundingClientRect().top ?? 0) + sheet.offsetTop;
-      const overlap = btn.getBoundingClientRect().bottom + 12 - sheetTop;
-      let scroller: HTMLElement | null = btn.parentElement;
-      while (scroller && !(scroller.scrollHeight > scroller.clientHeight && /auto|scroll/.test(getComputedStyle(scroller).overflowY))) {
-        scroller = scroller.parentElement;
-      }
-      if (overlap > 0) (scroller ?? document.scrollingElement)?.scrollBy({ top: overlap, behavior: 'smooth' });
-    }
-    // Krydset drejer ind, når kopien er tegnet
-    const raf = requestAnimationFrame(() => requestAnimationFrame(() => setShown(true)));
-    window.addEventListener('resize', measure);
-    window.addEventListener('scroll', measure, true);
-    return () => {
-      cancelAnimationFrame(raf);
-      window.removeEventListener('resize', measure);
-      window.removeEventListener('scroll', measure, true);
-    };
-  }, [open, anchorRef]);
-
-  useEffect(() => {
-    if (!open) return;
-    setDraft(value);
-    const previous = document.activeElement as HTMLElement | null;
-    ref.current?.focus({ preventScroll: true });
-    const onKey = (e: KeyboardEvent) => e.key === 'Escape' && onClose();
-    window.addEventListener('keydown', onKey);
-    return () => {
-      window.removeEventListener('keydown', onKey);
-      previous?.focus?.();
-    };
-  }, [open, value, onClose]);
-
-  if (!open) return null;
-  const pos = kmToPos(draft);
-  const host = document.getElementById('root') ?? document.body;
-
-  return createPortal(
-    <div className="radius-layer">
-      <button type="button" className="radius-layer__scrim" aria-label="Luk" tabIndex={-1} onClick={onClose} />
-      <div ref={ref} className="radius" role="dialog" aria-modal="true" aria-labelledby={titleId} tabIndex={-1}>
-        <button type="button" className="radius__handle" aria-label="Luk" onClick={onClose}>
-          <span className="radius__bar" />
-        </button>
-        <h2 id={titleId} className="t-title-l">
-          Søg i nærheden
-        </h2>
-        <p className="radius__place t-body-s">
-          <Icon name="pin" size={18} />
-          Ud fra din placering: {myCity}
-        </p>
-        <p className="radius__value t-title-xl" aria-hidden="true">
-          {draft} km
-        </p>
-        <input
-          type="range"
-          className="radius__slider"
-          min={0}
-          max={STEPS}
-          step={1}
-          value={Math.round(pos * STEPS)}
-          onChange={(e) => setDraft(Math.max(minRadius, posToKm(Number(e.target.value) / STEPS)))}
-          aria-label="Afstand"
-          aria-valuetext={`${draft} km`}
-          style={{ '--fill': `${pos * 100}%` } as React.CSSProperties}
-        />
-        <div className="radius__scale t-caption" aria-hidden="true">
-          <span>{minRadius} km</span>
-          <span>{maxRadius} km</span>
-        </div>
-        <ul className="market__chips" aria-label="Hurtigvalg">
-          {radiusPresets.map((km) => (
-            <li key={km}>
-              <Chip selected={draft === km} onClick={() => setDraft(km)}>
-                {km} km
-              </Chip>
-            </li>
-          ))}
-        </ul>
-        <Button block onClick={() => onApply(draft)}>
-          Vis annoncer
+  const [wasOpen, setWasOpen] = useState(open);
+  // Start forfra med den valgte afstand, hver gang arket åbnes
+  if (open !== wasOpen) {
+    setWasOpen(open);
+    if (open) setDraft(value);
+  }
+  return (
+    <Sheet
+      open={open}
+      onClose={onClose}
+      title="Afstand"
+      initialSize="auto"
+      dim
+      footer={
+        <Button
+          block
+          onClick={() => {
+            setRadius(draft);
+            onClose();
+          }}
+        >
+          Vis resultater
         </Button>
-      </div>
-      {anchor && <RadiusButton km={value} open={shown} onClick={onClose} floating className="market__radius--float" style={anchor} />}
-    </div>,
-    host,
+      }
+    >
+      <ul className="market__chips market-radius" aria-label={`Afstand fra ${myCity}`}>
+        {radiusOptions.map((km) => (
+          <li key={String(km)}>
+            <Chip selected={draft === km} onClick={() => setDraft(km)}>
+              {radiusText(km)}
+            </Chip>
+          </li>
+        ))}
+      </ul>
+    </Sheet>
   );
 }
 
@@ -257,19 +87,33 @@ const views: { value: View; label: string }[] = [
   { value: 'gemte', label: 'Gemte' },
 ];
 
+/** Gitter med annoncekort */
+function Grid({ items, label }: { items: Listing[]; label: string }) {
+  const navigate = useNavigate();
+  return (
+    <ul className="market__grid" aria-label={label}>
+      {items.map((l) => (
+        <li key={l.id}>
+          <ListingCard listing={l} onOpen={() => navigate(`/torvet/${l.id}`)} />
+        </li>
+      ))}
+    </ul>
+  );
+}
+
+/** Solgte til sidst */
+const soldLast = (a: Listing, b: Listing) => Number(!!a.sold) - Number(!!b.sold);
+
 /** Torvet: køb og sælg i nærheden. */
 export function Market() {
   const navigate = useNavigate();
   const [params, setParams] = useSearchParams();
-  const view: View = (views.find((v) => v.value === params.get('vis'))?.value ?? 'salg');
+  const view: View = views.find((v) => v.value === params.get('vis'))?.value ?? 'salg';
   const all = useListings();
-  const { saved } = useMarket();
+  const { saved, recent } = useMarket();
+  const radius = useRadius();
   const [query, setQuery] = useState('');
-  const [category, setCategory] = useState<Category>('Alle');
-  const [radius, setRadius] = useState(initialRadius);
   const [radiusOpen, setRadiusOpen] = useState(false);
-  const radiusRef = useRef<HTMLButtonElement>(null);
-  const closeRadius = useCallback(() => setRadiusOpen(false), []);
 
   const q = query.trim().toLowerCase();
   const matches = (l: Listing) =>
@@ -278,11 +122,10 @@ export function Market() {
   let shown: Listing[];
   if (view === 'dine') shown = all.filter((l) => l.mine);
   else if (view === 'gemte') shown = saved.map((id) => all.find((l) => l.id === id)).filter((l): l is Listing => !!l);
-  else
-    shown = all
-      .filter((l) => !l.mine && (category === 'Alle' || l.category === category) && l.km <= radius && matches(l))
-      // Solgte til sidst
-      .sort((a, b) => Number(!!a.sold) - Number(!!b.sold));
+  else shown = all.filter((l) => !l.mine && (radius === null || l.km <= radius) && matches(l)).sort(soldLast);
+
+  // Uden søgning: annoncer i det, du senest har kigget på, først
+  const { forYou, rest } = view === 'salg' && !q ? relatedFirst(shown, recent) : { forYou: [], rest: shown };
 
   const setView = (v: View) => setParams(v === 'salg' ? {} : { vis: v }, { replace: true });
 
@@ -306,45 +149,28 @@ export function Market() {
       <SegmentedControl label="Vis annoncer" options={views} value={view} onChange={setView} />
 
       {view === 'salg' && (
-        <>
+        <div className="market__filters">
           <TextField label="Søg på Torvet" type="search" value={query} onChange={(e) => setQuery(e.target.value)} />
-
-          <div>
-            <RadiusButton
-              km={radius}
-              open={radiusOpen}
-              buttonRef={radiusRef}
-              onClick={() => setRadiusOpen((o) => !o)}
-              // Mens arket er åbent, ligger en kopi med ✕ oven på sløret
-              className={radiusOpen ? 'market__radius--under' : undefined}
-            />
-          </div>
-
-          <ul className="market__chips market__chips--scroll" aria-label="Kategorier">
-            {categories.map((c) => (
-              <li key={c}>
-                <Chip selected={category === c} onClick={() => setCategory(c)}>
-                  {c}
-                </Chip>
-              </li>
-            ))}
-          </ul>
-        </>
+          <Chip
+            className="market__radius"
+            aria-haspopup="dialog"
+            aria-expanded={radiusOpen}
+            aria-pressed={undefined}
+            aria-label={`Afstand: ${radius === null ? 'hele landet' : `inden for ${radius} km`} fra ${myCity}. Skift`}
+            onClick={() => setRadiusOpen(true)}
+          >
+            <Icon name="pin" size={18} />
+            {radiusText(radius)}
+            <Icon name="chevron-right" size={16} className="market__radius-chevron" />
+          </Chip>
+        </div>
       )}
 
       <p className="visually-hidden" role="status" aria-live="polite">
         {shown.length === 1 ? '1 annonce' : `${shown.length} annoncer`}
       </p>
 
-      {shown.length > 0 ? (
-        <ul className="market__grid" aria-label="Annoncer">
-          {shown.map((l) => (
-            <li key={l.id}>
-              <ListingCard listing={l} onOpen={() => navigate(`/torvet/${l.id}`)} />
-            </li>
-          ))}
-        </ul>
-      ) : (
+      {shown.length === 0 ? (
         <div className="market__empty">
           <p className="t-body-s market__muted">{empty}</p>
           {view === 'dine' && (
@@ -353,18 +179,24 @@ export function Market() {
             </Button>
           )}
         </div>
+      ) : forYou.length > 0 ? (
+        <>
+          <section className="market__section" aria-labelledby="market-for-you">
+            <h2 id="market-for-you" className="t-heading-m">Til dig</h2>
+            <Grid items={forYou} label="Til dig" />
+          </section>
+          {rest.length > 0 && (
+            <section className="market__section" aria-labelledby="market-more">
+              <h2 id="market-more" className="t-heading-m">Mere på Torvet</h2>
+              <Grid items={rest} label="Mere på Torvet" />
+            </section>
+          )}
+        </>
+      ) : (
+        <Grid items={rest} label="Annoncer" />
       )}
 
-      <RadiusSheet
-        open={radiusOpen}
-        value={radius}
-        onClose={closeRadius}
-        anchorRef={radiusRef}
-        onApply={(km) => {
-          setRadius(km);
-          setRadiusOpen(false);
-        }}
-      />
+      <RadiusSheet open={radiusOpen} value={radius} onClose={() => setRadiusOpen(false)} />
     </div>
   );
 }

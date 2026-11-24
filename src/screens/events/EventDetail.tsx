@@ -6,7 +6,7 @@ import { Button } from '../../components/Button';
 import { Icon } from '../../components/Icon';
 import { PageHeader } from '../../components/PageHeader';
 import { Tag } from '../../components/Tag';
-import { attendeeCount, isMine, longDate, type EventItem, type Guest, type Rsvp } from '../../data/events';
+import { attendeeCount, isMine, longDate, rsvpLabel, type EventItem, type Guest, type Rsvp } from '../../data/events';
 import { img } from '../../data/sample';
 import { setRsvp, useEvent } from './store';
 import './EventDetail.css';
@@ -22,7 +22,7 @@ function names(list: Guest[]) {
 /** Gæstelisterne med dig placeret efter dit svar. */
 function guestRows(event: EventItem, rsvp: Rsvp) {
   const { going, notGoing, invited } = event.guests;
-  const awaiting = event.invitedMe && (rsvp === 'none' || rsvp === 'interesseret');
+  const awaiting = event.invitedMe && (rsvp === 'none' || rsvp === 'interesseret' || rsvp === 'maaske');
   return [
     { label: 'Deltager', list: rsvp === 'deltager' ? [...going, me] : going },
     { label: 'Deltager ikke', list: rsvp === 'deltager-ikke' ? [...notGoing, me] : notGoing },
@@ -125,7 +125,7 @@ export function EventDetail() {
         </Button>
 
         <div className="event-picker" role="group" aria-label="Dit svar">
-          {(['deltager', 'deltager-ikke'] as const).map((value) => (
+          {(['deltager', 'maaske', 'deltager-ikke'] as const).map((value) => (
             <button
               key={value}
               type="button"
@@ -133,7 +133,7 @@ export function EventDetail() {
               className={['event-picker__option', rsvp === value && 'event-picker__option--on'].filter(Boolean).join(' ')}
               onClick={() => toggle(value)}
             >
-              {value === 'deltager' ? 'Deltager' : 'Deltager ikke'}
+              {rsvpLabel[value]}
             </button>
           ))}
         </div>
@@ -142,6 +142,8 @@ export function EventDetail() {
           <p className="t-caption event-join-note" aria-live="polite">
             {rsvp === 'deltager-ikke'
               ? 'Du har meldt fra. Den ligger under Dine begivenheder, så du kan ombestemme dig.'
+              : rsvp === 'maaske'
+                ? 'Du har svaret måske. Begivenheden ligger nu under Dine begivenheder.'
               : rsvp === 'interesseret'
                 ? 'Du er interesseret. Begivenheden ligger nu under Dine begivenheder.'
                 : isMine(event)

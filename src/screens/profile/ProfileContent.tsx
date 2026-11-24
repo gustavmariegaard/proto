@@ -162,10 +162,6 @@ export function ProfileContent({ highlights, posts, debate, flicks, own = false,
 
         {tab === 'debat' && (
           <>
-            <p className="t-caption pc-note">
-              <Icon name="compass" size={14} />
-              {own ? 'Dine indlæg i Offentlig debat. Alle kan se og stemme på dem.' : `${genitive(name)} indlæg i Offentlig debat.`}
-            </p>
             {debate.length === 0 ? (
               <Empty
                 text={own ? 'Du har ikke deltaget i debatten endnu.' : `${name} har ikke deltaget i debatten endnu.`}
@@ -213,9 +209,4 @@ function Empty({ text, action }: { text: string; action?: { label: string; to: s
       )}
     </div>
   );
-}
-
-/** Dansk ejefald: "Mette" → "Mettes", "Lars" → "Lars'" */
-function genitive(name: string) {
-  return /[sxz]$/i.test(name) ? `${name}'` : `${name}s`;
 }

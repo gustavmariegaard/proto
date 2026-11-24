@@ -9,18 +9,26 @@ import { TabBar } from '../../components/TabBar';
 import { flicks as allFlicks, type Flick, type FlickSource } from '../../data/flicks';
 import { isBuried, scoreWith, useVotes } from '../../state/votes';
 import { FlickCommentsSheet } from './FlickCommentsSheet';
+import { TopicsSheet } from '../discover/TopicsSheet';
+import { inTopics, useTopics } from '../../state/topics';
 import { at, handleOf } from '../../data/handles';
 import './Flicks.css';
 
 const modes: { source: FlickSource; label: string }[] = [
-  { source: 'tildig', label: 'Til dig' },
+  // Samme emner som Offentlig debat, derfor samme navn som der
+  { source: 'tildig', label: 'Dine emner' },
   { source: 'cirkel', label: 'Følger' },
 ];
+
+/** Et punkt i feedet: en flick, eller en tom side, når ingen flicks passer til dine emner */
+type Item = { kind: 'flick'; flick: Flick } | { kind: 'empty' };
+const sourceOf = (item: Item): FlickSource => (item.kind === 'flick' ? item.flick.source : 'tildig');
 
 /**
  * Flicks: korte lodrette videoer og billeder i fuld skærm.
  * Swipe op og ned; hver flick fylder hele skærmen (scroll-snap).
  * Skærmen har ingen topbar, men viser selv bundmenuen.
+ * "Dine emner" henter fra de samme emner som Offentlig debat og deler filteret med den.
  */
 export function Flicks() {
   const navigate = useNavigate();
@@ -29,36 +37,45 @@ export function Flicks() {
   const [hasSwiped, setHasSwiped] = useState(false);
   const [saved, setSaved] = useState<string[]>([]);
   const [commentsFor, setCommentsFor] = useState<string | null>(null);
+  const [editing, setEditing] = useState(false);
+  const { topics, active, isOn, toggle: toggleTopic } = useTopics();
   // Flicks fra offentlige profiler med score -5 eller lavere forsvinder, som i Offentlig debat
   const votes = useVotes();
-  const flicks = allFlicks.filter((f) => !(publicKind(f.author) && isBuried(scoreWith(flickCounts(f.id).likes, votes[f.id]))));
+  const visible = allFlicks.filter((f) => !(publicKind(f.author) && isBuried(scoreWith(flickCounts(f.id).likes, votes[f.id]))));
+  // Dine emner: kun flicks, der handler om de emner, der er slået til
+  const mine = visible.filter((f) => f.source === 'tildig' && inTopics(f.tags, active));
+  const items: Item[] = [
+    ...(mine.length ? mine.map((f) => ({ kind: 'flick' as const, flick: f })) : [{ kind: 'empty' as const }]),
+    ...visible.filter((f) => f.source === 'cirkel').map((f) => ({ kind: 'flick' as const, flick: f })),
+  ];
 
-  const current = flicks[index] ?? flicks[0]!;
+  const current = items[Math.min(index, items.length - 1)]!;
+  const onTopics = sourceOf(current) === 'tildig';
 
   // Hvilken flick er på skærmen? (rundet til nærmeste hele skærm)
   const onScroll = () => {
     const el = feedRef.current;
     if (!el || !el.clientHeight) return;
     const i = Math.round(el.scrollTop / el.clientHeight);
-    if (i !== index) setIndex(Math.min(Math.max(i, 0), flicks.length - 1));
+    if (i !== index) setIndex(Math.min(Math.max(i, 0), items.length - 1));
     if (el.scrollTop > 8 && !hasSwiped) setHasSwiped(true);
   };
 
-  const scrollTo = (i: number) => {
+  const scrollTo = (i: number, instant = false) => {
     const el = feedRef.current;
     if (!el) return;
-    const reduce = window.matchMedia?.('(prefers-reduced-motion: reduce)').matches;
+    const reduce = instant || window.matchMedia?.('(prefers-reduced-motion: reduce)').matches;
     el.scrollTo({ top: i * el.clientHeight, behavior: reduce ? 'auto' : 'smooth' });
   };
 
   // Piletaster skifter flick, når intet ark er åbent
   useEffect(() => {
     const onKey = (e: KeyboardEvent) => {
-      if (commentsFor) return;
+      if (commentsFor || editing) return;
       if (e.target instanceof HTMLInputElement || e.target instanceof HTMLTextAreaElement) return;
       if (e.key === 'ArrowDown' || e.key === 'PageDown') {
         e.preventDefault();
-        scrollTo(Math.min(index + 1, flicks.length - 1));
+        scrollTo(Math.min(index + 1, items.length - 1));
       }
       if (e.key === 'ArrowUp' || e.key === 'PageUp') {
         e.preventDefault();
@@ -67,60 +84,135 @@ export function Flicks() {
     };
     window.addEventListener('keydown', onKey);
     return () => window.removeEventListener('keydown', onKey);
-  }, [index, commentsFor]);
+  }, [index, commentsFor, editing, items.length]);
 
   const toggle = (list: string[], id: string) => (list.includes(id) ? list.filter((x) => x !== id) : [...list, id]);
   const closeComments = useCallback(() => setCommentsFor(null), []);
+  const closeTopics = useCallback(() => setEditing(false), []);
+
+  // Skifter man emner, starter "Dine emner" forfra
+  const filterKey = active.join('|');
+  const firstRun = useRef(true);
+  useEffect(() => {
+    if (firstRun.current) {
+      firstRun.current = false;
+      return;
+    }
+    scrollTo(0, true);
+    setIndex(0);
+  }, [filterKey]);
 
   return (
     <div className="flicks">
       <h1 className="visually-hidden">Flicks</h1>
 
-      {/* Til dig / Cirkel. Valgt = hvid. Følger den flick, der vises. */}
-      <div className="flicks__top" role="group" aria-label="Vælg feed">
-        {modes.map((m) => {
-          const on = current.source === m.source;
-          return (
+      <div className="flicks__chrome">
+        {/* Dine emner / Følger. Valgt = hvid. Følger den flick, der vises. */}
+        <div className="flicks__top" role="group" aria-label="Vælg feed">
+          {modes.map((m) => {
+            const on = sourceOf(current) === m.source;
+            return (
+              <button
+                key={m.source}
+                type="button"
+                aria-pressed={on}
+                className={['flicks__mode', on && 'flicks__mode--on'].filter(Boolean).join(' ')}
+                onClick={() => {
+                  const first = items.findIndex((it) => sourceOf(it) === m.source);
+                  if (first >= 0) scrollTo(first);
+                }}
+              >
+                {m.label}
+              </button>
+            );
+          })}
+        </div>
+
+        {/* Dine emner som filter – samme emner og samme filter som i Offentlig debat */}
+        <ul
+          className={['flicks__topics', !onTopics && 'flicks__topics--away'].filter(Boolean).join(' ')}
+          aria-label="Filtrér efter dine emner"
+          aria-hidden={!onTopics}
+        >
+          <li>
             <button
-              key={m.source}
               type="button"
-              aria-pressed={on}
-              className={['flicks__mode', on && 'flicks__mode--on'].filter(Boolean).join(' ')}
-              onClick={() => {
-                const first = flicks.findIndex((f) => f.source === m.source);
-                if (first >= 0) scrollTo(first);
-              }}
+              className="flicks__chip flicks__chip--edit"
+              aria-label="Rediger emner"
+              tabIndex={onTopics ? undefined : -1}
+              onClick={() => setEditing(true)}
             >
-              {m.label}
+              <Icon name="sliders" size={18} />
             </button>
-          );
-        })}
+          </li>
+          {topics.map((t) => {
+            const on = isOn(t);
+            return (
+              <li key={t}>
+                <button
+                  type="button"
+                  aria-pressed={on}
+                  tabIndex={onTopics ? undefined : -1}
+                  className={['flicks__chip', on && 'flicks__chip--on'].filter(Boolean).join(' ')}
+                  aria-label={on ? `${t}, vises. Tryk for at fjerne` : `${t}, skjult. Tryk for at vise`}
+                  onClick={() => toggleTopic(t)}
+                >
+                  {t}
+                  <Icon name={on ? 'close' : 'plus'} size={14} />
+                </button>
+              </li>
+            );
+          })}
+        </ul>
       </div>
 
       <div className="flicks__feed" ref={feedRef} onScroll={onScroll} aria-label="Flicks" role="feed" aria-busy="false">
-        {flicks.map((f, i) => (
-          <FlickView
-            key={f.id}
-            flick={f}
-            position={i + 1}
-            showHint={i < flicks.length - 1}
-            bounce={!hasSwiped}
-            onNext={() => {
-              setHasSwiped(true);
-              scrollTo(i + 1);
-            }}
-            saved={saved.includes(f.id)}
-            onSave={() => setSaved((s) => toggle(s, f.id))}
-            onComments={() => setCommentsFor(f.id)}
-            // Samme deling som alle andre opslag: Besked, Opslag eller Moment
-            onShare={() => navigate(`/opslag/${f.id}/del`)}
-          />
-        ))}
+        {items.map((it, i) =>
+          it.kind === 'empty' ? (
+            <article key="empty" className="flick flick--dark flick--empty" aria-posinset={i + 1} aria-setsize={items.length}>
+              <div className="flick__empty">
+                <p className="t-heading-m">Ingen flicks om dine emner lige nu</p>
+                <button type="button" className="t-label flick__undo" onClick={() => setEditing(true)}>
+                  Rediger emner
+                </button>
+              </div>
+              {i < items.length - 1 && (
+                <SwipeHint
+                  bounce={!hasSwiped}
+                  onNext={() => {
+                    setHasSwiped(true);
+                    scrollTo(i + 1);
+                  }}
+                />
+              )}
+            </article>
+          ) : (
+            <FlickView
+              key={it.flick.id}
+              flick={it.flick}
+              position={i + 1}
+              total={items.length}
+              why={whyFlick(it.flick, topics)}
+              showHint={i < items.length - 1}
+              bounce={!hasSwiped}
+              onNext={() => {
+                setHasSwiped(true);
+                scrollTo(i + 1);
+              }}
+              saved={saved.includes(it.flick.id)}
+              onSave={() => setSaved((s) => toggle(s, it.flick.id))}
+              onComments={() => setCommentsFor(it.flick.id)}
+              // Samme deling som alle andre opslag: Besked, Opslag eller Moment
+              onShare={() => navigate(`/opslag/${it.flick.id}/del`)}
+            />
+          ),
+        )}
       </div>
 
       <TabBar />
 
       <FlickCommentsSheet open={commentsFor !== null} onClose={closeComments} />
+      <TopicsSheet open={editing} onClose={closeTopics} />
     </div>
   );
 }
@@ -128,6 +220,8 @@ export function Flicks() {
 type FlickViewProps = {
   flick: Flick;
   position: number;
+  total: number;
+  why: string;
   showHint: boolean;
   /** Hopper let, indtil man har swipet første gang */
   bounce: boolean;
@@ -138,7 +232,7 @@ type FlickViewProps = {
   onShare: () => void;
 };
 
-function FlickView({ flick, position, showHint, bounce, onNext, saved, onSave, onComments, onShare }: FlickViewProps) {
+function FlickView({ flick, position, total, why, showHint, bounce, onNext, saved, onSave, onComments, onShare }: FlickViewProps) {
   const navigate = useNavigate();
   const [menu, setMenu] = useState(false);
   const hidden = useHidden(flick.id);
@@ -147,7 +241,7 @@ function FlickView({ flick, position, showHint, bounce, onNext, saved, onSave, o
     <article
       className={`flick flick--${flick.placeholder}`}
       aria-posinset={position}
-      aria-setsize={allFlicks.length}
+      aria-setsize={total}
       aria-label={`${flick.author}: ${flick.text}`}
     >
       {flick.image && <img className="flick__photo" src={flick.image} alt="" />}
@@ -160,7 +254,7 @@ function FlickView({ flick, position, showHint, bounce, onNext, saved, onSave, o
         noun="flick"
         open={menu}
         onClose={() => setMenu(false)}
-        why={whyFlick(flick)}
+        why={why}
         onHide={() => setHidden(flick.id, true)}
         onReport={() => navigate(`/opslag/${flick.id}/rapporter`)}
       />
@@ -254,9 +348,9 @@ function SwipeHint({ bounce, onNext }: { bounce: boolean; onNext: () => void }) 
 }
 
 /** Forklaringen bag "Hvorfor ser jeg denne flick?" (tidligere den grønne linje) */
-function whyFlick(f: Flick) {
-  const topic = f.reason.match(/^Fordi du følger (.+)$/);
-  if (topic) return `Flicken handler om ${topic[1]}, som er et af dine emner.`;
+function whyFlick(f: Flick, topics: string[]) {
+  const topic = f.source === 'tildig' ? f.tags?.find((t) => topics.includes(t)) : undefined;
+  if (topic) return `Flicken handler om ${topic}, som er et af dine emner.`;
   if (f.friends?.length) return `${f.friends.map((p) => p.name.split(' ')[0]).join(' og ')}, som du følger, har liket den.`;
   return `Du følger ${f.author}.`;
 }

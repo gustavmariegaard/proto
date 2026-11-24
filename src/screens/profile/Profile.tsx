@@ -2,6 +2,9 @@ import { Link, useNavigate } from 'react-router-dom';
 import { Icon } from '../../components/Icon';
 import { IconButton } from '../../components/IconButton';
 import { useSession } from '../../state/session';
+import { useRelations } from '../../state/blocks';
+import { keep } from '../../state/keep';
+import { allAccounts } from '../../data/directory';
 import { myDebatePosts, myFlicks, myProfilePosts, photoById } from '../../data/profile';
 import type { FeedPost } from '../../data/sample';
 import { usePosts } from '../../state/posts';
@@ -19,17 +22,38 @@ export function Profile() {
   const all = usePosts();
   const mine = all.filter((p) => p.id.startsWith('mit-') && p.feed !== 'debat' && !p.group);
   const myDebate = all.filter((p) => p.id.startsWith('mit-') && p.feed === 'debat');
+  const relations = useRelations();
+  // Dine tal: opslag, dem der følger dig, og dem du følger
+  const follows = keep<Record<string, boolean>>('follows', {});
+  const accounts = allAccounts().filter((a) => !relations.blocked.includes(a.handle));
+  const followers = accounts.filter((a) => a.followsMe && !relations.removedFollowers.includes(a.handle)).length;
+  const followingCount = accounts.filter((a) => follows[a.handle] ?? a.followed).length;
+  const postCount = mine.length + myProfilePosts.length + myDebate.length + myDebatePosts.length + myFlicks.length;
+  // Dit eget moment, hvis du har delt et
+  const myMoment = all.find((p) => p.id.startsWith('mit-') && p.meta === 'Moment');
+  const fmt = (n: number) => n.toLocaleString('da-DK');
   // Dit navn og billede på dine opslag
   const asMe = (p: FeedPost): FeedPost => ({ ...p, author: me.name, avatarSrc: me.avatar, username: me.username.replace(/^@/, '') });
 
   return (
     <div className="profile">
       <section className="pf-identity" aria-label="Din profil">
-        <span className="pf-ring" aria-hidden="true">
+        {/* Grøn ring, når du har delt et moment. Ellers et plus, der åbner kameraet (som "Dig" på forsiden). */}
+        <button
+          type="button"
+          className={['pf-ring', !myMoment && 'pf-ring--none'].filter(Boolean).join(' ')}
+          aria-label={myMoment ? 'Se dit moment' : 'Del et moment'}
+          onClick={() => navigate(myMoment ? `/opslag/${myMoment.id}` : '/flicks/ny?som=moment')}
+        >
           <span className="pf-ring__avatar">
             <img src={me.avatar} alt="" />
           </span>
-        </span>
+          {!myMoment && (
+            <span className="pf-ring__plus" aria-hidden="true">
+              <Icon name="plus" size={16} />
+            </span>
+          )}
+        </button>
         <div className="pf-identity__name">
           <h1 className="t-title-l">{me.name}</h1>
           <p className="t-caption pf-muted">
@@ -48,13 +72,17 @@ export function Profile() {
 
       <div className="pf-stats">
         <div className="pf-stats__item">
-          <span className="t-heading-m">—</span>
+          <span className="t-heading-m">{fmt(postCount)}</span>
+          <span className="t-caption pf-muted">Opslag</span>
+        </div>
+        <div className="pf-stats__item">
+          <span className="t-heading-m">{fmt(followers)}</span>
           <span className="t-caption pf-muted">Følgere</span>
         </div>
-        <Link to="/profil/interesser" className="pf-stats__item pf-stats__item--link">
-          <span className="t-heading-m">{me.interests.length}</span>
-          <span className="t-caption pf-muted">Interesser</span>
-        </Link>
+        <div className="pf-stats__item">
+          <span className="t-heading-m">{fmt(followingCount)}</span>
+          <span className="t-caption pf-muted">Følger</span>
+        </div>
       </div>
 
       <ProfileContent

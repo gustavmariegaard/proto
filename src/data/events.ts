@@ -7,7 +7,7 @@ import { img, side } from './sample';
  */
 
 /** Din status for en begivenhed */
-export type Rsvp = 'none' | 'interesseret' | 'deltager' | 'deltager-ikke';
+export type Rsvp = 'none' | 'interesseret' | 'deltager' | 'maaske' | 'deltager-ikke';
 export type Visibility = 'offentlig' | 'privat';
 
 export type Guest = { id: string; name: string; tone: AvatarTone; avatarSrc?: string };
@@ -203,7 +203,7 @@ export const initialEvents: EventItem[] = [
     description: 'Jeg rydder ud i tøj og legetøj. Naboerne er velkomne til at sætte en bod op ved siden af.',
     image: img('toej.jpg'),
     allowShare: true,
-    rsvp: 'none',
+    rsvp: 'maaske',
     invitedMe: false,
     attendees: 6,
     guests: { going: [g.karen!], notGoing: [], invited: [] },
@@ -258,6 +258,7 @@ export const groupMembers: Record<string, Guest[]> = {
 export const rsvpLabel: Record<Exclude<Rsvp, 'none'>, string> = {
   interesseret: 'Interesseret',
   deltager: 'Deltager',
+  maaske: 'Måske',
   'deltager-ikke': 'Deltager ikke',
 };
 

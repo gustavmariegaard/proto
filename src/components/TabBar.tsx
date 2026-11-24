@@ -44,10 +44,13 @@ export function TabBar() {
 /**
  * Som på Facebook: menuen glider væk, når man ruller ned, og kommer igen, når man ruller op.
  * Lytter på alle rullende flader i appen (scroll bobler ikke, så vi lytter i capture-fasen).
+ * Undtagen på Flicks, hvor menuen altid vises.
  */
 function useHideOnScroll() {
   const [hidden, setHidden] = useState(false);
   const { pathname } = useLocation();
+  // På Flicks står menuen altid fast: hele skærmen ruller, og man skal kunne komme videre
+  const pinned = pathname === '/flicks' || pathname.startsWith('/flicks/');
   useEffect(() => setHidden(false), [pathname]);
   useEffect(() => {
     const last = new WeakMap<EventTarget, number>();
@@ -66,5 +69,5 @@ function useHideOnScroll() {
     document.addEventListener('scroll', onScroll, { capture: true, passive: true });
     return () => document.removeEventListener('scroll', onScroll, { capture: true });
   }, []);
-  return hidden;
+  return hidden && !pinned;
 }

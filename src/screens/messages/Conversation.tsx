@@ -5,7 +5,7 @@ import {
   useRef,
   useState,
 } from "react";
-import { Navigate, useParams } from "react-router-dom";
+import { Navigate, useParams, useSearchParams } from "react-router-dom";
 import { Avatar } from "../../components/Avatar";
 import { BackButton } from "../../components/BackButton";
 import { Icon } from "../../components/Icon";
@@ -18,13 +18,19 @@ import { img } from "../../data/sample";
 import type { AvatarTone } from "../../components/Avatar";
 import { useSession } from "../../state/session";
 import { useKeyboardViewport } from "./hooks";
-import { markRead, sendMedia, sendMessage, setDisappearing, useThread } from "./store";
+import { markRead, sendMedia, sendMessage, setDisappearing, useThread, useThreads } from "./store";
+import { ListingContext } from "../market/ListingContext";
+import { needsAbout, sendAboutListing, useListing } from "../market/store";
 import "./Messages.css";
 
 /** Samtale (1:1) eller cirkel. Skrivefeltet ligger nederst, listen starter ved den nyeste besked. */
 export function Conversation() {
   const { id } = useParams();
   const thread = useThread(id);
+  const threads = useThreads();
+  // Åbnet fra en annonce på Torvet (?annonce=<id>): vis annoncen, og send "Om: …" med første besked
+  const [params, setParams] = useSearchParams();
+  const listing = useListing(params.get("annonce") ?? undefined);
   const { profile } = useSession();
   const [text, setText] = useState("");
   const [settingsOpen, setSettingsOpen] = useState(false);
@@ -57,11 +63,15 @@ export function Conversation() {
 
   const isCircle = thread.kind === "circle";
   const hasText = text.trim().length > 0;
+  const about = listing && needsAbout(thread.id, listing, threads) ? listing : undefined;
 
   const send = () => {
     const t = text.trim();
     if (!t) return;
-    sendMessage(thread.id, t);
+    if (about) {
+      sendAboutListing(thread.id, about, t, threads);
+      setParams({}, { replace: true });
+    } else sendMessage(thread.id, t);
     setText("");
     inputRef.current?.focus({ preventScroll: true });
   };
@@ -151,6 +161,8 @@ export function Conversation() {
           />
         ))}
       </div>
+
+      {about && <ListingContext listing={about} />}
 
       <form
         className="msg-composer"

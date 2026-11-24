@@ -200,27 +200,7 @@ export const creatorToggles = [
 
 export const creatorToggleDefaults: Record<string, boolean> = { tips: true, abonnement: false, butik: false, annoncer: true };
 
-/* ---------- Indstillinger ---------- */
-
-export const languages = ['Dansk', 'English', 'Deutsch', 'Français', 'Español'];
-
-export const translationToggles = [
-  { id: 'oversaet-opslag', title: 'Oversæt opslag automatisk', hint: 'Fremmedsprogede opslag vises på dit sprog.' },
-  { id: 'oversaet-beskeder', title: 'Oversæt beskeder', hint: 'Du kan altid se den originale tekst.' },
-];
-
-export const networkToggles = [
-  { id: 'foelg-andre', title: 'Følg folk på andre netværk', hint: 'Fx Mastodon og Bluesky vises i dit feed.' },
-  { id: 'del-offentlige', title: 'Del mine offentlige opslag', hint: 'Andre netværk kan følge dine offentlige opslag.' },
-];
+/* ---------- Indstillinger (sprog og oversættelse: se settings.ts) ---------- */
 
 export const screenTimeOptions = ['30 min.', '60 min.', '90 min.', 'Ingen grænse'];
 
-/** Eksemplet på oversættelse i Indstillinger */
-export const translationExample = {
-  name: 'Elin Andersson',
-  language: 'Svensk',
-  avatarSrc: img('person-i.jpg'),
-  translated: 'Sikke en fin udsigt, vi havde i går aftes.',
-  original: 'Vilken fin utsikt vi hade i går kväll.',
-};

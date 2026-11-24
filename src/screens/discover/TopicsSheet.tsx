@@ -5,17 +5,13 @@ import { Sheet } from '../../components/Sheet';
 import { TextField } from '../../components/TextField';
 import { allTopics, trendingTopics } from '../../data/interests';
 import { suggestedInterests } from '../../data/onboarding';
-import { useSession } from '../../state/session';
+import { useTopics } from '../../state/topics';
 import './TopicsSheet.css';
 
-/** Rediger emner (Offentlig debat): søg efter nye emner, se hvad der trender, og vælg eller fravælg. */
+/** Rediger emner (Offentlig debat og Flicks bruger de samme emner): søg efter nye emner, se hvad der trender, og vælg eller fravælg. */
 export function TopicsSheet({ open, onClose }: { open: boolean; onClose: () => void }) {
-  const { profile, setProfile } = useSession();
+  const { topics: mine, following: has, follow: toggle } = useTopics();
   const [query, setQuery] = useState('');
-  const mine = profile.interests;
-  const has = (i: string) => mine.includes(i);
-  const toggle = (i: string) =>
-    setProfile({ ...profile, interests: has(i) ? mine.filter((x) => x !== i) : [...mine, i] });
 
   const q = query.trim().toLowerCase();
   const catalogue = [...new Set([...mine, ...trendingTopics.map((t) => t.name), ...allTopics])];

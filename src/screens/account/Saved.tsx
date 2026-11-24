@@ -1,7 +1,8 @@
 import { useState } from 'react';
 import { Link } from 'react-router-dom';
 import { PageHeader } from '../../components/PageHeader';
-import { savedItems, type SavedItem } from '../../data/account';
+import { savedItems } from '../../data/account';
+import { posts } from '../../data/sample';
 import './account.css';
 
 type Tab = 'alt' | 'opslag' | 'flick';
@@ -12,13 +13,24 @@ const tabs: { value: Tab; label: string }[] = [
   { value: 'flick', label: 'Flicks' },
 ];
 
-/** Gemt og minder: det, du har gemt, i et masonry-gitter med to kolonner. */
+type Tile = { id: string; kind: 'opslag' | 'flick'; label: string; to: string; image?: string; text?: string; author?: string };
+
+/** Gemte tekst-opslag (uden billede) vises som kvadratiske tekstfliser. */
+const savedTextPosts = ['p-karen', 'p-ahmed'];
+
+const tiles: Tile[] = [
+  ...savedItems.map(({ id, kind, label, to, image }) => ({ id, kind, label, to, image })),
+  ...posts
+    .filter((p) => savedTextPosts.includes(p.id))
+    .map((p) => ({ id: `t-${p.id}`, kind: 'opslag' as const, label: `Opslag fra ${p.author}`, to: `/opslag/${p.id}`, text: p.text, author: p.author })),
+];
+// Flet tekstfliserne ind mellem billederne, så gitteret ikke ender med en klump tekst
+tiles.splice(2, 0, tiles.splice(-2, 1)[0]!);
+
+/** Gemt og minder: det, du har gemt, i et stramt gitter af kvadratiske felter. */
 export function Saved() {
   const [tab, setTab] = useState<Tab>('alt');
-  const shown = savedItems.filter((s) => tab === 'alt' || s.kind === tab);
-  // Venstre, højre, venstre … som i Figma
-  const cols: SavedItem[][] = [[], []];
-  shown.forEach((s, i) => cols[i % 2]!.push(s));
+  const shown = tiles.filter((s) => tab === 'alt' || s.kind === tab);
 
   return (
     <div className="acc-screen">
@@ -42,16 +54,19 @@ export function Saved() {
 
         <p className="t-caption acc-muted">Kun du kan se det, du har gemt.</p>
 
-        <div className="masonry">
-          {cols.map((col, i) => (
-            <div key={i} className="masonry__col">
-              {col.map((s) => (
-                <Link key={s.id} to={s.to} className="masonry__item" style={{ height: s.height }} aria-label={s.label}>
-                  <img src={s.image} alt="" />
-                </Link>
-              ))}
-            </div>
-          ))}
+        <div className="saved-grid">
+          {shown.map((s) =>
+            s.image ? (
+              <Link key={s.id} to={s.to} className="saved-tile" aria-label={s.label}>
+                <img src={s.image} alt="" />
+              </Link>
+            ) : (
+              <Link key={s.id} to={s.to} className="saved-tile saved-tile--text" aria-label={s.label}>
+                <span className="saved-tile__text">{s.text}</span>
+                <span className="t-caption saved-tile__author">{s.author}</span>
+              </Link>
+            ),
+          )}
         </div>
       </main>
     </div>

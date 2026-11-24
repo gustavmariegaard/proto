@@ -5,7 +5,7 @@ import { Icon } from '../../components/Icon';
 import { PostCard } from '../../components/PostCard';
 import { discoverPosts } from '../../data/discover';
 import { usePosts } from '../../state/posts';
-import { useSession } from '../../state/session';
+import { inTopics, useTopics } from '../../state/topics';
 import { HIDE_AT, isBuried, scoreWith, useVotes } from '../../state/votes';
 import { TopicsSheet } from './TopicsSheet';
 import './Discover.css';
@@ -16,22 +16,17 @@ import './Discover.css';
  */
 export function Discover() {
   const navigate = useNavigate();
-  const { profile } = useSession();
-  const [off, setOff] = useState<string[]>([]);
+  // Samme emner og samme filter som i Flicks
+  const { topics, active, isOn, toggle } = useTopics();
   const [editing, setEditing] = useState(false);
   const rowRef = useRef<HTMLUListElement>(null);
 
   const votes = useVotes();
   const [showBuried, setShowBuried] = useState(false);
-  const topics = profile.interests;
-  const active = topics.filter((t) => !off.includes(t));
 
   // Dine egne debatopslag (fra Opret) står øverst, uanset emne
   const mine = usePosts().filter((p) => p.feed === 'debat' && p.id.startsWith('mit-'));
-  const inTopics = active.length
-    ? discoverPosts.filter((p) => p.tags.some((t) => active.includes(t)))
-    : discoverPosts;
-  const all = [...mine, ...inTopics];
+  const all = [...mine, ...discoverPosts.filter((p) => inTopics(p.tags, active))];
 
   // Opslag med for mange nedstemmer forsvinder fra emnerne
   const score = (p: { id: string; score?: number }) => scoreWith(p.score ?? 0, votes[p.id]);
@@ -51,14 +46,14 @@ export function Discover() {
           </Chip>
         </li>
         {topics.map((t) => {
-          const on = !off.includes(t);
+          const on = isOn(t);
           return (
             <li key={t}>
               <Chip
                 selected={on}
                 className="discover__topic"
                 aria-label={on ? `${t}, vises. Tryk for at fjerne` : `${t}, skjult. Tryk for at vise`}
-                onClick={() => setOff((o) => (on ? [...o, t] : o.filter((x) => x !== t)))}
+                onClick={() => toggle(t)}
               >
                 {t}
                 <Icon name={on ? 'close' : 'plus'} size={16} />

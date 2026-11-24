@@ -15,12 +15,15 @@ export const listingCategories = categories.filter((c): c is ListingCategory => 
 export const conditions = ['Ny', 'Som ny', 'God', 'Brugt'] as const;
 export type Condition = (typeof conditions)[number];
 
-/** Hurtigvalg i arket "Søg i nærheden" */
-export const radiusPresets = [5, 10, 25, 50, 100];
-export const initialRadius = 25;
-export const minRadius = 1;
-export const maxRadius = 100;
+/** Valg i arket "Afstand" (km). null = hele landet. */
+export const radiusOptions: (number | null)[] = [2, 5, 10, 25, 50, null];
+export const initialRadius: number | null = 25;
 export const myCity = 'Aarhus';
+
+/** "25 km" eller "Hele landet" */
+export function radiusText(km: number | null) {
+  return km === null ? 'Hele landet' : `${km} km`;
+}
 
 /** Højst så mange billeder i en annonce */
 export const maxPhotos = 10;
@@ -206,57 +209,3 @@ export const listings: Listing[] = [
     sold: true,
   },
 ];
-
-/** "1080" → "1.100": runder et bud pænt (til 100, 50 eller 10 kr.) */
-function roundOffer(kr: number) {
-  const step = kr >= 1000 ? 100 : kr >= 200 ? 50 : 10;
-  return Math.max(step, Math.round(kr / step) * step);
-}
-
-/**
- * Forslag til en første besked til sælgeren, bygget ud fra annoncen
- * (kategori, beskrivelse, afhentning/forsendelse og pris). Højst tre.
- */
-export function sellerSuggestions(l: Listing, today = new Date()): string[] {
-  const the = l.noun?.the ?? 'den';
-  const it = l.noun?.it ?? 'den';
-  const desc = `${l.title} ${l.description}`.toLowerCase();
-  const has = (re: RegExp) => re.test(desc);
-
-  // Lige sat til salg? Så giver det ikke mening at spørge, om den stadig er til salg.
-  const fresh = l.createdAt ? Date.now() - l.createdAt < 864e5 : /min\.|time|lige nu/i.test(l.listed ?? '');
-  const greeting = fresh ? undefined : `Hej! Er ${the} stadig til salg?`;
-
-  // Et spørgsmål, der passer til kategorien – og som annoncen ikke allerede svarer på
-  const byCategory: Record<ListingCategory, [string, boolean][]> = {
-    Møbler: [
-      ['Hvad er målene?', !has(/\d+\s*[×x]\s*\d+/)],
-      [`Kan ${it} skilles ad, så ${it} kan være i en bil?`, true],
-    ],
-    Cykler: [
-      [`Hvor mange km har ${it} kørt?`, !has(/\bkm\b/)],
-      [`Hvornår blev ${it} sidst serviceret?`, !has(/service/)],
-      ['Kan jeg få en prøvetur?', true],
-    ],
-    Børn: [
-      ['Hvilken størrelse er det?', !has(/str\./)],
-      ['Hvilke mærker er det?', true],
-    ],
-    Elektronik: [
-      ['Følger opladeren med?', !has(/oplader/)],
-      ['Er der ridser eller andre skader?', true],
-    ],
-    Fritid: [['Er der nogen fejl eller mangler?', true]],
-  };
-  const question = byCategory[l.category].find(([, ok]) => ok)?.[0];
-
-  // Afhentning eller forsendelse
-  const area = l.location.split(',')[0]!.trim();
-  const day = today.getDay(); // 0 = søndag
-  const when = day === 4 || day === 5 ? 'i weekenden' : 'i dag';
-  const logistics = l.shipping ? `Kan du sende ${it} til mig?` : `Kan jeg hente ${it} ${when} i ${area}?`;
-
-  const offer = l.price >= 100 ? `Vil du tage ${formatPrice(roundOffer(l.price * 0.9))} for ${it}?` : undefined;
-
-  return [greeting, question, logistics, offer].filter((s): s is string => !!s).slice(0, 3);
-}

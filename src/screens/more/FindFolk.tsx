@@ -5,7 +5,7 @@ import { friendRequests, suggestions } from '../../data/more';
 import { MoreHeader } from './parts';
 import './More.css';
 
-/** Udvid cirkel (Figma "Find folk"): anmodninger om at følge dig og forslag. Fuld skærm. */
+/** Udvid cirkel: anmodninger om at følge dig og forslag. Fuld skærm. */
 export function FindFolk() {
   const [requests, setRequests] = useState(friendRequests.map((r) => ({ ...r, accepted: false })));
   const [sent, setSent] = useState<Record<string, boolean>>(() =>
@@ -45,10 +45,7 @@ export function FindFolk() {
           </section>
         ))}
 
-        <h2 className="t-heading-m">Folk du måske kender</h2>
-        <p className="t-caption more-muted">
-          Forslag bygger kun på fælles cirkler og grupper. Vi bruger ikke din adfærd andre steder.
-        </p>
+        <h2 className="t-heading-m">Forslag til dig</h2>
         {suggestions.map((s) => {
           const isSent = sent[s.id];
           return (
@@ -71,10 +68,8 @@ export function FindFolk() {
         })}
 
         <div className="more-note">
-          <span className="t-heading-s">Find folk via dine kontakter</span>
-          <span className="t-caption">
-            Det sker kun, hvis du selv vælger det. Kontakterne bruges til at finde matches og bliver ikke gemt bagefter.
-          </span>
+          <span className="t-heading-s">Find venner via dine kontakter</span>
+          <span className="t-caption">Vi gemmer ikke dine kontakter.</span>
           <Button
             variant={contactsChosen ? 'secondary' : 'primary'}
             aria-pressed={contactsChosen}

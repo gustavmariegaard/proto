@@ -11,7 +11,7 @@ import { TextField } from '../../components/TextField';
 import { formatPrice, listedText, type Listing } from '../../data/market';
 import { handleOf } from '../../data/handles';
 import { useThreads } from '../messages/store';
-import { deleteListing, messageSeller, setPrice, setSold, toggleSaved, useListing, useSaved } from './store';
+import { deleteListing, markViewed, messageSeller, setPrice, setSold, toggleSaved, useListing, useSaved } from './store';
 import './ListingDetail.css';
 
 /** Billeder, man kan swipe igennem, med prikker og tæller. */
@@ -159,48 +159,6 @@ function PriceSheet({
   );
 }
 
-/** Skriv direkte til sælgeren (ingen færdige forslag). */
-function SellerComposer({ listing, onSend }: { listing: Listing; onSend: (text?: string) => void }) {
-  const [text, setText] = useState('');
-  const fieldRef = useRef<HTMLTextAreaElement>(null);
-  const fieldId = `ld-msg-${listing.id}`;
-
-
-  return (
-    <form
-      className="ld-compose"
-      onSubmit={(e) => {
-        e.preventDefault();
-        onSend(text.trim() || undefined);
-      }}
-    >
-      <label htmlFor={fieldId} className="visually-hidden">
-        Besked til {listing.seller.name.split(' ')[0]}
-      </label>
-      <div className="ld-compose__row">
-        <textarea
-          id={fieldId}
-          ref={fieldRef}
-          className="ld-compose__field t-body"
-          rows={1}
-          placeholder={`Skriv til ${listing.seller.name.split(' ')[0]} …`}
-          value={text}
-          onChange={(e) => setText(e.target.value)}
-          onKeyDown={(e) => {
-            if (e.key === 'Enter' && !e.shiftKey) {
-              e.preventDefault();
-              e.currentTarget.form?.requestSubmit();
-            }
-          }}
-        />
-        <button type="submit" className="ld-compose__send" aria-label="Send" disabled={!text.trim()}>
-          <Icon name="send" size={20} />
-        </button>
-      </div>
-    </form>
-  );
-}
-
 const reportReasons = ['Svindel eller snyd', 'Forbudt vare', 'Vildledende annonce', 'Allerede solgt', 'Andet'];
 
 /** Annonce på Torvet (fuld skærm). Rute: /torvet/:id */
@@ -232,6 +190,8 @@ function ListingView({ listing }: { listing: Listing }) {
   const [reason, setReason] = useState('');
   const [reported, setReported] = useState(false);
   const close = () => setSheet(null);
+
+  useEffect(() => markViewed(listing.id), [listing.id]);
 
   const threads = useThreads();
   const write = (text?: string) => navigate(messageSeller(listing, text, threads));
@@ -307,12 +267,10 @@ function ListingView({ listing }: { listing: Listing }) {
                 {!listing.sold && <Action icon="shop" label="Giv et bud" onClick={() => setSheet('bud')} />}
               </div>
               {!listing.sold && (
-                <section className="ld-message" aria-labelledby="ld-message-title">
-                  <h2 id="ld-message-title" className="t-heading-s ld-message__title">
-                    Send en besked til sælgeren
-                  </h2>
-                  <SellerComposer listing={listing} onSend={write} />
-                </section>
+                <Button block className="ld-write" onClick={() => write()}>
+                  <Icon name="chat" size={20} />
+                  Skriv til {listing.seller.name.split(' ')[0]}
+                </Button>
               )}
 
             </>

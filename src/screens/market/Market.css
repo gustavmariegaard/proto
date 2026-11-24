@@ -15,62 +15,33 @@
 
 .market__muted { color: var(--color-text-secondary); }
 
+/* Søgning og afstand */
+.market__filters {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: 10px;
+}
+
+.market__filters > :first-child { align-self: stretch; }
+
+/* Afstand som pille: 📍 25 km ⌄ */
 .market__radius {
-  display: inline-flex;
-  align-items: center;
-  gap: 8px;
-  min-height: 44px;
-  max-width: 100%;
-  padding: 10px 12px 10px 14px;
-  border-radius: var(--radius-pill);
-  background: var(--color-bg-subtle);
-  color: var(--color-text-primary);
-  text-align: left;
+  gap: 6px;
+  padding: 0 12px 0 12px;
 }
 
-.market__radius > span { white-space: nowrap; }
-.market__radius .market__muted { overflow: hidden; text-overflow: ellipsis; min-width: 0; }
 .market__radius svg { flex-shrink: 0; }
-.market__radius:focus-visible { outline: none; box-shadow: var(--focus-ring); }
+.market__radius-chevron { transform: rotate(90deg); color: var(--color-text-secondary); }
 
-.market__radius--under { visibility: hidden; }
-
-.market__radius--float {
-  position: absolute;
-  z-index: 1;
-  box-sizing: border-box;
-  box-shadow: 0 2px 10px rgba(0, 0, 0, 0.12);
+.market__section {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
 }
 
-/* Pil ⌄ der drejer og bliver til ✕ */
-.market__toggle {
-  position: relative;
-  display: inline-grid;
-  place-items: center;
-  flex-shrink: 0;
-  width: 24px;
-  height: 24px;
-  margin-right: -2px;
-  border-radius: 50%;
-  transition: background-color 0.25s ease;
-}
-
-.market__toggle > svg {
-  grid-area: 1 / 1;
-  transition: transform 0.28s cubic-bezier(0.2, 0.8, 0.2, 1), opacity 0.2s ease;
-}
-
-.market__toggle-chevron { transform: rotate(90deg); }
-.market__toggle-close { opacity: 0; transform: rotate(-90deg) scale(0.6); }
-
-.market__toggle--open { background: var(--color-bg-surface); }
-.market__toggle--open .market__toggle-chevron { opacity: 0; transform: rotate(270deg) scale(0.6); }
-.market__toggle--open .market__toggle-close { opacity: 1; transform: none; }
-
-@media (prefers-reduced-motion: reduce) {
-  .market__toggle,
-  .market__toggle > svg { transition: none; }
-}
+/* Afstand-arket */
+.market__chips.market-radius { padding: 16px 20px 20px; }
 
 .market__chips {
   display: flex;
@@ -164,143 +135,10 @@
 
 .market__sell { gap: 6px; padding-left: 14px; }
 
-/* Kategorier på én linje, der kan rulles sidelæns */
-.market__chips--scroll {
-  flex-wrap: nowrap;
-  margin: 0 -20px;
-  padding: 2px 20px;
-  overflow-x: auto;
-  scrollbar-width: none;
-}
-
-.market__chips--scroll::-webkit-scrollbar { display: none; }
-.market__chips--scroll > li { flex-shrink: 0; }
-
 .market__empty {
   display: flex;
   flex-direction: column;
   align-items: flex-start;
   gap: 12px;
   padding: 8px 0 24px;
-}
-
-/* ---------- Radius-ark (ligger over bundmenuen) ---------- */
-.radius-layer {
-  position: absolute;
-  inset: 0;
-  z-index: 50;
-}
-
-.radius-layer__scrim {
-  position: absolute;
-  inset: 0;
-  width: 100%;
-  background: transparent;
-  cursor: default;
-}
-
-.radius {
-  position: absolute;
-  left: 0;
-  right: 0;
-  bottom: 0;
-  display: flex;
-  flex-direction: column;
-  gap: 14px;
-  padding: 0 20px max(30px, calc(var(--safe-bottom) + 8px));
-  border-radius: 24px 24px 0 0;
-  background: var(--color-bg-surface);
-  box-shadow: 0 -4px 18px rgba(0, 0, 0, 0.16);
-  color: var(--color-text-primary);
-  outline: none;
-  animation: radius-up 0.25s ease;
-}
-
-.radius__handle {
-  display: flex;
-  justify-content: center;
-  align-self: stretch;
-  height: 44px;
-  margin-bottom: -23px;
-  padding-top: 12px;
-}
-
-.radius__bar {
-  width: 44px;
-  height: 5px;
-  border-radius: 3px;
-  background: var(--color-border-strong);
-}
-
-.radius__handle:focus-visible { outline: none; }
-.radius__handle:focus-visible .radius__bar { box-shadow: 0 0 0 2px var(--color-bg-surface), 0 0 0 4px var(--color-text-primary); }
-
-.radius__place {
-  display: flex;
-  align-items: center;
-  gap: 6px;
-  color: var(--color-text-secondary);
-}
-
-.radius__place svg { color: var(--color-text-primary); }
-
-.radius__value { text-align: center; }
-
-.radius__scale {
-  display: flex;
-  justify-content: space-between;
-  color: var(--color-text-secondary);
-}
-
-/* Skyder: 6 px bane, mint udfyldning, 30 px hvidt håndtag */
-.radius__slider {
-  --fill: 40%;
-  width: 100%;
-  height: 36px;
-  margin: 0;
-  background: transparent;
-  -webkit-appearance: none;
-  appearance: none;
-  cursor: pointer;
-}
-
-.radius__slider::-webkit-slider-runnable-track {
-  height: 6px;
-  border-radius: 3px;
-  background: linear-gradient(to right, var(--color-accent-highlight) var(--fill), var(--color-bg-subtle) var(--fill));
-}
-
-.radius__slider::-moz-range-track {
-  height: 6px;
-  border-radius: 3px;
-  background: linear-gradient(to right, var(--color-accent-highlight) var(--fill), var(--color-bg-subtle) var(--fill));
-}
-
-.radius__slider::-webkit-slider-thumb {
-  -webkit-appearance: none;
-  width: 30px;
-  height: 30px;
-  margin-top: -12px;
-  border: 2px solid var(--color-text-primary);
-  border-radius: 50%;
-  background: var(--color-bg-surface);
-  box-shadow: 0 2px 6px rgba(0, 0, 0, 0.18);
-}
-
-.radius__slider::-moz-range-thumb {
-  box-sizing: border-box;
-  width: 30px;
-  height: 30px;
-  border: 2px solid var(--color-text-primary);
-  border-radius: 50%;
-  background: var(--color-bg-surface);
-  box-shadow: 0 2px 6px rgba(0, 0, 0, 0.18);
-}
-
-.radius__slider:focus-visible { outline: none; }
-.radius__slider:focus-visible::-webkit-slider-thumb { box-shadow: var(--focus-ring); }
-.radius__slider:focus-visible::-moz-range-thumb { box-shadow: var(--focus-ring); }
-
-@keyframes radius-up {
-  from { transform: translateY(100%); }
 }

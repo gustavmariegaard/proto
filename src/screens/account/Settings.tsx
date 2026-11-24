@@ -2,17 +2,18 @@ import { useEffect, useState } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import { Avatar } from '../../components/Avatar';
 import { Button } from '../../components/Button';
-import { Chip } from '../../components/Chip';
 import { Icon, type IconName } from '../../components/Icon';
 import { PageHeader } from '../../components/PageHeader';
 import { SegmentedControl } from '../../components/SegmentedControl';
 import { SaveBar, SavedToast } from '../../components/SaveBar';
+import { Sheet } from '../../components/Sheet';
 import { TextField } from '../../components/TextField';
-import { languages, networkToggles, translationExample as ex, translationToggles } from '../../data/account';
+import { europeanLanguages, languageByCode, translationExample as ex, translationToggles } from '../../data/settings';
 import { keep, save } from '../../state/keep';
 import { useSession } from '../../state/session';
 import { ToggleList } from '../create/parts';
 import { useChildren } from '../parental/store';
+import { usePublicFigure } from './publicFigure';
 import './account.css';
 
 /* Små indstillinger, der huskes i fanen */
@@ -67,12 +68,20 @@ function Row({ to, icon, title, hint }: { to: string; icon: IconName; title: str
   );
 }
 
+const publicFigureHint = {
+  ingen: 'Ansøg om globus ved dit navn',
+  behandles: 'Ansøgning under behandling',
+  godkendt: 'Godkendt · globus ved dit navn',
+  afvist: 'Ansøgning afvist · du kan søge igen',
+};
+
 /** Indstillinger: én oversigt, åbnes fra tandhjulet på din profil. */
 export function Settings() {
   const navigate = useNavigate();
   const { profile, logOut } = useSession();
   const children = useChildren();
-  const [language] = useSetting('sprog', 'Dansk');
+  const [languageCode] = useSetting('sprog-kode', 'da');
+  const publicFigure = usePublicFigure();
 
   return (
     <div className="acc-screen">
@@ -84,14 +93,19 @@ export function Settings() {
             to="/indstillinger/privatliv"
             icon="lock"
             title="Privatliv og data"
-            hint={`${profile.private ? 'Privat' : 'Offentlig'} profil · beskeder, blokerede, dine data`}
+            hint={`${profile.private ? 'Privat' : 'Offentlig'} profil · aktivitet, blokerede`}
           />
+          <Row to="/indstillinger/offentlig-person" icon="globe" title="Offentlig person" hint={publicFigureHint[publicFigure.status]} />
         </ul>
 
-        <h2 className="t-heading-s acc-muted set-group">Sprog og netværk</h2>
+        <h2 className="t-heading-s acc-muted set-group">Sprog</h2>
         <ul className="acc-list set-list">
-          <Row to="/indstillinger/sprog" icon="chat" title="Sprog og oversættelse" hint={`${language} · oversæt opslag og beskeder`} />
-          <Row to="/indstillinger/netvaerk" icon="link" title="Åbne netværk" hint="Følg folk på fx Mastodon og Bluesky" />
+          <Row
+            to="/indstillinger/sprog"
+            icon="chat"
+            title="Sprog og oversættelse"
+            hint={`${languageByCode(languageCode).native} · oversæt opslag og beskeder`}
+          />
         </ul>
 
         <h2 className="t-heading-s acc-muted set-group">Familie</h2>
@@ -102,6 +116,12 @@ export function Settings() {
             title="Forældrekontrol"
             hint={children.length ? `${children.map((c) => c.name).join(' og ')} er tilknyttet` : 'Tilknyt dine børn, og bestem hvad de kan se'}
           />
+        </ul>
+
+        <h2 className="t-heading-s acc-muted set-group">Om og jura</h2>
+        <ul className="acc-list set-list">
+          <Row to="/indstillinger/privatlivspolitik" icon="info" title="Privatlivspolitik" hint="Hvilke data vi behandler, og dine rettigheder" />
+          <Row to="/indstillinger/databehandleraftale" icon="info" title="Databehandleraftale" hint="For sider, grupper og virksomheder" />
         </ul>
 
         {/* Ikke i Figma: så testere kan prøve velkomst og oprettelse igen */}
@@ -120,21 +140,18 @@ export function Settings() {
   );
 }
 
-/** Privatliv og data: offentlig/privat profil, beskeder, blokerede og dine data */
+/** Privatliv og data: offentlig/privat profil, aktivitet, blokerede og sletning */
 export function PrivacySettings() {
   const { profile, setProfile } = useSession();
-  const [messages, setMessages] = useSetting<'foelger' | 'gensidigt'>('beskeder', 'foelger');
   const [hidden, setHidden] = useSetting('skjul-aktiv', false);
-  const d = useDraft({ private: Boolean(profile.private), messages, hidden });
+  const d = useDraft({ private: Boolean(profile.private), hidden });
   const save = () => {
     setProfile({ ...profile, private: d.draft.private });
-    setMessages(d.draft.messages);
     setHidden(d.draft.hidden);
     d.saved();
   };
   const visibilityChanged = d.draft.private !== Boolean(profile.private);
   const [deleting, setDeleting] = useState(false);
-  const [downloaded, setDownloaded] = useState(false);
 
   return (
     <div className="acc-screen">
@@ -150,39 +167,6 @@ export function PrivacySettings() {
             { value: 'privat', label: 'Privat' },
           ]}
         />
-        {/* Præcis hvad der låses, og hvad der altid er synligt */}
-        <div className="acc-panel privacy-scope" aria-live="polite">
-          <p className="t-heading-s">{d.draft.private ? 'Kun for dine følgere' : 'Synligt for alle'}</p>
-          <ul className="privacy-scope__list t-body-s">
-            <li>Opslag på din profil</li>
-            <li>Flicks</li>
-            <li>Moments og highlights</li>
-            <li>Hvem du følger, og hvem der følger dig</li>
-          </ul>
-          <p className="t-heading-s">Altid synligt</p>
-          <ul className="privacy-scope__list t-body-s">
-            <li>Navn, brugernavn, profilbillede og kort tekst</li>
-            <li>Dine indlæg og kommentarer i Offentlig debat</li>
-            <li>Opslag i grupper og begivenheder (for deres medlemmer)</li>
-          </ul>
-          {d.draft.private && <p className="t-caption acc-muted">Nye følgere skal godkendes af dig.</p>}
-        </div>
-
-        <h2 className="t-heading-m">Hvem kan skrive til dig?</h2>
-        <SegmentedControl
-          label="Hvem kan skrive til dig?"
-          value={d.draft.messages}
-          onChange={(v) => d.patch({ messages: v })}
-          options={[
-            { value: 'foelger', label: 'Dem, jeg følger' },
-            { value: 'gensidigt', label: 'Kun gensidigt' },
-          ]}
-        />
-        <p className="t-caption acc-muted" aria-live="polite">
-          {d.draft.messages === 'foelger'
-            ? 'Folk, du følger, kan skrive til dig. Andre sender en anmodning først.'
-            : 'Kun folk, hvor I følger hinanden, kan skrive til dig.'}
-        </p>
 
         <ToggleList
           rows={[{ id: 'aktiv', title: 'Skjul hvornår jeg er aktiv', hint: 'Andre kan ikke se, om du er online.' }]}
@@ -192,22 +176,14 @@ export function PrivacySettings() {
 
         <h2 className="t-heading-m">Blokerede</h2>
         <div className="acc-panel">
-          <p className="t-body-s acc-muted">Du har ikke blokeret nogen. Du kan blokere fra en profil eller fra ⋯ på et opslag.</p>
+          <p className="t-body-s acc-muted">
+            Du har ikke blokeret nogen. Du blokerer en profil ved at trykke på ⋯ inde på selve profilen.
+          </p>
         </div>
 
-        <h2 className="t-heading-m">Dine data</h2>
-        <div className="acc-panel">
-          <p className="t-body-s">Hent en kopi af alt, du har delt: opslag, billeder, beskeder og indstillinger.</p>
-          <Button variant="secondary" onClick={() => setDownloaded(true)} disabled={downloaded}>
-            <Icon name="download" size={18} /> {downloaded ? 'Du får en mail, når den er klar' : 'Hent mine data'}
-          </Button>
-        </div>
         <div className="age-note">
           <p className="t-heading-s">Verificeret med MitID</p>
-          <p className="t-caption">
-            Din alder og identitet er bekræftet med MitID. Andre kan ikke se dit CPR-nummer. Under 16 år får automatisk et
-            beskyttet miljø uden beskeder fra fremmede.
-          </p>
+          <p className="t-caption">Din alder og identitet er bekræftet med MitID. Andre kan ikke se dit CPR-nummer.</p>
         </div>
 
         {deleting ? (
@@ -245,26 +221,37 @@ export function PrivacySettings() {
   );
 }
 
+/** Europas sprog, Dansk først og resten efter dansk navn */
+const sortedLanguages = [...europeanLanguages].sort((a, b) =>
+  a.code === 'da' ? -1 : b.code === 'da' ? 1 : a.da.localeCompare(b.da, 'da'),
+);
+
 /** Sprog og oversættelse */
 export function LanguageSettings() {
-  const [language, setLanguage] = useSetting('sprog', 'Dansk');
+  const [language, setLanguage] = useSetting('sprog-kode', 'da');
   const [toggles, setToggles] = useSetting<Record<string, boolean>>('oversaet', { 'oversaet-opslag': true, 'oversaet-beskeder': true });
   const d = useDraft({ language, toggles });
+  const [picking, setPicking] = useState(false);
   const [showOriginal, setShowOriginal] = useState(false);
+  const chosen = languageByCode(d.draft.language);
 
   return (
     <div className="acc-screen">
       <PageHeader title="Sprog og oversættelse" fallback="/indstillinger" />
       <main className="acc-content">
-        <p className="t-caption acc-muted">Læs opslag og beskeder fra hele Europa på dit eget sprog.</p>
-        <h2 className="t-heading-m">Dit sprog</h2>
-        <div className="acc-chips" role="group" aria-label="Dit sprog">
-          {languages.map((l) => (
-            <Chip key={l} selected={l === d.draft.language} onClick={() => d.patch({ language: l })} lang={langCode(l)}>
-              {l}
-            </Chip>
-          ))}
-        </div>
+        <h2 className="t-heading-m">Standardsprog for indhold</h2>
+        <button type="button" className="acc-card set-row lang-current" onClick={() => setPicking(true)}>
+          <span className="set-row__icon lang-current__code" aria-hidden="true">
+            {chosen.code.toUpperCase()}
+          </span>
+          <span className="acc-card__text">
+            <span className="t-heading-s" lang={chosen.code}>
+              {chosen.native}
+            </span>
+            <span className="t-caption acc-muted">Opslag, kommentarer og beskeder vises på {chosen.da.toLowerCase()}</span>
+          </span>
+          <span className="t-label lang-current__change">Skift</span>
+        </button>
 
         <ToggleList
           rows={translationToggles}
@@ -272,20 +259,32 @@ export function LanguageSettings() {
           onToggle={(id) => d.patch({ toggles: { ...d.draft.toggles, [id]: !d.draft.toggles[id] } })}
         />
 
-        <h2 className="t-heading-s">Sådan ser det ud</h2>
-        <div className="translation-example">
-          <div className="translation-example__who">
+        <h2 className="t-heading-s acc-muted">Sådan ser et oversat opslag ud</h2>
+        <article className="tx-post">
+          <header className="tx-post__head">
             <Avatar name={ex.name} tone="sand" size="S" src={ex.avatarSrc} />
-            <span className="t-heading-s">{ex.name}</span>
-            <span className="t-caption acc-muted">{ex.language}</span>
-          </div>
-          <p className="t-body" lang={showOriginal ? 'sv' : undefined}>
+            <span className="tx-post__who">
+              <span className="t-heading-s">{ex.name}</span>
+              <span className="t-caption acc-muted">{ex.meta}</span>
+            </span>
+          </header>
+          <p className="t-body" lang={showOriginal ? ex.from.code : 'da'}>
             {showOriginal ? ex.original : ex.translated}
           </p>
-          <Button variant="ghost" onClick={() => setShowOriginal((v) => !v)}>
-            {showOriginal ? 'Vis oversættelse' : 'Vis original'}
-          </Button>
-        </div>
+          <button type="button" className="tx-post__toggle t-caption" onClick={() => setShowOriginal((v) => !v)} aria-pressed={showOriginal}>
+            <Icon name="chat" size={14} />
+            {showOriginal ? (
+              <span>
+                Vist på {ex.from.da} · <strong>Se oversættelse</strong>
+              </span>
+            ) : (
+              <span>
+                Oversat fra {ex.from.da} · <strong>Se original</strong>
+              </span>
+            )}
+          </button>
+          <img className="tx-post__img" src={ex.image} alt="" />
+        </article>
       </main>
       <SaveBar
         dirty={d.dirty}
@@ -297,49 +296,70 @@ export function LanguageSettings() {
         onReset={d.reset}
       />
       <SavedToast show={d.toast} />
+      <LanguagePicker
+        open={picking}
+        value={d.draft.language}
+        onClose={() => setPicking(false)}
+        onPick={(code) => {
+          d.patch({ language: code });
+          setPicking(false);
+        }}
+      />
     </div>
   );
 }
 
-/** Åbne netværk */
-export function NetworkSettings() {
-  const [toggles, setToggles] = useSetting<Record<string, boolean>>('netvaerk', { 'foelg-andre': true, 'del-offentlige': false });
-  const [handle, setHandle] = useState('');
-  const d = useDraft({ toggles });
+/** Søgbar liste over Europas sprog */
+function LanguagePicker({ open, value, onClose, onPick }: { open: boolean; value: string; onClose: () => void; onPick: (code: string) => void }) {
+  const [query, setQuery] = useState('');
+  const q = query.trim().toLowerCase();
+  const list = q
+    ? sortedLanguages.filter((l) => l.native.toLowerCase().includes(q) || l.da.toLowerCase().includes(q))
+    : sortedLanguages;
+  const close = () => {
+    setQuery('');
+    onClose();
+  };
 
   return (
-    <div className="acc-screen">
-      <PageHeader title="Åbne netværk" fallback="/indstillinger" />
-      <main className="acc-content">
-        <p className="t-caption acc-muted">Følg folk på andre netværk, og lad dem følge dig, uden at skifte app.</p>
-        <ToggleList
-          rows={networkToggles}
-          values={d.draft.toggles}
-          onToggle={(id) => d.patch({ toggles: { ...d.draft.toggles, [id]: !d.draft.toggles[id] } })}
-        />
+    <Sheet open={open} onClose={close} title="Standardsprog for indhold" dim initialSize="full">
+      <div className="lang-search">
         <TextField
-          label="Følg en profil, fx @navn@netværk.eu"
-          type="text"
+          label="Søg efter sprog"
+          type="search"
           autoCapitalize="none"
           autoCorrect="off"
           spellCheck={false}
-          value={handle}
-          onChange={(e) => setHandle(e.target.value)}
+          value={query}
+          onChange={(e) => setQuery(e.target.value)}
         />
-      </main>
-      <SaveBar
-        dirty={d.dirty}
-        onSave={() => {
-          setToggles(d.draft.toggles);
-          d.saved();
-        }}
-        onReset={d.reset}
-      />
-      <SavedToast show={d.toast} />
-    </div>
+      </div>
+      <ul className="lang-list" role="listbox" aria-label="Sprog">
+        {list.map((l) => {
+          const selected = l.code === value;
+          return (
+            <li key={l.code} role="option" aria-selected={selected}>
+              <button
+                type="button"
+                className={['lang-list__row', selected && 'lang-list__row--on'].filter(Boolean).join(' ')}
+                onClick={() => {
+                  setQuery('');
+                  onPick(l.code);
+                }}
+              >
+                <span className="acc-card__text">
+                  <span className="t-heading-s" lang={l.code}>
+                    {l.native}
+                  </span>
+                  {l.native !== l.da && <span className="t-caption acc-muted">{l.da}</span>}
+                </span>
+                {selected && <Icon name="check" size={20} />}
+              </button>
+            </li>
+          );
+        })}
+        {list.length === 0 && <li className="t-body-s acc-muted lang-list__empty">Intet sprog matcher “{query}”.</li>}
+      </ul>
+    </Sheet>
   );
-}
-
-function langCode(l: string) {
-  return { Dansk: 'da', English: 'en', Deutsch: 'de', Français: 'fr', Español: 'es' }[l];
 }

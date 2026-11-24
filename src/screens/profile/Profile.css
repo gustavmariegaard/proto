@@ -69,7 +69,31 @@
   height: 84px;
   border: 3px solid var(--color-accent-highlight);
   border-radius: var(--radius-pill);
+  position: relative;
 }
+
+.pf-ring:focus-visible { outline: none; box-shadow: var(--focus-ring); }
+.pf-ring:active .pf-ring__avatar { transform: scale(0.97); }
+
+/* Intet moment: ingen ring, men et plus nederst til højre (som "Dig" på forsiden) */
+.pf-ring--none { border-color: transparent; }
+
+.pf-ring__plus {
+  position: absolute;
+  right: 0;
+  bottom: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 26px;
+  height: 26px;
+  border-radius: 50%;
+  background: var(--color-action-primary);
+  color: var(--color-text-on-action);
+  border: 3px solid var(--color-bg-app);
+}
+
+.pf-ring__plus svg path { stroke-width: 2.5; }
 
 .pf-ring__avatar {
   width: 72px;

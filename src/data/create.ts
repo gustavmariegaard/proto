@@ -42,8 +42,7 @@ export type SettingRow = { id: string; title: string; hint: string; on: boolean 
 /** Flere indstillinger (tekstopslag) */
 export const postSettings: SettingRow[] = [
   { id: 'kommentarer', title: 'Tillad kommentarer', hint: 'Dine følgere kan svare på opslaget.', on: true },
-  { id: 'deling', title: 'Tillad deling videre', hint: 'Andre kan dele opslaget til deres egen profil.', on: false },
-  { id: 'likes', title: 'Skjul antal synes godt om', hint: 'Andre kan ikke se, hvor mange der har likket opslaget.', on: false },
+  { id: 'deling', title: 'Tillad deling', hint: 'Andre kan dele opslaget til deres egen profil.', on: false },
 ];
 
 /** Indstillinger for et billede */

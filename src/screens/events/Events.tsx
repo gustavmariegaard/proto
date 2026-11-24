@@ -14,25 +14,22 @@ import {
   shortDate,
   toIso,
   type EventItem,
+  type Rsvp,
 } from '../../data/events';
 import { setRsvp, useEvents } from './store';
 import './Events.css';
 
 type Tab = 'dine' | 'find';
-type Filter = 'alle' | 'deltager' | 'interesseret' | 'private';
+type Filter = 'alle' | Exclude<Rsvp, 'none'>;
 type When = 'alle' | 'i-dag' | 'uge' | 'weekend';
 
 const tabs: { value: Tab; label: string }[] = [
-  { value: 'dine', label: 'Dine' },
+  { value: 'dine', label: 'Dine begivenheder' },
   { value: 'find', label: 'Find begivenheder' },
 ];
 
-const filters: { value: Filter; label: string }[] = [
-  { value: 'alle', label: 'Alle' },
-  { value: 'deltager', label: 'Deltager' },
-  { value: 'interesseret', label: 'Interesseret' },
-  { value: 'private', label: 'Private' },
-];
+/** Rækkefølgen på filtrene. Et filter vises kun, hvis mindst én af dine begivenheder har den status. */
+const statusFilters: Exclude<Filter, 'alle'>[] = ['interesseret', 'deltager', 'maaske', 'deltager-ikke'];
 
 const whens: { value: When; label: string }[] = [
   { value: 'alle', label: 'Alle' },
@@ -42,10 +39,7 @@ const whens: { value: When; label: string }[] = [
 ];
 
 function matchesFilter(e: EventItem, filter: Filter) {
-  if (filter === 'deltager') return e.rsvp === 'deltager';
-  if (filter === 'interesseret') return e.rsvp === 'interesseret';
-  if (filter === 'private') return e.visibility === 'privat';
-  return true;
+  return filter === 'alle' || e.rsvp === filter;
 }
 
 /** Dato-interval for chipsene. Ugen slutter søndag; weekenden er den kommende lørdag og søndag. */
@@ -162,7 +156,14 @@ export function Events() {
   };
 
   const byDate = (a: EventItem, b: EventItem) => a.date.localeCompare(b.date) || a.time.localeCompare(b.time);
-  const mine = events.filter((e) => isMine(e) && matchesFilter(e, filter)).sort(byDate);
+  const allMine = events.filter(isMine);
+  const filters: { value: Filter; label: string }[] = [
+    { value: 'alle', label: 'Alle' },
+    ...statusFilters.filter((f) => allMine.some((e) => e.rsvp === f)).map((f) => ({ value: f, label: rsvpLabel[f] })),
+  ];
+  // Forsvinder det valgte filter (fx fordi du har ændret dit svar), vises alle igen
+  const activeFilter: Filter = filters.some((f) => f.value === filter) ? filter : 'alle';
+  const mine = allMine.filter((e) => matchesFilter(e, activeFilter)).sort(byDate);
 
   const today = toIso(new Date());
   const range = whenRange(when);
@@ -189,9 +190,9 @@ export function Events() {
       {tab === 'dine' ? (
         <>
           <p className="t-body-s events__intro">Det, du er inviteret til, har svaret på eller selv har oprettet.</p>
-          <div className="events__filters" role="group" aria-label="Filtrer dine begivenheder">
+          <div className="events__filters events__filters--scroll" role="group" aria-label="Filtrer dine begivenheder">
             {filters.map((f) => (
-              <Chip key={f.value} selected={filter === f.value} onClick={() => setFilter(f.value)}>
+              <Chip key={f.value} selected={activeFilter === f.value} onClick={() => setFilter(f.value)}>
                 {f.label}
               </Chip>
             ))}
@@ -240,10 +241,10 @@ export function Events() {
             {moved && (
               <div className="events__moved">
                 <p className="t-body-s">
-                  {moved.rsvp === 'deltager' ? 'Du deltager i' : 'Du er interesseret i'} „{moved.title}“. Den ligger nu under Dine.
+                  {moved.rsvp === 'deltager' ? 'Du deltager i' : 'Du er interesseret i'} „{moved.title}“. Den ligger nu under Dine begivenheder.
                 </p>
                 <button type="button" className="events__moved-link t-label" onClick={() => setTab('dine')}>
-                  Se Dine
+                  Se dine begivenheder
                 </button>
               </div>
             )}

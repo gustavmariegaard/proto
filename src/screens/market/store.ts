@@ -1,8 +1,8 @@
 import { useMemo, useSyncExternalStore } from 'react';
-import { formatPrice, listings as sampleListings, type Listing } from '../../data/market';
+import { formatPrice, initialRadius, listings as sampleListings, type Listing } from '../../data/market';
 import { contacts, type Thread } from '../../data/messages';
 import { keep, save } from '../../state/keep';
-import { openConversation, sendMessage } from '../messages/store';
+import { openConversation, openPersonConversation, sendMessage } from '../messages/store';
 
 /*
  * Et lille lager til Torvet: dine egne annoncer, gemte annoncer
@@ -14,10 +14,14 @@ type MarketState = {
   own: Listing[];
   /** Id'er på gemte annoncer */
   saved: string[];
+  /** Senest sete annoncer (nyeste først) */
+  recent?: string[];
+  /** Valgt afstand på Torvet (km). null = hele landet. */
+  radius?: number | null;
 };
 
 const KEY = 'market';
-let state: MarketState = keep<MarketState>(KEY, { own: [], saved: [] });
+let state: MarketState = keep<MarketState>(KEY, { own: [], saved: [], recent: [] });
 const listeners = new Set<() => void>();
 
 function set(next: MarketState) {
@@ -35,6 +39,11 @@ const getState = () => state;
 
 export function useMarket() {
   return useSyncExternalStore(subscribe, getState, getState);
+}
+
+export function useRadius() {
+  const { radius } = useMarket();
+  return radius === undefined ? initialRadius : radius;
 }
 
 /** Alle annoncer: dine egne først, derefter eksemplerne */
@@ -85,7 +94,40 @@ export const setSold = (id: string, sold: boolean) => updateOwn(id, { sold });
 export const setPrice = (id: string, price: number) => updateOwn(id, { price });
 
 export function deleteListing(id: string) {
-  set({ own: state.own.filter((l) => l.id !== id), saved: state.saved.filter((x) => x !== id) });
+  set({
+    ...state,
+    own: state.own.filter((l) => l.id !== id),
+    saved: state.saved.filter((x) => x !== id),
+    recent: (state.recent ?? []).filter((x) => x !== id),
+  });
+}
+
+export function setRadius(radius: number | null) {
+  set({ ...state, radius });
+}
+
+/** Husker, at du har kigget på annoncen (de 12 seneste) */
+export function markViewed(id: string) {
+  const recent = state.recent ?? [];
+  if (recent[0] === id) return;
+  set({ ...state, recent: [id, ...recent.filter((x) => x !== id)].slice(0, 12) });
+}
+
+/**
+ * Annoncer i de kategorier, du senest har kigget på – nyeste kategori først.
+ * Tom, hvis du ikke har set nogen annoncer endnu.
+ */
+export function relatedFirst(all: Listing[], recent: string[] = []): { forYou: Listing[]; rest: Listing[] } {
+  const order: string[] = [];
+  for (const id of recent) {
+    const cat = all.find((l) => l.id === id)?.category;
+    if (cat && !order.includes(cat)) order.push(cat);
+  }
+  const rank = (l: Listing) => order.indexOf(l.category);
+  const forYou = all
+    .filter((l) => rank(l) >= 0 && !l.sold)
+    .sort((a, b) => rank(a) - rank(b));
+  return { forYou, rest: all.filter((l) => !forYou.includes(l)) };
 }
 
 /** Kontakten i Beskeder, hvis sælgeren er en, du kender */
@@ -98,29 +140,47 @@ export function aboutLine(l: Listing) {
   return `Om: ${l.title} · ${formatPrice(l.price)}`;
 }
 
+/** Finder (eller opretter) samtalen med sælgeren. Returnerer dens id. */
+export function sellerThread(l: Listing): string {
+  const contactId = sellerContactId(l);
+  if (contactId) return openConversation([contactId]);
+  return openPersonConversation({ name: l.seller.name, tone: l.seller.tone, avatarSrc: l.seller.avatarSrc });
+}
+
+/** Er samtalens seneste "Om: …"-linje allerede denne annonce? */
+function aboutSent(l: Listing, thread: Thread | undefined) {
+  const last = [...(thread?.messages ?? [])]
+    .reverse()
+    .find((m) => m.from === 'me' && m.kind === 'text' && m.text.startsWith('Om: '));
+  return last?.kind === 'text' && last.text === aboutLine(l);
+}
+
 /**
- * Skriver til sælgeren – altid som dig ("me"). Er sælgeren en kendt kontakt,
- * åbnes samtalen. Sender du tekst, kommer først en linje om annoncen
- * (medmindre samtalen allerede handler om den), og så din besked.
+ * Sender en besked om annoncen: først "Om: …" (medmindre samtalen
+ * allerede handler om den), så din tekst.
+ */
+export function sendAboutListing(threadId: string, l: Listing, text: string, threads: Thread[]) {
+  if (!aboutSent(l, threads.find((t) => t.id === threadId))) sendMessage(threadId, aboutLine(l));
+  sendMessage(threadId, text);
+}
+
+/** Skal annoncekortet vises i samtalen? (Nej, når "Om: …" allerede er sendt.) */
+export function needsAbout(threadId: string, l: Listing, threads: Thread[]) {
+  return !aboutSent(l, threads.find((t) => t.id === threadId));
+}
+
+/**
+ * Åbner samtalen med sælgeren. Uden tekst sendes intet – samtalen viser
+ * annoncen som et lille kort, og "Om: …" følger med din første besked.
+ * Med tekst (fx et bud) sendes den med det samme.
  * Returnerer stien, der skal navigeres til.
  */
 export function messageSeller(l: Listing, text?: string, threads: Thread[] = []): string {
-  const contactId = sellerContactId(l);
-  if (!contactId) return '/beskeder/ny';
-  const threadId = openConversation([contactId]);
+  const threadId = sellerThread(l);
   const body = text?.trim();
   if (body) {
-    const thread = threads.find((t) => t.id === threadId);
-    const lastAbout = [...(thread?.messages ?? [])]
-      .reverse()
-      .find((m) => m.from === 'me' && m.kind === 'text' && m.text.startsWith('Om: '));
-    const about = aboutLine(l);
-    if (!lastAbout || lastAbout.kind !== 'text' || lastAbout.text !== about) {
-      sendMessage(threadId, about);
-      sendMessage(threadId, body);
-    } else {
-      sendMessage(threadId, body);
-    }
+    sendAboutListing(threadId, l, body, threads);
+    return `/beskeder/${threadId}`;
   }
-  return `/beskeder/${threadId}`;
+  return `/beskeder/${threadId}?annonce=${encodeURIComponent(l.id)}`;
 }

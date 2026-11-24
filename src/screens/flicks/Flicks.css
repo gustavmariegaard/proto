@@ -26,16 +26,124 @@
 .flicks__feed::-webkit-scrollbar { display: none; }
 .flicks__feed:focus-visible { outline: none; }
 
-/* ---------- Til dig / Cirkel ---------- */
+/* ---------- Dine emner / Følger + emne-filter ---------- */
 
-/* 56 px fra toppen i Figma = 48 px frirum + 8 px */
-.flicks__top {
+/* Faner og emner øverst. Klik går igennem tomrummet til flicken bag. */
+.flicks__chrome {
   position: absolute;
   z-index: 10;
   top: calc(var(--safe-top) + var(--top-gap));
-  left: 20px;
+  left: 0;
+  right: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  pointer-events: none;
+}
+
+/* Let skygge øverst, så hvide faner og emner kan læses på lyse billeder */
+.flicks::before {
+  content: '';
+  position: absolute;
+  z-index: 9;
+  top: 0;
+  left: 0;
+  right: 0;
+  height: calc(var(--safe-top) + 140px);
+  background: linear-gradient(180deg, rgb(0 0 0 / 0.42) 0%, rgb(0 0 0 / 0.18) 55%, transparent 100%);
+  pointer-events: none;
+}
+
+.flicks__top {
+  align-self: flex-start;
   display: flex;
   gap: 8px;
+  margin-left: 20px;
+  pointer-events: auto;
+}
+
+/* Vandret række af dine emner. Vises kun under "Dine emner". */
+.flicks__topics {
+  display: flex;
+  gap: 6px;
+  margin: 0;
+  padding: 4px 20px;
+  list-style: none;
+  overflow-x: auto;
+  scrollbar-width: none;
+  pointer-events: auto;
+  transition: opacity 0.2s ease, transform 0.2s ease;
+  -webkit-mask-image: linear-gradient(90deg, #000 calc(100% - 40px), transparent);
+  mask-image: linear-gradient(90deg, #000 calc(100% - 40px), transparent);
+}
+
+.flicks__topics::-webkit-scrollbar { display: none; }
+
+.flicks__topics--away {
+  opacity: 0;
+  transform: translateY(-6px);
+  pointer-events: none;
+}
+
+/* Emne-chip ovenpå video: glas med hvid tekst. 36 px synlig, 44 px trykflade. */
+.flicks__chip {
+  position: relative;
+  display: inline-flex;
+  flex-shrink: 0;
+  align-items: center;
+  gap: 4px;
+  height: 36px;
+  padding: 0 10px 0 14px;
+  border: 1px solid rgb(255 255 255 / 0.28);
+  border-radius: var(--radius-pill);
+  background: rgb(20 20 20 / 0.32);
+  -webkit-backdrop-filter: blur(14px);
+  backdrop-filter: blur(14px);
+  color: rgb(255 255 255 / 0.72);
+  font: 600 13px/18px var(--font-body);
+  white-space: nowrap;
+}
+
+.flicks__chip::before {
+  content: '';
+  position: absolute;
+  inset: -4px 0;
+}
+
+.flicks__chip--on {
+  border-color: rgb(255 255 255 / 0.7);
+  background: rgb(255 255 255 / 0.18);
+  color: #fff;
+}
+
+.flicks__chip--edit {
+  justify-content: center;
+  width: 36px;
+  padding: 0;
+  color: #fff;
+}
+
+.flicks__chip:focus-visible {
+  outline: 2px solid var(--color-accent-highlight);
+  outline-offset: 2px;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .flicks__topics { transition: none; }
+}
+
+/* Ingen flicks om dine emner */
+.flick__empty {
+  position: absolute;
+  inset: 0;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 16px;
+  padding: 24px 32px;
+  color: #fff;
+  text-align: center;
 }
 
 .flicks__mode {

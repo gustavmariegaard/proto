@@ -10,7 +10,7 @@ import { screenTimeOptions } from '../../data/account';
 import { allTopics } from '../../data/interests';
 import { ToggleList } from '../create/parts';
 import { SaveBar, SavedToast } from '../../components/SaveBar';
-import { areas, removeChild, updateChild, useChildren, type Child, type ChildSettings as ChildSettingsT, type Contact } from './store';
+import { areas, removeChild, updateChild, useChildren, type Child, type ChildSettings as ChildSettingsT } from './store';
 import '../account/account.css';
 import '../create/parts.css';
 import './Parental.css';
@@ -25,6 +25,9 @@ const week = [
   { day: 'Lør', min: 74 },
   { day: 'Søn', min: 40 },
 ];
+
+/** Dansk ejefald: Emil → Emils, Klaus → Klaus' */
+const possessive = (name: string) => (/[sxz]$/i.test(name) ? `${name}'` : `${name}s`);
 
 /** Ét barns indstillinger. Rute: /indstillinger/foraeldrekontrol/:id */
 export function ChildSettingsScreen() {
@@ -87,7 +90,6 @@ function Editor({ child, onRemove }: { child: Child; onRemove: () => void }) {
               </div>
             ))}
           </div>
-          <p className="t-caption acc-muted">Mest tid på Flicks og Beskeder. Du kan ikke se indholdet af beskeder.</p>
         </section>
 
         <h2 className="t-heading-m">Daglig skærmtid</h2>
@@ -107,16 +109,14 @@ function Editor({ child, onRemove }: { child: Child; onRemove: () => void }) {
         {/* ---------- Indhold ---------- */}
         <h2 className="t-heading-m">Hvad må {child.name} bruge?</h2>
         <ToggleList rows={areas} values={s.areas} onToggle={(a) => set({ areas: { ...s.areas, [a]: !s.areas[a] } })} />
-        <p className="t-caption acc-muted">Beskeder med familie og opslag fra folk, {child.name} følger, er altid slået til.</p>
 
         <ToggleList
-          rows={[{ id: 'sensitive', title: 'Skjul følsomt indhold', hint: 'Vold, skræmmende billeder og indhold for voksne.' }]}
+          rows={[{ id: 'sensitive', title: 'Skjul følsomt indhold', hint: 'Skjuler nøgenhed, selvskade og grafiske billeder. Vold er aldrig tilladt på ciircle.' }]}
           values={{ sensitive: s.sensitive }}
           onToggle={() => set({ sensitive: !s.sensitive })}
         />
 
         <h3 className="t-heading-s">Blokerede emner</h3>
-        <p className="t-caption acc-muted">Opslag om disse emner vises ikke for {child.name}.</p>
         <ul className="acc-chips pc-topics">
           {s.blockedTopics.map((t) => (
             <li key={t}>
@@ -153,25 +153,20 @@ function Editor({ child, onRemove }: { child: Child; onRemove: () => void }) {
           </div>
         )}
 
-        {/* ---------- Kontakt ---------- */}
-        <h2 className="t-heading-m">Hvem må skrive til {child.name}?</h2>
-        <SegmentedControl<Contact>
-          label={`Hvem må skrive til ${child.name}?`}
-          value={s.contact}
-          onChange={(v) => set({ contact: v })}
+        {/* ---------- Profil ---------- */}
+        <h2 className="t-heading-m">Hvem kan se {possessive(child.name)} profil?</h2>
+        <SegmentedControl
+          label={`Hvem kan se ${possessive(child.name)} profil?`}
+          value={s.private ? 'privat' : 'offentlig'}
+          onChange={(v) => set({ private: v === 'privat' })}
           options={[
-            { value: 'godkendte', label: 'Godkendte' },
-            { value: 'foelger', label: 'Følger' },
-            { value: 'alle', label: 'Alle' },
+            { value: 'offentlig', label: 'Offentlig' },
+            { value: 'privat', label: 'Privat' },
           ]}
         />
-        <p className="t-caption acc-muted" aria-live="polite">
-          {s.contact === 'godkendte'
-            ? `Kun kontakter, du har godkendt. Du får besked, når nogen vil skrive til ${child.name}.`
-            : s.contact === 'foelger'
-              ? `Kun folk, ${child.name} følger, og som følger ${child.name} igen.`
-              : 'Alle verificerede brugere. Ikke anbefalet for børn under 16 år.'}
-        </p>
+
+        {/* ---------- Følgere ---------- */}
+        <h2 className="t-heading-m">Følgere</h2>
         <ToggleList
           rows={[{ id: 'approve', title: 'Godkend nye følgere', hint: `Du skal godkende, før nogen kan følge ${child.name}.` }]}
           values={{ approve: s.approveFollowers }}

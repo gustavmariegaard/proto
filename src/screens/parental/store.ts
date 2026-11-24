@@ -7,14 +7,13 @@ import { keep, save } from '../../state/keep';
  * Eksempeldata til prototypen (ikke fra Figma). Huskes i fanen.
  */
 
-export type Contact = 'godkendte' | 'foelger' | 'alle';
-
 export type ChildSettings = {
   /** Hvilke dele af appen barnet må bruge */
   areas: Record<string, boolean>;
   sensitive: boolean;
   blockedTopics: string[];
-  contact: Contact;
+  /** Privat profil: kun godkendte følgere ser barnets indhold */
+  private: boolean;
   approveFollowers: boolean;
   screenTime: string;
   bedtime: boolean;
@@ -61,14 +60,17 @@ export function defaultsFor(age: number): ChildSettings {
     },
     sensitive: true,
     blockedTopics: ['Politik'],
-    contact: young ? 'godkendte' : 'foelger',
+    private: true,
     approveFollowers: true,
     screenTime: young ? '30 min.' : '60 min.',
     bedtime: true,
   };
 }
 
-let children: Child[] = keep('children', []);
+// Ældre gemte data mangler `private` – udfyld med standard
+let children: Child[] = keep<Child[]>('children', []).map((c) =>
+  typeof c.settings.private === 'boolean' ? c : { ...c, settings: { ...c.settings, private: true } },
+);
 const listeners = new Set<() => void>();
 const get = () => children;
 

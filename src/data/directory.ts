@@ -94,3 +94,9 @@ export function findAccount(handle: string): Account | undefined {
 
 /** Opslag fra en profil: fra feedet og fra Offentlig debat */
 export const debatePostsBy = (handle: string) => discoverPosts.filter((p) => handleOf(p.author) === handle);
+
+/** Alle profiler i prototypen (til fx dine tal for følgere) */
+export function allAccounts(): Account[] {
+  cache ??= build();
+  return [...cache.keys()].map((h) => findAccount(h)!);
+}

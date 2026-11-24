@@ -97,13 +97,6 @@
   gap: 14px;
 }
 
-.pc-note {
-  display: flex;
-  align-items: center;
-  gap: 6px;
-  color: var(--color-text-secondary);
-}
-
 .pc-more {
   align-self: center;
   min-height: 44px;
