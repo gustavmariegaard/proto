@@ -1,4 +1,4 @@
-import { img } from './sample';
+import { img, type FeedPost } from './sample';
 
 /*
  * Eksempeldata til profilen (din egen). Tekster er hentet fra Figma.
@@ -83,3 +83,32 @@ export const interestOptions = ['Kultur', 'Byudvikling', 'Musik', 'Cykling', 'Ma
 
 /** "Måske kunne du også lide" */
 export const interestSuggestions = ['Litteratur', 'Havearbejde', 'Sport'];
+
+/* ---------- Dine opslag og debatindlæg (til profilens faner) ---------- */
+
+const me = { author: 'Sara Jensen', username: 'sara.jensen', avatarSrc: img('mig.jpg'), tone: 'blue' as const };
+
+/** Dine opslag til følgere: tekst og billeder (fra Figma-teksterne og dine billeder) */
+export const myProfilePosts: FeedPost[] = [
+  { ...me, id: 'pf-t1', feed: 'venner', meta: '2 t.', text: textPosts[0]!.text, image: img('have.jpg') },
+  { ...me, id: 'pf-t2', feed: 'venner', meta: 'I går', text: textPosts[1]!.text },
+  { ...me, id: 'pf-p1', feed: 'venner', meta: 'I går', text: 'Morgenlys over søen.', image: img('soe.jpg') },
+  { ...me, id: 'pf-t3', feed: 'venner', meta: 'Man.', text: textPosts[2]!.text, image: img('cykelsti.jpg') },
+  { ...me, id: 'pf-t4', feed: 'venner', meta: 'Søn.', text: textPosts[3]!.text },
+  { ...me, id: 'pf-p2', feed: 'venner', meta: 'Lør.', text: 'Søndagsmiddag med hele familien.', image: img('familie-soe.jpg') },
+  { ...me, id: 'pf-p3', feed: 'venner', meta: 'Fre.', text: 'Ny cykel, nye ruter.', image: img('cykel.jpg') },
+];
+
+/** Dine indlæg i Offentlig debat */
+export const myDebatePosts: FeedPost[] = [
+  {
+    ...me,
+    id: 'pf-d1',
+    feed: 'debat',
+    topic: 'Byudvikling',
+    tags: ['Byudvikling', 'Cykelstier'],
+    score: 37,
+    meta: 'Byudvikling · for 3 dage siden',
+    text: 'Cykelstien langs åen bør have lys hele vejen. Om vinteren er det alt for mørkt efter klokken 16.',
+  },
+];

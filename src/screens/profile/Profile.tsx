@@ -1,55 +1,26 @@
-import { Link, useNavigate, useSearchParams } from 'react-router-dom';
+import { Link, useNavigate } from 'react-router-dom';
 import { Icon } from '../../components/Icon';
 import { IconButton } from '../../components/IconButton';
-import { Tag } from '../../components/Tag';
 import { useSession } from '../../state/session';
-import { latestPhotos, myFlicks, photoById, photoHeights, photos, pinnedPost, textPosts, type TextPost } from '../../data/profile';
-import { Masonry, useMe, type Tile } from './shared';
+import { myDebatePosts, myFlicks, myProfilePosts, photoById } from '../../data/profile';
+import type { FeedPost } from '../../data/sample';
+import { usePosts } from '../../state/posts';
+import { ProfileContent } from './ProfileContent';
+import { useMe } from './shared';
 import { useCollections } from './store';
 import './Profile.css';
 
-type Tab = 'alt' | 'tekst' | 'billeder' | 'flicks';
-
-const tabs: { value: Tab; label: string }[] = [
-  { value: 'alt', label: 'Alt' },
-  { value: 'tekst', label: 'Tekst' },
-  { value: 'billeder', label: 'Billeder' },
-  { value: 'flicks', label: 'Flicks' },
-];
-
-/** Profil (i appens ramme). Fanerne Alt, Tekst, Billeder og Flicks huskes i adressen (?fane=). */
+/** Din profil: highlights og fanerne Opslag · Debat · Flicks (huskes i adressen, ?fane=). */
 export function Profile() {
   const navigate = useNavigate();
-  const [params, setParams] = useSearchParams();
   const me = useMe();
   const { profile } = useSession();
   const collections = useCollections();
-  const raw = params.get('fane');
-  const tab: Tab = tabs.some((t) => t.value === raw) ? (raw as Tab) : 'alt';
-
-  const selectTab = (value: Tab) => setParams(value === 'alt' ? {} : { fane: value }, { replace: true });
-
-  const onTabKey = (e: React.KeyboardEvent, index: number) => {
-    const dir = e.key === 'ArrowRight' ? 1 : e.key === 'ArrowLeft' ? -1 : 0;
-    if (!dir) return;
-    e.preventDefault();
-    const next = tabs[(index + dir + tabs.length) % tabs.length]!;
-    selectTab(next.value);
-    document.getElementById(`pf-tab-${next.value}`)?.focus({ preventScroll: true });
-  };
-
-  const photoTile = (id: string, height: number): Tile => {
-    const photo = photoById(id)!;
-    return {
-      key: id,
-      height,
-      render: () => (
-        <Link to={`/profil/billede/${id}`} className="pf-photo" aria-label="Åbn billede">
-          <img src={photo.src} alt="" />
-        </Link>
-      ),
-    };
-  };
+  const all = usePosts();
+  const mine = all.filter((p) => p.id.startsWith('mit-') && p.feed !== 'debat' && !p.group);
+  const myDebate = all.filter((p) => p.id.startsWith('mit-') && p.feed === 'debat');
+  // Dit navn og billede på dine opslag
+  const asMe = (p: FeedPost): FeedPost => ({ ...p, author: me.name, avatarSrc: me.avatar, username: me.username.replace(/^@/, '') });
 
   return (
     <div className="profile">
@@ -86,96 +57,19 @@ export function Profile() {
         </Link>
       </div>
 
-      <h2 className="t-heading-s">Samlinger</h2>
-      <ul className="pf-collections">
-        {collections.map((c) => (
-          <li key={c.id} className="pf-collection">
-            <Link to={`/profil/samling/${c.id}/vis`} aria-label={`Afspil samlingen ${c.title}`} className="pf-collection__link">
-              <span className="pf-collection__photo">
-                <img src={photoById(c.cover)?.src} alt="" />
-              </span>
-              <span className="t-label">{c.title}</span>
-            </Link>
-            <Link
-              to={`/profil/samling/${c.id}/rediger`}
-              className="pf-collection__edit"
-              aria-label={`Rediger samlingen ${c.title}`}
-            >
-              <Icon name="edit" size={16} />
-            </Link>
-          </li>
-        ))}
-      </ul>
-
-      <div className="pf-tabs" role="tablist" aria-label="Vis på profilen">
-        {tabs.map((t, i) => (
-          <button
-            key={t.value}
-            id={`pf-tab-${t.value}`}
-            type="button"
-            role="tab"
-            aria-selected={tab === t.value}
-            aria-controls="pf-panel"
-            tabIndex={tab === t.value ? 0 : -1}
-            className="pf-tab"
-            onClick={() => selectTab(t.value)}
-            onKeyDown={(e) => onTabKey(e, i)}
-          >
-            {t.label}
-          </button>
-        ))}
-      </div>
-
-      <div id="pf-panel" role="tabpanel" aria-labelledby={`pf-tab-${tab}`} className="pf-panel">
-        {tab === 'alt' && (
-          <>
-            <h2 className="t-heading-s">Fastgjort</h2>
-            <article className="pf-post">
-              <Tag>Fastgjort</Tag>
-              <p className="t-body">{pinnedPost.text}</p>
-              <p className="t-caption pf-muted">{pinnedPost.note}</p>
-            </article>
-            <h2 className="t-heading-s">Seneste</h2>
-            <TextCard post={textPosts[0]!} />
-            <Masonry tiles={latestPhotos.map((p) => photoTile(p.id, p.height))} label="Seneste billeder" />
-            <TextCard post={textPosts[1]!} />
-          </>
-        )}
-
-        {tab === 'tekst' && textPosts.map((p) => <TextCard key={p.id} post={p} />)}
-
-        {tab === 'billeder' && (
-          <Masonry
-            label="Dine billeder"
-            tiles={photos.map((p, i) => photoTile(p.id, photoHeights[i % photoHeights.length]!))}
-          />
-        )}
-
-        {tab === 'flicks' && (
-          <Masonry
-            label="Dine flicks"
-            tiles={myFlicks.map((f) => ({
-              key: f.id,
-              height: f.height,
-              render: () => (
-                <Link to="/flicks" className="pf-photo pf-flick" aria-label={f.label}>
-                  <img src={f.src} alt="" />
-                  <Icon name="clip" className="pf-flick__icon" />
-                </Link>
-              ),
-            }))}
-          />
-        )}
-      </div>
+      <ProfileContent
+        own
+        name={me.name}
+        highlights={collections.map((c) => ({
+          id: c.id,
+          title: c.title,
+          cover: photoById(c.cover)?.src,
+          href: `/profil/samling/${c.id}/vis`,
+        }))}
+        posts={[...mine, ...myProfilePosts].map(asMe)}
+        debate={[...myDebate, ...myDebatePosts].map(asMe)}
+        flicks={myFlicks.map((f, i) => ({ id: f.id, src: f.src, href: '/flicks', views: ['1,2 t.', '846', '2,4 t.', '310'][i % 4] }))}
+      />
     </div>
-  );
-}
-
-function TextCard({ post }: { post: TextPost }) {
-  return (
-    <article className="pf-post">
-      <p className="t-body">{post.text}</p>
-      <p className="t-caption pf-muted">{post.time}</p>
-    </article>
   );
 }

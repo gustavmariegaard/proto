@@ -48,28 +48,26 @@ export type Moment = {
   time: string;
   /** Sti til billede i public/img, ellers grå pladsholder */
   image?: string;
-  /** Tags, som på opslag */
-  tags?: string[];
 };
 
 /** Hver persons moments i rækkefølge. Mette har fire (fire prikker i Figma). */
 export const moments: Moment[] = [
-  { id: 'm1', personId: 'mette', time: '2 timer siden', image: img('aften.jpg'), tags: ['Natur', 'Efterår'] },
+  { id: 'm1', personId: 'mette', time: '2 timer siden', image: img('aften.jpg') },
   { id: 'm2', personId: 'mette', time: '2 timer siden', image: img('soe.jpg') },
   { id: 'm3', personId: 'mette', time: '2 timer siden', image: img('have.jpg') },
   { id: 'm4', personId: 'mette', time: '2 timer siden', image: img('nyhavn.jpg') },
-  { id: 'j1', personId: 'jonas', time: '2 timer siden', image: img('haandbold.jpg'), tags: ['Håndbold'] },
+  { id: 'j1', personId: 'jonas', time: '2 timer siden', image: img('haandbold.jpg') },
   { id: 'a1', personId: 'anna', time: '2 timer siden', image: img('familie-soe.jpg') },
   { id: 'p1', personId: 'peter', time: '2 timer siden', image: img('cykelsti.jpg') },
-  { id: 's1', personId: 'sofie', time: '3 timer siden', image: img('mad.jpg'), tags: ['Bagning'] },
+  { id: 's1', personId: 'sofie', time: '3 timer siden', image: img('mad.jpg') },
   { id: 's2', personId: 'sofie', time: '3 timer siden', image: img('have.jpg') },
   { id: 'h1', personId: 'ahmed', time: '5 timer siden', image: img('begivenhed.jpg') },
   { id: 'k1', personId: 'karen', time: 'i går', image: img('nyhavn.jpg') },
   /* Sider (ikke fra Figma) */
-  { id: 'pg1', personId: 'kulturhuset', time: '1 time siden', image: img('begivenhed.jpg'), tags: ['Kultur', 'Koncert'] },
+  { id: 'pg1', personId: 'kulturhuset', time: '1 time siden', image: img('begivenhed.jpg') },
   { id: 'pg2', personId: 'kulturhuset', time: '1 time siden', image: img('dans.jpg') },
-  { id: 'pg3', personId: 'hallen', time: '3 timer siden', image: side('hallen.jpg'), tags: ['Håndbold'] },
-  { id: 'pg4', personId: 'bageri', time: 'i morges', image: side('bageri.jpg'), tags: ['Bagning'] },
+  { id: 'pg3', personId: 'hallen', time: '3 timer siden', image: side('hallen.jpg') },
+  { id: 'pg4', personId: 'bageri', time: 'i morges', image: side('bageri.jpg') },
   { id: 'pg5', personId: 'cykel', time: 'i går', image: side('vaerksted.jpg') },
   { id: 'pg6', personId: 'bibliotek', time: 'i går', image: side('bibliotek.jpg') },
   { id: 'pg7', personId: 'teater', time: '2 dage siden', image: side('teater.jpg') },

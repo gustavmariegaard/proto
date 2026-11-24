@@ -47,7 +47,7 @@ export function Create() {
   const [params] = useSearchParams();
   const placeKind: PlaceKind | null = params.get('gruppe') ? 'gruppe' : params.get('begivenhed') ? 'begivenhed' : null;
   const [placeId, setPlaceId] = useState<string | null>(params.get('gruppe') ?? params.get('begivenhed'));
-  const [audience, setAudience] = useState<Audience>('offentlig');
+  const [audience, setAudience] = useState<Audience>(params.get('sted') === 'debat' ? 'debat' : 'offentlig');
   const [tags, setTags] = useState<string[]>([]);
   const [tagError, setTagError] = useState(false);
   const groups = groupStore.use();

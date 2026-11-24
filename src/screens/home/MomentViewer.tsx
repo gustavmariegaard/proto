@@ -178,9 +178,6 @@ function Viewer({ personId }: { personId: string }) {
         </button>
       </div>
 
-      {current.tags && current.tags.length > 0 && (
-        <p className="t-caption-strong moment-full__tags">{current.tags.map((t) => `#${t}`).join('  ')}</p>
-      )}
 
       <div className="moment-full__spacer" />
 

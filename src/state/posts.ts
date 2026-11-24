@@ -2,6 +2,7 @@ import { useSyncExternalStore } from 'react';
 import { posts as samplePosts, type FeedPost } from '../data/sample';
 import { keep, save } from './keep';
 import { discoverPosts } from '../data/discover';
+import { myDebatePosts, myProfilePosts } from '../data/profile';
 import { flicks } from '../data/flicks';
 import { moments, pageAccounts, people } from '../data/sample';
 
@@ -49,6 +50,8 @@ export function usePost(id: string | undefined) {
   return (
     usePosts().find((p) => p.id === id) ??
     discoverPosts.find((p) => p.id === id) ??
+    myProfilePosts.find((p) => p.id === id) ??
+    myDebatePosts.find((p) => p.id === id) ??
     flickAsPost(id) ??
     momentAsPost(id)
   );

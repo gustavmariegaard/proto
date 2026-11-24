@@ -5,6 +5,8 @@ import { Icon, type IconName } from './Icon';
 import { PostMenu } from './PostMenu';
 import { setHidden, useHidden } from '../state/posts';
 import { VoteControl } from './VoteControl';
+import { groups } from '../data/more';
+import { initialEvents } from '../data/events';
 import { publicKind, publicLabel, type PublicKind } from '../data/publicProfiles';
 import { handleOf } from '../data/handles';
 import './PostCard.css';
@@ -62,6 +64,12 @@ export function PostCard({ post, onComment, onShare, onReport }: PostCardProps) 
   const [stats] = useState(() => post.stats ?? sampleStats(post.id));
   const kind = post.group ? null : publicKind(post.author);
   const isPublic = kind !== null;
+  // Gruppe- og begivenhedsopslag: navnet og billedet fører til gruppen eller begivenheden
+  const groupHref = post.group
+    ? post.group.kind === 'begivenhed'
+      ? `/begivenheder/${initialEvents.find((e) => e.title === post.group!.name)?.id ?? ''}`
+      : `/grupper/${groups.find((g) => g.name === post.group!.name)?.id ?? ''}`
+    : '';
   const handle = post.username || handleOf(post.author);
   // Egne opslag åbner din egen profil
   const profileHref = post.id.startsWith('mit-') ? '/profil' : `/bruger/${handle}`;
@@ -93,17 +101,19 @@ export function PostCard({ post, onComment, onShare, onReport }: PostCardProps) 
     <article className="post" aria-label={`Opslag fra ${post.author}`}>
       {post.group ? (
         <header className="post__header">
-          <span className="post__group-pic" aria-hidden="true">
+          <Link to={groupHref} className="post__group-pic" aria-label={`Gå til ${post.group.name}`}>
             <span className={`post__group-thumb avatar--${post.group.tone ?? 'sand'}`}>
               {post.group.avatarSrc ? <img src={post.group.avatarSrc} alt="" /> : post.group.initials}
             </span>
             <span className="post__group-author">
               <Avatar name={post.author} tone={post.tone} src={post.avatarSrc} size="S" />
             </span>
-          </span>
+          </Link>
           <div className="post__meta">
             <h3 className="t-heading-s post__name">
-              <span className="post__group-name">{post.group.name}</span>
+              <Link to={groupHref} className="post__group-name post__name-link">
+                {post.group.name}
+              </Link>
               <PublicBadge kind={post.group.kind ?? 'gruppe'} />
             </h3>
             <p className="t-caption post__sub">
@@ -232,4 +242,4 @@ export function PublicBadge({ kind }: { kind: PublicKind | 'gruppe' | 'begivenhe
 }
 
 /** Ét ikon pr. slags fællesskab: offentlig person, side og gruppe */
-export const badgeIcon = { person: 'megaphone', side: 'building', gruppe: 'circles', begivenhed: 'calendar' } as const;
+export const badgeIcon = { person: 'globe', side: 'building', gruppe: 'circles', begivenhed: 'calendar' } as const;

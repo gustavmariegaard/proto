@@ -1,16 +1,13 @@
 import { useState } from 'react';
-import { Link, Navigate, useNavigate, useParams, useSearchParams } from 'react-router-dom';
+import { Navigate, useNavigate, useParams } from 'react-router-dom';
 import { Avatar } from '../../components/Avatar';
 import { Button } from '../../components/Button';
 import { Icon } from '../../components/Icon';
 import { isVideo } from '../../components/StoryViewer';
-import { Tag } from '../../components/Tag';
 import { PageHeader } from '../../components/PageHeader';
-import { PostCard } from '../../components/PostCard';
 import { debatePostsBy, findAccount } from '../../data/directory';
 import { handleOf } from '../../data/handles';
 import { contacts } from '../../data/messages';
-import { photoHeights } from '../../data/profile';
 import { extrasFor } from '../../data/profileExtras';
 import { publicKind, publicLabel } from '../../data/publicProfiles';
 import { keep, save } from '../../state/keep';
@@ -18,7 +15,7 @@ import { usePosts } from '../../state/posts';
 import { useMoments } from '../../state/moments';
 import { useSession } from '../../state/session';
 import { openConversation, openPageConversation } from '../messages/store';
-import { Masonry, type Tile } from '../profile/shared';
+import { ProfileContent } from '../profile/ProfileContent';
 import '../profile/Profile.css';
 import './UserProfile.css';
 
@@ -33,13 +30,6 @@ function countsFor(handle: string, kind: 'person' | 'side') {
 
 const fmt = (n: number) => n.toLocaleString('da-DK');
 
-type Tab = 'alt' | 'tekst' | 'billeder' | 'flicks';
-const tabs: { value: Tab; label: string }[] = [
-  { value: 'alt', label: 'Alt' },
-  { value: 'tekst', label: 'Tekst' },
-  { value: 'billeder', label: 'Billeder' },
-  { value: 'flicks', label: 'Flicks' },
-];
 
 /**
  * En andens profil eller en side: billede, navn, @brugernavn, følg-knap
@@ -52,9 +42,6 @@ export function UserProfile() {
   const { seen } = useMoments();
   const all = usePosts();
   const account = findAccount(handle);
-  const [params, setParams] = useSearchParams();
-  const raw = params.get('fane');
-  const tab: Tab = tabs.some((t) => t.value === raw) ? (raw as Tab) : 'alt';
   const [follows, setFollows] = useState<Record<string, boolean>>(() => keep('follows', {}));
 
   const myHandle = profile.username.trim().replace(/^@/, '') || handleOf(profile.name);
@@ -72,35 +59,19 @@ export function UserProfile() {
   const ids = new Set(feedPosts.map((p) => p.id));
   const history = [...feedPosts, ...debatePostsBy(handle).filter((p) => !ids.has(p.id))];
   const counts = countsFor(handle, account.kind);
+  const debateIds = new Set(debatePostsBy(handle).map((p) => p.id));
+  const author = { author: account.name, avatarSrc: account.avatarSrc, tone: account.tone, feed: 'venner' as const };
+  const extraFor = extrasFor(handle);
+  // Opslag til følgere: deres opslag fra feedet + korte tekster og billeder fra profilen (uden debatindlæg)
+  const profilePosts = [
+    ...(extraFor.pinned ? [{ ...author, id: `${handle}-pin`, meta: 'Fastgjort', text: extraFor.pinned }] : []),
+    ...feedPosts.filter((p) => !debateIds.has(p.id) && p.feed !== 'debat'),
+    ...extraFor.texts.map((t, i) => ({ ...author, id: `${handle}-t${i}`, meta: t.time, text: t.text, image: extraFor.photos.filter((x) => !isVideo(x))[i + 1] })),
+  ];
   const extras = extrasFor(handle);
-  const textPosts = history.filter((p) => typeof p.image !== 'string');
-  const photos = [
-    ...new Set([...history.map((p) => p.image).filter((x): x is string => typeof x === 'string'), ...extras.photos]),
-  ].filter((x) => !isVideo(x));
-  const nothing = history.length + extras.texts.length + photos.length === 0 && !extras.pinned;
   const postCount = history.length + extras.texts.length + extras.photos.length + extras.flicks.length;
 
-  const photoTile = (src: string, i: number): Tile => ({
-    key: `${src}-${i}`,
-    height: photoHeights[i % photoHeights.length]!,
-    render: () => (
-      <span className="pf-photo">
-        <img src={src} alt="" />
-      </span>
-    ),
-  });
 
-  const card = (p: (typeof history)[number]) => {
-    return (
-      <PostCard
-        key={p.id}
-        post={p}
-        onComment={() => navigate(`/opslag/${p.id}?kommentarer`)}
-        onShare={() => navigate(`/opslag/${p.id}/del`)}
-        onReport={() => navigate(`/opslag/${p.id}/rapporter`)}
-      />
-    );
-  };
   const isSide = account.kind === 'side';
   const pk = publicKind(account.handle) ?? (isSide ? 'side' : null);
   const contact = contacts.find((c) => handleOf(c.name) === handle);
@@ -139,7 +110,7 @@ export function UserProfile() {
             </p>
             {pk && (
               <span className={`uprof__public uprof__public--${pk} t-caption-strong`}>
-                <Icon name={pk === 'person' ? 'megaphone' : 'building'} size={14} /> {publicLabel[pk]}
+                <Icon name={pk === 'person' ? 'globe' : 'building'} size={14} /> {publicLabel[pk]}
               </span>
             )}
             {account.followsMe && (
@@ -178,109 +149,19 @@ export function UserProfile() {
           </Button>
         </div>
 
-        {extras.collections.length > 0 && (
-          <>
-            <h2 className="t-heading-s">Samlinger</h2>
-            <ul className="pf-collections">
-              {extras.collections.map((c) => (
-                <li key={c.id} className="pf-collection">
-                  <Link to={`/bruger/${handle}/samling/${c.id}`} className="pf-collection__link" aria-label={`Afspil samlingen ${c.title}`}>
-                    <span className="pf-collection__photo">
-                      <img src={c.photos.find((x) => !isVideo(x))} alt="" />
-                      {c.photos.some(isVideo) && <Icon name="clip" size={18} className="uprof__has-video" />}
-                    </span>
-                    <span className="t-label">{c.title}</span>
-                  </Link>
-                </li>
-              ))}
-            </ul>
-          </>
-        )}
-
-        <div className="pf-tabs" role="tablist" aria-label={`Vis på profilen for ${account.name}`}>
-          {tabs.map((t) => (
-            <button
-              key={t.value}
-              type="button"
-              role="tab"
-              aria-selected={tab === t.value}
-              className="pf-tab"
-              onClick={() => setParams(t.value === 'alt' ? {} : { fane: t.value }, { replace: true })}
-            >
-              {t.label}
-            </button>
-          ))}
-        </div>
-
-        <div role="tabpanel" className="pf-panel">
-          {tab === 'alt' && (
-            <>
-              {extras.pinned && (
-                <article className="pf-post">
-                  <Tag>Fastgjort</Tag>
-                  <p className="t-body">{extras.pinned}</p>
-                </article>
-              )}
-              {history.map(card)}
-              {extras.texts.map((t) => (
-                <TextCard key={t.id} text={t.text} time={t.time} />
-              ))}
-              {photos.length > 0 && <Masonry tiles={photos.slice(0, 4).map(photoTile)} label="Seneste billeder" />}
-              {nothing && <p className="t-body-s uprof__muted">{account.name} har ikke delt noget endnu.</p>}
-            </>
-          )}
-
-          {tab === 'tekst' &&
-            (textPosts.length + extras.texts.length === 0 ? (
-              <p className="t-body-s uprof__muted">Ingen tekstopslag endnu.</p>
-            ) : (
-              <>
-                {textPosts.map(card)}
-                {extras.texts.map((t) => (
-                  <TextCard key={t.id} text={t.text} time={t.time} />
-                ))}
-              </>
-            ))}
-
-          {tab === 'billeder' && (
-            <>
-              {photos.length ? (
-                <Masonry tiles={photos.map(photoTile)} label="Billeder" />
-              ) : (
-                <p className="t-body-s uprof__muted">Ingen billeder endnu.</p>
-              )}
-            </>
-          )}
-
-          {tab === 'flicks' &&
-            (extras.flicks.length ? (
-              <Masonry
-                label="Flicks"
-                tiles={extras.flicks.map((src, i) => ({
-                  key: `f${i}`,
-                  height: [230, 180, 200][i % 3]!,
-                  render: () => (
-                    <Link to="/flicks" className="pf-photo pf-flick" aria-label={`Flick ${i + 1} fra ${account.name}`}>
-                      <img src={src} alt="" />
-                      <Icon name="clip" className="pf-flick__icon" />
-                    </Link>
-                  ),
-                }))}
-              />
-            ) : (
-              <p className="t-body-s uprof__muted">Ingen flicks endnu.</p>
-            ))}
-        </div>
+        <ProfileContent
+          name={account.name.split(' ')[0]!}
+          highlights={extras.collections.map((c) => ({
+            id: c.id,
+            title: c.title,
+            cover: c.photos.find((x) => !isVideo(x)),
+            href: `/bruger/${handle}/samling/${c.id}`,
+          }))}
+          posts={profilePosts}
+          debate={debatePostsBy(handle)}
+          flicks={extras.flicks.map((src, i) => ({ id: `f${i}`, src, href: '/flicks', views: ['3,1 t.', '942', '1,5 t.'][i % 3] }))}
+        />
       </main>
     </div>
-  );
-}
-
-function TextCard({ text, time }: { text: string; time: string }) {
-  return (
-    <article className="pf-post">
-      <p className="t-body">{text}</p>
-      <p className="t-caption pf-muted">{time}</p>
-    </article>
   );
 }

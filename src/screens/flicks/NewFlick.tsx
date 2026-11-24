@@ -242,11 +242,14 @@ export function NewFlick() {
       {/* Efter optagelse: vælg flick eller moment, tilføj tags, og del */}
       {captured && (
         <div className="newflick__panel">
+          {/* Kun flicks har tags. Moments er personlige og forsvinder efter 24 timer. */}
+          {kind === 'flick' && (
           <TagInput
             tags={tags}
             onTags={setTags}
-            hint={kind === 'moment' ? 'Fx #Natur eller #Koncert. Forsvinder efter 24 timer.' : 'Fx #Dans eller #Cykelstier, så andre kan finde den.'}
+            hint="Fx #Dans eller #Cykelstier, så andre kan finde den."
           />
+          )}
           <Button variant="highlight" block onClick={close}>
             Del {kind === 'flick' ? 'flick' : 'moment'}
           </Button>
