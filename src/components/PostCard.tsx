@@ -201,7 +201,7 @@ function whyText(post: Post & { feed?: string; topic?: string }) {
   if (post.id.startsWith('mit-')) return 'Det er dit eget opslag.';
   if (name) return `Du er medlem af gruppen ${name}.`;
   if (post.meta.startsWith('Side')) return `Du følger siden ${post.author}.`;
-  if (post.feed === 'debat' || post.topic) return `Opslaget handler om ${post.topic ?? post.meta}, som er et af dine emner i Offentlig debat.`;
+  if (post.feed === 'debat' || post.topic) return `Opslaget handler om ${post.topic ?? post.meta}, som er en af dine interesser.`;
   return `Du følger ${post.author}.`;
 }
 

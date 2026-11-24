@@ -37,12 +37,12 @@ export function Discover() {
     <div className="discover">
       <h1 className="t-title-xl">Offentlig debat</h1>
 
-      <ul ref={rowRef} className="discover__row" aria-label="Filtrér efter dine emner">
+      <ul ref={rowRef} className="discover__row" aria-label="Filtrér efter dine interesser">
         {/* Rediger emner står først og ruller med væk, når man bladrer i emnerne */}
         <li>
           <Chip className="discover__edit" onClick={() => setEditing(true)}>
             <Icon name="sliders" size={18} />
-            Rediger emner
+            Rediger interesser
           </Chip>
         </li>
         {topics.map((t) => {
@@ -74,7 +74,7 @@ export function Discover() {
           />
         ))}
         {shown.length === 0 && (
-          <p className="t-body-s discover__intro">Ingen opslag om dine emner lige nu. Prøv at følge flere emner.</p>
+          <p className="t-body-s discover__intro">Ingen opslag om dine interesser lige nu. Prøv at følge flere.</p>
         )}
       </div>
 

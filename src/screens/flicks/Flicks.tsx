@@ -135,9 +135,9 @@ export function Flicks() {
           it.kind === 'empty' ? (
             <article key="empty" className="flick flick--dark flick--empty" aria-posinset={i + 1} aria-setsize={items.length}>
               <div className="flick__empty">
-                <p className="t-heading-m">Ingen flicks om dine emner lige nu</p>
+                <p className="t-heading-m">Ingen flicks om dine interesser lige nu</p>
                 <button type="button" className="t-label flick__undo" onClick={() => setEditing(true)}>
-                  Rediger emner
+                  Rediger interesser
                 </button>
               </div>
             </article>
@@ -245,7 +245,7 @@ function FlickView({ flick, position, total, why, saved, onSave, onComments, onS
 /** Forklaringen bag "Hvorfor ser jeg denne flick?" (tidligere den grønne linje) */
 function whyFlick(f: Flick, topics: string[]) {
   const topic = f.source === 'tildig' ? f.tags?.find((t) => topics.includes(t)) : undefined;
-  if (topic) return `Flicken handler om ${topic}, som er et af dine emner.`;
+  if (topic) return `Flicken handler om ${topic}, som er en af dine interesser.`;
   if (f.friends?.length) return `${f.friends.map((p) => p.name.split(' ')[0]).join(' og ')}, som du følger, har liket den.`;
   return `Du følger ${f.author}.`;
 }

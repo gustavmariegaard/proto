@@ -35,10 +35,10 @@ export function TopicsSheet({ open, onClose }: { open: boolean; onClose: () => v
   );
 
   return (
-    <Sheet open={open} onClose={onClose} title="Rediger emner" dim initialSize="full">
+    <Sheet open={open} onClose={onClose} title="Rediger interesser" dim initialSize="full">
       <div className="interests">
         <TextField
-          label="Søg efter emner"
+          label="Søg efter interesser"
           type="search"
           value={query}
           onChange={(e) => setQuery(e.target.value)}
@@ -65,17 +65,17 @@ export function TopicsSheet({ open, onClose }: { open: boolean; onClose: () => v
               )}
             </ul>
             {hits.length === 0 && (
-              <p className="t-caption interests__muted">Ingen emner hedder sådan endnu. Du kan selv følge det.</p>
+              <p className="t-caption interests__muted">Ingen interesser hedder sådan endnu. Du kan selv følge den.</p>
             )}
           </section>
         ) : (
           <>
             <section className="interests__section" aria-labelledby="interests-mine">
-              <h2 id="interests-mine" className="t-heading-s">Dine emner</h2>
+              <h2 id="interests-mine" className="t-heading-s">Dine interesser</h2>
               {mine.length ? (
                 <ul className="interests__chips">{mine.map(chip)}</ul>
               ) : (
-                <p className="t-caption interests__muted">Du følger ingen emner endnu. Søg, eller vælg nedenfor.</p>
+                <p className="t-caption interests__muted">Du følger ingen interesser endnu. Søg, eller vælg nedenfor.</p>
               )}
             </section>
 
