@@ -320,19 +320,27 @@ input:focus-visible + .more-photo__drop { box-shadow: var(--focus-ring); }
 }
 
 .group-members__all {
+  display: inline-flex;
+  align-items: center;
   min-height: 44px;
   padding: 0 4px;
+  color: inherit;
   text-decoration: underline;
 }
 
 .group-members__list {
   display: flex;
-  flex-wrap: wrap;
-  gap: 14px 10px;
-  margin: 0;
-  padding: 0;
+  gap: 10px;
+  margin: 0 -20px;
+  padding: 0 20px 2px;
   list-style: none;
+  /* Én række, man kan swipe i */
+  overflow-x: auto;
+  scrollbar-width: none;
 }
+
+.group-members__list::-webkit-scrollbar { display: none; }
+.group-members__list > li { flex: none; }
 
 .group-member {
   display: flex;
@@ -351,3 +359,6 @@ input:focus-visible + .more-photo__drop { box-shadow: var(--focus-ring); }
   margin-top: -4px;
   color: var(--color-text-secondary);
 }
+
+/* Medlemslisten: links uden understregning */
+a.more-row { color: inherit; text-decoration: none; }

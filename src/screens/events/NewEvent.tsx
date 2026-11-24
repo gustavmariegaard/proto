@@ -50,7 +50,8 @@ export function NewEvent() {
   const isPublic = visibility === 'offentlig';
 
   const create = () => {
-    const invited: Guest[] = isPublic ? [] : resolveInvites(invites);
+    // Både offentlige og private begivenheder kan invitere
+    const invited: Guest[] = resolveInvites(invites);
     const id = addEvent({
       title: title.trim(),
       date: date || todayIso(),
@@ -109,7 +110,7 @@ export function NewEvent() {
             : 'Privat: kun dem, du inviterer, kan se den og tilmelde sig.'}
         </p>
 
-        {isPublic ? (
+        {isPublic && (
           <button
             type="button"
             role="switch"
@@ -123,14 +124,12 @@ export function NewEvent() {
             </span>
             <Toggle on={allowShare} />
           </button>
-        ) : (
-          <>
-            <h2 className="t-heading-s" id="new-event-invite">
-              Inviter
-            </h2>
-            <InvitePicker value={invites} onChange={setInvites} />
-          </>
         )}
+
+        <h2 className="t-heading-s" id="new-event-invite">
+          Inviter {isPublic && <span className="t-caption event-screen__muted">(valgfrit – alle kan stadig finde den)</span>}
+        </h2>
+        <InvitePicker value={invites} onChange={setInvites} />
 
         <textarea
           className="new-event__desc"
