@@ -11,9 +11,13 @@ import { pages } from './more';
 export type PublicKind = 'person' | 'side';
 
 const publicPeople = ['anna.noergaard', 'peter.holm'];
+/** Foreninger og steder, der kun optræder i Offentlig debat og Flicks (også sider) */
+const otherOrganisations = ['Cykelklubben Øst', 'Grønne Gader', 'Spillestedet Lyden', 'Løbefællesskabet', 'Byens Cyklister'];
+
 const pageHandles = new Set<string>([
   ...Object.values(pageAccounts).map((p) => handleOf(p.fullName)),
   ...pages.map((p) => handleOf(p.name)),
+  ...otherOrganisations.map(handleOf),
 ]);
 
 export function publicKind(nameOrHandle: string): PublicKind | null {

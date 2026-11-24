@@ -99,8 +99,8 @@ export function Create() {
     const id = addPost({
       feed: debat ? 'debat' : 'venner',
       topic: debat ? tags[0] : undefined,
-      // Tags kun på normale opslag, ikke i grupper og begivenheder
-      tags: !placeKind && tags.length ? tags : undefined,
+      // Tags kun i Offentlig debat
+      tags: debat && tags.length ? tags : undefined,
       // Som på Reddit: dit eget opslag starter med din egen opstemme
       score: debat ? 0 : undefined,
       author: profile.name || 'Dig',
@@ -355,8 +355,8 @@ function AudiencePicker({ audience, onAudience, hint, tags, onTags, tagError }: 
       </div>
       {hint && <p className="t-caption modal-screen__muted" aria-live="polite">{hint}</p>}
 
-      {/* Tags på normale opslag; i Offentlig debat er mindst ét påkrævet */}
-      <TagInput tags={tags} onTags={onTags} error={tagError} required={audience === 'debat'} />
+      {/* Tags kun i Offentlig debat (mindst ét). Opslag på din profil har ingen tags. */}
+      {audience === 'debat' && <TagInput tags={tags} onTags={onTags} error={tagError} required />}
 
     </section>
   );
