@@ -167,3 +167,65 @@
   color: var(--color-text-on-action);
   text-decoration: none;
 }
+
+/* ---------- Opslag som gitter (Instagram/VSCO) ---------- */
+.pc-view {
+  display: flex;
+  justify-content: flex-end;
+  gap: 4px;
+  margin-bottom: -6px;
+}
+
+.pc-view__btn {
+  display: grid;
+  place-items: center;
+  width: 40px;
+  height: 40px;
+  border-radius: 10px;
+  color: var(--color-text-secondary);
+  position: relative;
+}
+
+.pc-view__btn::before { content: ''; position: absolute; inset: -2px; }
+.pc-view__btn[aria-pressed='true'] { background: var(--color-bg-subtle); color: var(--color-text-primary); }
+.pc-view__btn:focus-visible { outline: none; box-shadow: var(--focus-ring); }
+
+/* Tre kolonner i 4:5, tæt som Instagram, uden runde hjørner som VSCO */
+.pc-grid {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 2px;
+  margin: 0 -20px;
+  padding: 0;
+  list-style: none;
+}
+
+.pc-tile {
+  display: block;
+  aspect-ratio: 4 / 5;
+  overflow: hidden;
+  background: var(--color-bg-subtle);
+  color: var(--color-text-primary);
+  text-decoration: none;
+}
+
+.pc-tile img { width: 100%; height: 100%; object-fit: cover; transition: transform 0.25s ease; }
+.pc-tile:active img { transform: scale(0.98); }
+.pc-tile:focus-visible { outline: none; box-shadow: inset 0 0 0 3px var(--color-accent-highlight); }
+
+/* Tekstopslag: rolig typografisk flise */
+.pc-tile--text {
+  display: flex;
+  align-items: flex-end;
+  padding: 10px;
+  background: var(--color-bg-surface);
+  box-shadow: inset 0 0 0 1px var(--color-border-default);
+}
+
+.pc-tile__text {
+  display: -webkit-box;
+  -webkit-line-clamp: 6;
+  -webkit-box-orient: vertical;
+  overflow: hidden;
+  font: 500 13px/17px var(--font-body);
+}

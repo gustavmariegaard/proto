@@ -53,6 +53,7 @@ import { PhotoView } from './screens/profile/PhotoView';
 import { Collection } from './screens/profile/Collection';
 import { CollectionViewer } from './screens/profile/CollectionViewer';
 import { CollectionEdit } from './screens/profile/CollectionEdit';
+import { NewHighlight } from './screens/profile/NewHighlight';
 import { Interests } from './screens/profile/Interests';
 
 /** Mørk statuslinje og baggrund på de mørke skærme */
@@ -145,6 +146,7 @@ export default function App() {
             <Route path="sider" element={<Pages />} />
             <Route path="sider/ny" element={<NewPage />} />
             <Route path="profil/billede/:id" element={<PhotoView />} />
+            <Route path="profil/samling/ny" element={<NewHighlight />} />
             <Route path="profil/samling/:id" element={<Collection />} />
             <Route path="profil/samling/:id/vis" element={<CollectionViewer />} />
             <Route path="profil/samling/:id/rediger" element={<CollectionEdit />} />

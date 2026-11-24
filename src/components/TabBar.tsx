@@ -1,4 +1,5 @@
-import { NavLink } from 'react-router-dom';
+import { useEffect, useState } from 'react';
+import { NavLink, useLocation } from 'react-router-dom';
 import { Icon, type IconName } from './Icon';
 import './TabBar.css';
 
@@ -15,8 +16,9 @@ const tabs: { to: string; label: string; icon: IconName }[] = [
  * Kun ikoner; navnet læses op af skærmlæsere.
  */
 export function TabBar() {
+  const hidden = useHideOnScroll();
   return (
-    <nav className="tabbar" aria-label="Hovedmenu">
+    <nav className={['tabbar', hidden && 'tabbar--hidden'].filter(Boolean).join(' ')} aria-label="Hovedmenu">
       <ul className="tabbar__pill">
         {tabs.map((tab) => (
           <li key={tab.to}>
@@ -37,4 +39,32 @@ export function TabBar() {
       </ul>
     </nav>
   );
+}
+
+/**
+ * Som på Facebook: menuen glider væk, når man ruller ned, og kommer igen, når man ruller op.
+ * Lytter på alle rullende flader i appen (scroll bobler ikke, så vi lytter i capture-fasen).
+ */
+function useHideOnScroll() {
+  const [hidden, setHidden] = useState(false);
+  const { pathname } = useLocation();
+  useEffect(() => setHidden(false), [pathname]);
+  useEffect(() => {
+    const last = new WeakMap<EventTarget, number>();
+    const onScroll = (e: Event) => {
+      const el = e.target;
+      if (!(el instanceof HTMLElement)) return;
+      // Kun lodret rulning af hele sider (ikke vandrette rækker)
+      if (el.scrollHeight - el.clientHeight < 40) return;
+      const top = el.scrollTop;
+      const prev = last.get(el) ?? 0;
+      const delta = top - prev;
+      if (Math.abs(delta) < 6) return;
+      last.set(el, top);
+      setHidden(delta > 0 && top > 80);
+    };
+    document.addEventListener('scroll', onScroll, { capture: true, passive: true });
+    return () => document.removeEventListener('scroll', onScroll, { capture: true });
+  }, []);
+  return hidden;
 }

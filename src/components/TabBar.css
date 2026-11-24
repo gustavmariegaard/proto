@@ -57,3 +57,15 @@
 }
 
 .tabbar__tab:active .tabbar__holder { transform: scale(0.94); }
+
+/* Glider ned og væk ved scroll nedad, frem igen ved scroll opad */
+.tabbar { transition: transform 0.28s ease, opacity 0.2s ease; }
+.tabbar--hidden {
+  transform: translateY(calc(100% + var(--tabbar-bottom) + 8px));
+  opacity: 0;
+  pointer-events: none;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .tabbar { transition: opacity 0.15s linear; }
+}

@@ -31,6 +31,15 @@ export function updateCollection(id: string, patch: Partial<Omit<Collection, 'id
   listeners.forEach((cb) => cb());
 }
 
+/** Ny highlight. Returnerer dens id. */
+export function createCollection(title: string, photoIds: string[]): string {
+  const id = `h-${Date.now()}`;
+  collections = [...collections, { id, title, cover: photoIds[0] ?? '', photoIds }];
+  save('collections', collections);
+  listeners.forEach((cb) => cb());
+  return id;
+}
+
 /** Billederne i en samling, forsiden først ikke flyttet (rækkefølgen bevares). */
 export function collectionPhotos(c: Collection): Photo[] {
   return c.photoIds.map(photoById).filter((p): p is Photo => Boolean(p));

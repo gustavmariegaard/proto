@@ -35,6 +35,8 @@ export function ProfileContent({ highlights, posts, debate, flicks, own = false,
   const raw = params.get('fane');
   const tab: Tab = raw === 'debat' || raw === 'flicks' ? raw : 'opslag';
   const [openAll, setOpenAll] = useState(false);
+  // Opslag som gitter (Instagram/VSCO) eller liste. Gitter er standard.
+  const [view, setView] = useState<'gitter' | 'liste'>('gitter');
 
   const tabs: { value: Tab; label: string; icon: IconName; count: number }[] = [
     { value: 'opslag', label: 'Opslag', icon: 'layout-list', count: posts.length },
@@ -61,7 +63,7 @@ export function ProfileContent({ highlights, posts, debate, flicks, own = false,
           <ul className="pc-highlights__row">
             {own && (
               <li>
-                <Link to="/flicks/ny?som=moment" className="pc-highlight pc-highlight--new" aria-label="Nyt moment">
+                <Link to="/profil/samling/ny" className="pc-highlight pc-highlight--new" aria-label="Ny highlight">
                   <span className="pc-highlight__ring">
                     <Icon name="plus" />
                   </span>
@@ -109,11 +111,37 @@ export function ProfileContent({ highlights, posts, debate, flicks, own = false,
             />
           ) : (
             <>
+              <div className="pc-view" role="group" aria-label="Visning">
+                <button type="button" className="pc-view__btn" aria-pressed={view === 'gitter'} aria-label="Vis som gitter" onClick={() => setView('gitter')}>
+                  <Icon name="layout-grid" size={20} />
+                </button>
+                <button type="button" className="pc-view__btn" aria-pressed={view === 'liste'} aria-label="Vis som liste" onClick={() => setView('liste')}>
+                  <Icon name="layout-list" size={20} />
+                </button>
+              </div>
+              {view === 'gitter' ? (
+                <ul className="pc-grid">
+                  {posts.map((p) => (
+                    <li key={p.id}>
+                      <Link to={`/opslag/${p.id}`} className={['pc-tile', typeof p.image !== 'string' && 'pc-tile--text'].filter(Boolean).join(' ')} aria-label={`Opslag: ${p.text.slice(0, 60)}`}>
+                        {typeof p.image === 'string' ? (
+                          <img src={p.image} alt="" loading="lazy" />
+                        ) : (
+                          <span className="pc-tile__text">{p.text}</span>
+                        )}
+                      </Link>
+                    </li>
+                  ))}
+                </ul>
+              ) : (
+              <>
               {shownPosts.map(card)}
               {posts.length > shownPosts.length && (
                 <button type="button" className="t-label pc-more" onClick={() => setOpenAll(true)}>
                   Vis alle {posts.length} opslag
                 </button>
+              )}
+              </>
               )}
             </>
           ))}

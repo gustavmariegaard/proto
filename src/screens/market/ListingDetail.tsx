@@ -8,7 +8,7 @@ import { IconButton } from '../../components/IconButton';
 import { PageHeader } from '../../components/PageHeader';
 import { Sheet } from '../../components/Sheet';
 import { TextField } from '../../components/TextField';
-import { formatPrice, listedText, sellerSuggestions, type Listing } from '../../data/market';
+import { formatPrice, listedText, type Listing } from '../../data/market';
 import { handleOf } from '../../data/handles';
 import { useThreads } from '../messages/store';
 import { deleteListing, messageSeller, setPrice, setSold, toggleSaved, useListing, useSaved } from './store';
@@ -159,23 +159,12 @@ function PriceSheet({
   );
 }
 
-/**
- * Forslag som chips + et redigerbart beskedfelt. Et tryk på en chip lægger
- * teksten i feltet (sender ikke), så man kan rette den til før Send.
- */
+/** Skriv direkte til sælgeren (ingen færdige forslag). */
 function SellerComposer({ listing, onSend }: { listing: Listing; onSend: (text?: string) => void }) {
   const [text, setText] = useState('');
   const fieldRef = useRef<HTMLTextAreaElement>(null);
-  const suggestions = sellerSuggestions(listing);
   const fieldId = `ld-msg-${listing.id}`;
 
-  const pick = (q: string) => {
-    setText(q);
-    const el = fieldRef.current;
-    if (!el) return;
-    el.focus({ preventScroll: true });
-    requestAnimationFrame(() => el.setSelectionRange(q.length, q.length));
-  };
 
   return (
     <form
@@ -185,15 +174,6 @@ function SellerComposer({ listing, onSend }: { listing: Listing; onSend: (text?:
         onSend(text.trim() || undefined);
       }}
     >
-      <ul className="ld-replies" aria-label="Forslag til en besked">
-        {suggestions.map((q) => (
-          <li key={q}>
-            <Chip onClick={() => pick(q)} aria-pressed={undefined} selected={text === q}>
-              {q}
-            </Chip>
-          </li>
-        ))}
-      </ul>
       <label htmlFor={fieldId} className="visually-hidden">
         Besked til {listing.seller.name.split(' ')[0]}
       </label>

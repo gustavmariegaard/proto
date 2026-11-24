@@ -1,0 +1,71 @@
+.nh { gap: 16px; }
+
+.nh__name {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  width: 100%;
+}
+
+.nh__head {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: 8px;
+  width: 100%;
+}
+
+/* Moments i 9:16 som i et story-arkiv */
+.nh__grid {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 4px;
+  width: 100%;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.nh__tile {
+  position: relative;
+  display: block;
+  width: 100%;
+  aspect-ratio: 9 / 16;
+  overflow: hidden;
+  border-radius: 10px;
+  background: var(--color-bg-subtle);
+}
+
+.nh__tile img { width: 100%; height: 100%; object-fit: cover; transition: opacity 0.15s ease; }
+.nh__tile--on img { opacity: 0.75; }
+.nh__tile--on { box-shadow: inset 0 0 0 3px var(--color-accent-highlight); }
+.nh__tile:focus-visible { outline: none; box-shadow: var(--focus-ring); }
+
+.nh__time {
+  position: absolute;
+  left: 6px;
+  bottom: 6px;
+  color: #fff;
+  text-shadow: 0 1px 3px rgb(0 0 0 / 0.6);
+}
+
+.nh__check {
+  position: absolute;
+  top: 6px;
+  right: 6px;
+  display: grid;
+  place-items: center;
+  width: 24px;
+  height: 24px;
+  border-radius: 50%;
+  border: 1.5px solid #fff;
+  background: rgb(0 0 0 / 0.25);
+  color: #fff;
+  font: 700 12px/1 var(--font-body);
+}
+
+.nh__tile--on .nh__check {
+  border-color: var(--color-accent-highlight);
+  background: var(--color-accent-highlight);
+  color: var(--ink-900);
+}
