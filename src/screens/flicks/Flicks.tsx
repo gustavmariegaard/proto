@@ -15,14 +15,13 @@ import { at, handleOf } from '../../data/handles';
 import './Flicks.css';
 
 const modes: { source: FlickSource; label: string }[] = [
-  // Samme emner som Offentlig debat, derfor samme navn som der
-  { source: 'tildig', label: 'Dine emner' },
+  // Bygger på de emner, man vælger med justér-knappen (de samme som i Offentlig debat)
+  { source: 'tildig', label: 'Interesser' },
   { source: 'cirkel', label: 'Følger' },
 ];
 
 /** Et punkt i feedet: en flick, eller en tom side, når ingen flicks passer til dine emner */
 type Item = { kind: 'flick'; flick: Flick } | { kind: 'empty' };
-const sourceOf = (item: Item): FlickSource => (item.kind === 'flick' ? item.flick.source : 'tildig');
 
 /**
  * Flicks: korte lodrette videoer og billeder i fuld skærm.
@@ -34,6 +33,8 @@ export function Flicks() {
   const navigate = useNavigate();
   const feedRef = useRef<HTMLDivElement>(null);
   const [index, setIndex] = useState(0);
+  // Interesser og Følger er to adskilte feeds – skift er hårdt, som Reels
+  const [mode, setMode] = useState<FlickSource>('tildig');
   const [saved, setSaved] = useState<string[]>([]);
   const [commentsFor, setCommentsFor] = useState<string | null>(null);
   const [editing, setEditing] = useState(false);
@@ -43,12 +44,18 @@ export function Flicks() {
   const visible = allFlicks.filter((f) => !(publicKind(f.author) && isBuried(scoreWith(flickCounts(f.id).likes, votes[f.id]))));
   // Dine emner: kun flicks, der handler om de emner, der er slået til
   const mine = visible.filter((f) => f.source === 'tildig' && inTopics(f.tags, active));
-  const items: Item[] = [
-    ...(mine.length ? mine.map((f) => ({ kind: 'flick' as const, flick: f })) : [{ kind: 'empty' as const }]),
-    ...visible.filter((f) => f.source === 'cirkel').map((f) => ({ kind: 'flick' as const, flick: f })),
-  ];
+  const items: Item[] =
+    mode === 'tildig'
+      ? mine.length
+        ? mine.map((f) => ({ kind: 'flick' as const, flick: f }))
+        : [{ kind: 'empty' as const }]
+      : visible.filter((f) => f.source === 'cirkel').map((f) => ({ kind: 'flick' as const, flick: f }));
 
-  const current = items[Math.min(index, items.length - 1)]!;
+  const switchTo = (m: FlickSource) => {
+    if (m === mode) return;
+    setMode(m);
+    setIndex(0);
+  };
 
   // Hvilken flick er på skærmen? (rundet til nærmeste hele skærm)
   const onScroll = () => {
@@ -104,42 +111,26 @@ export function Flicks() {
       <h1 className="visually-hidden">Flicks</h1>
 
       <div className="flicks__chrome">
-        {/* Dine emner / Følger. Valgt = hvid. Følger den flick, der vises.
-            Dine emner har et justér-ikon og åbner de samme emner som Offentlig debat. */}
+        {/* Justér emner · Interesser · Følger. Valgt = hvid, resten gennemsigtige. */}
         <div className="flicks__top" role="group" aria-label="Vælg feed">
-          {modes.map((m) => {
-            const on = sourceOf(current) === m.source;
-            const go = () => {
-              const first = items.findIndex((it) => sourceOf(it) === m.source);
-              if (first >= 0) scrollTo(first);
-            };
-            const cls = ['flicks__mode', on && 'flicks__mode--on'].filter(Boolean).join(' ');
-            if (m.source !== 'tildig') {
-              return (
-                <button key={m.source} type="button" aria-pressed={on} className={cls} onClick={go}>
-                  {m.label}
-                </button>
-              );
-            }
-            // Dine emner: ikon til venstre. Er man der allerede, åbner et tryk de samme emner som Offentlig debat.
-            return (
-              <button
-                key={m.source}
-                type="button"
-                aria-pressed={on}
-                aria-label={on ? 'Dine emner – rediger emner' : 'Dine emner'}
-                className={cls}
-                onClick={on ? () => setEditing(true) : go}
-              >
-                <Icon name="sliders" size={18} />
-                {m.label}
-              </button>
-            );
-          })}
+          <button type="button" className="flicks__mode flicks__mode--icon" aria-label="Juster dine interesser" onClick={() => setEditing(true)}>
+            <Icon name="sliders" size={20} />
+          </button>
+          {modes.map((m) => (
+            <button
+              key={m.source}
+              type="button"
+              aria-pressed={mode === m.source}
+              className={['flicks__mode', mode === m.source && 'flicks__mode--on'].filter(Boolean).join(' ')}
+              onClick={() => switchTo(m.source)}
+            >
+              {m.label}
+            </button>
+          ))}
         </div>
       </div>
 
-      <div className="flicks__feed" ref={feedRef} onScroll={onScroll} aria-label="Flicks" role="feed" aria-busy="false">
+      <div key={mode} className="flicks__feed" ref={feedRef} onScroll={onScroll} aria-label="Flicks" role="feed" aria-busy="false">
         {items.map((it, i) =>
           it.kind === 'empty' ? (
             <article key="empty" className="flick flick--dark flick--empty" aria-posinset={i + 1} aria-setsize={items.length}>

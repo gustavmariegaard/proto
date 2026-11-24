@@ -6,11 +6,14 @@ import { Icon } from '../../components/Icon';
 import { SegmentedControl } from '../../components/SegmentedControl';
 import { Sheet } from '../../components/Sheet';
 import { TextField } from '../../components/TextField';
-import { formatPrice, listedText, myCity, radiusOptions, radiusText, type Listing } from '../../data/market';
+import { formatPrice, listedText, myCity, radiusText, type Listing } from '../../data/market';
 import { relatedFirst, setRadius, useListings, useMarket, useRadius } from './store';
+import { Toggle } from '../create/parts';
 import './Market.css';
 
-/** Torvet · Afstand: vælg, hvor langt væk annoncerne må være. */
+const MAX_KM = 100;
+
+/** Torvet · Afstand: træk i linjen for at vælge, hvor langt væk annoncerne må være. */
 function RadiusSheet({ open, value, onClose }: { open: boolean; value: number | null; onClose: () => void }) {
   const [draft, setDraft] = useState(value);
   const [wasOpen, setWasOpen] = useState(open);
@@ -38,15 +41,38 @@ function RadiusSheet({ open, value, onClose }: { open: boolean; value: number | 
         </Button>
       }
     >
-      <ul className="market__chips market-radius" aria-label={`Afstand fra ${myCity}`}>
-        {radiusOptions.map((km) => (
-          <li key={String(km)}>
-            <Chip selected={draft === km} onClick={() => setDraft(km)}>
-              {radiusText(km)}
-            </Chip>
-          </li>
-        ))}
-      </ul>
+      <div className="market-radius">
+        <p className="market-radius__value">
+          <span className="t-title-l">{radiusText(draft)}</span>
+          <span className="t-caption market-radius__muted">fra {myCity}</span>
+        </p>
+        <input
+          type="range"
+          className="market-radius__slider"
+          min={1}
+          max={MAX_KM}
+          step={1}
+          value={draft ?? MAX_KM}
+          disabled={draft === null}
+          aria-label={`Afstand fra ${myCity} i km`}
+          style={{ '--fill': `${(((draft ?? MAX_KM) - 1) / (MAX_KM - 1)) * 100}%` } as React.CSSProperties}
+          onChange={(e) => setDraft(Number(e.target.value))}
+        />
+        <div className="market-radius__scale t-caption market-radius__muted" aria-hidden="true">
+          <span>1 km</span>
+          <span>{MAX_KM} km</span>
+        </div>
+        <button
+          type="button"
+          role="switch"
+          aria-checked={draft === null}
+          className="market-radius__all"
+          onClick={() => setDraft(draft === null ? 25 : null)}
+        >
+          <span className="t-label">Hele landet</span>
+          <Toggle on={draft === null} />
+        </button>
+      </div>
     </Sheet>
   );
 }

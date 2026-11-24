@@ -26,7 +26,6 @@ export const conditions = ['Ny', 'Som ny', 'God', 'Brugt'] as const;
 export type Condition = (typeof conditions)[number];
 
 /** Valg i arket "Afstand" (km). null = hele landet. */
-export const radiusOptions: (number | null)[] = [2, 5, 10, 25, 50, null];
 export const initialRadius: number | null = 25;
 export const myCity = 'Aarhus';
 

@@ -96,6 +96,11 @@
   color: var(--color-text-primary);
 }
 
+.flicks__mode--icon {
+  width: 44px;
+  padding: 0;
+}
+
 .flicks__mode:focus-visible {
   outline: 2px solid var(--color-accent-highlight);
   outline-offset: 2px;
@@ -142,8 +147,8 @@
  */
 .flick__bottom {
   position: absolute;
-  left: 12px;
-  right: 20px;
+  left: var(--space-16);
+  right: var(--space-16);
   bottom: calc(var(--tabbar-bar) + 16px);
   display: flex;
   flex-direction: column;
@@ -172,14 +177,14 @@
 /* Gemt: bogmærket fyldes ud */
 .flick__saved svg path { fill: currentColor; }
 
+/* Samme bredde og runding som bundmenuen */
 .flick__caption {
-  margin-right: 32px;
   display: flex;
   flex-direction: column;
   align-items: flex-start;
   gap: 6px;
-  padding: 14px;
-  border-radius: var(--radius-lg);
+  padding: 14px 20px;
+  border-radius: 26px;
   background: rgba(10, 10, 10, 0.85);
 }
 

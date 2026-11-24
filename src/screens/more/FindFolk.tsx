@@ -69,7 +69,6 @@ export function FindFolk() {
 
         <div className="more-note">
           <span className="t-heading-s">Find venner via dine kontakter</span>
-          <span className="t-caption">Vi gemmer ikke dine kontakter.</span>
           <Button
             variant={contactsChosen ? 'secondary' : 'primary'}
             aria-pressed={contactsChosen}
