@@ -1,4 +1,4 @@
-import { useCallback, useEffect, useId, useRef, useState } from 'react';
+import { useCallback, useEffect, useId, useLayoutEffect, useRef, useState, type RefObject } from 'react';
 import { createPortal } from 'react-dom';
 import { useNavigate, useSearchParams } from 'react-router-dom';
 import { Button } from '../../components/Button';
@@ -53,13 +53,104 @@ function posToKm(pos: number) {
   return maxRadius;
 }
 
-type RadiusSheetProps = { open: boolean; value: number; onClose: () => void; onApply: (km: number) => void };
+/** Pil, der drejer og bliver til et kryds, når arket er åbent */
+function ToggleIcon({ open }: { open: boolean }) {
+  return (
+    <span className={['market__toggle', open && 'market__toggle--open'].filter(Boolean).join(' ')} aria-hidden="true">
+      <Icon name="chevron-right" size={20} className="market__toggle-chevron" />
+      <Icon name="close" size={20} className="market__toggle-close" />
+    </span>
+  );
+}
+
+type RadiusButtonProps = {
+  km: number;
+  open: boolean;
+  onClick: () => void;
+  buttonRef?: RefObject<HTMLButtonElement | null>;
+  style?: React.CSSProperties;
+  className?: string;
+  /** Kopien oven på sløret, der lukker arket */
+  floating?: boolean;
+};
+
+/** "Inden for 25 km · Aarhus ⌄" – bliver til "… ✕", mens arket er åbent */
+function RadiusButton({ km, open, onClick, buttonRef, style, className, floating }: RadiusButtonProps) {
+  return (
+    <button
+      ref={buttonRef}
+      type="button"
+      className={['market__radius', className].filter(Boolean).join(' ')}
+      aria-haspopup="dialog"
+      aria-expanded={open}
+      aria-label={floating ? 'Luk Søg i nærheden' : undefined}
+      onClick={onClick}
+      style={style}
+    >
+      <Icon name="pin" size={20} />
+      <span className="t-label">Inden for {km} km</span>
+      <span className="t-caption market__muted">· {myCity}</span>
+      <ToggleIcon open={open} />
+    </button>
+  );
+}
+
+type RadiusSheetProps = {
+  open: boolean;
+  value: number;
+  onClose: () => void;
+  onApply: (km: number) => void;
+  /** Knappen, der åbnede arket. En kopi af den lægges over sløret som luk-knap. */
+  anchorRef: RefObject<HTMLButtonElement | null>;
+};
 
 /** Torvet · Radius: vælg, hvor langt væk annoncerne må være. */
-function RadiusSheet({ open, value, onClose, onApply }: RadiusSheetProps) {
+function RadiusSheet({ open, value, onClose, onApply, anchorRef }: RadiusSheetProps) {
   const titleId = useId();
   const ref = useRef<HTMLDivElement>(null);
   const [draft, setDraft] = useState(value);
+  const [anchor, setAnchor] = useState<React.CSSProperties | null>(null);
+  const [shown, setShown] = useState(false);
+
+  // Placér luk-knappen præcis oven på knappen, der åbnede arket
+  useLayoutEffect(() => {
+    if (!open) {
+      setAnchor(null);
+      setShown(false);
+      return;
+    }
+    const measure = () => {
+      const btn = anchorRef.current;
+      const host = document.getElementById('root') ?? document.body;
+      if (!btn) return;
+      const b = btn.getBoundingClientRect();
+      const h = host.getBoundingClientRect();
+      setAnchor({ top: b.top - h.top, left: b.left - h.left, width: b.width, height: b.height });
+    };
+    measure();
+    // Dækker arket knappen? Så rul siden lidt op, så krydset står frit over arket.
+    const btn = anchorRef.current;
+    const sheet = ref.current;
+    if (btn && sheet) {
+      // offsetTop, ikke getBoundingClientRect: arket glider stadig ind (transform)
+      const sheetTop = (sheet.parentElement?.getBoundingClientRect().top ?? 0) + sheet.offsetTop;
+      const overlap = btn.getBoundingClientRect().bottom + 12 - sheetTop;
+      let scroller: HTMLElement | null = btn.parentElement;
+      while (scroller && !(scroller.scrollHeight > scroller.clientHeight && /auto|scroll/.test(getComputedStyle(scroller).overflowY))) {
+        scroller = scroller.parentElement;
+      }
+      if (overlap > 0) (scroller ?? document.scrollingElement)?.scrollBy({ top: overlap, behavior: 'smooth' });
+    }
+    // Krydset drejer ind, når kopien er tegnet
+    const raf = requestAnimationFrame(() => requestAnimationFrame(() => setShown(true)));
+    window.addEventListener('resize', measure);
+    window.addEventListener('scroll', measure, true);
+    return () => {
+      cancelAnimationFrame(raf);
+      window.removeEventListener('resize', measure);
+      window.removeEventListener('scroll', measure, true);
+    };
+  }, [open, anchorRef]);
 
   useEffect(() => {
     if (!open) return;
@@ -124,6 +215,7 @@ function RadiusSheet({ open, value, onClose, onApply }: RadiusSheetProps) {
           Vis annoncer
         </Button>
       </div>
+      {anchor && <RadiusButton km={value} open={shown} onClick={onClose} floating className="market__radius--float" style={anchor} />}
     </div>,
     host,
   );
@@ -176,6 +268,7 @@ export function Market() {
   const [category, setCategory] = useState<Category>('Alle');
   const [radius, setRadius] = useState(initialRadius);
   const [radiusOpen, setRadiusOpen] = useState(false);
+  const radiusRef = useRef<HTMLButtonElement>(null);
   const closeRadius = useCallback(() => setRadiusOpen(false), []);
 
   const q = query.trim().toLowerCase();
@@ -217,17 +310,14 @@ export function Market() {
           <TextField label="Søg på Torvet" type="search" value={query} onChange={(e) => setQuery(e.target.value)} />
 
           <div>
-            <button
-              type="button"
-              className="market__radius"
-              aria-haspopup="dialog"
-              onClick={() => setRadiusOpen(true)}
-            >
-              <Icon name="pin" size={20} />
-              <span className="t-label">Inden for {radius} km</span>
-              <span className="t-caption market__muted">· {myCity}</span>
-              <Icon name="chevron-right" className="market__chevron" />
-            </button>
+            <RadiusButton
+              km={radius}
+              open={radiusOpen}
+              buttonRef={radiusRef}
+              onClick={() => setRadiusOpen((o) => !o)}
+              // Mens arket er åbent, ligger en kopi med ✕ oven på sløret
+              className={radiusOpen ? 'market__radius--under' : undefined}
+            />
           </div>
 
           <ul className="market__chips market__chips--scroll" aria-label="Kategorier">
@@ -269,6 +359,7 @@ export function Market() {
         open={radiusOpen}
         value={radius}
         onClose={closeRadius}
+        anchorRef={radiusRef}
         onApply={(km) => {
           setRadius(km);
           setRadiusOpen(false);

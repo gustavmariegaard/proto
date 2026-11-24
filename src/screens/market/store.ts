@@ -1,6 +1,6 @@
 import { useMemo, useSyncExternalStore } from 'react';
-import { listings as sampleListings, type Listing } from '../../data/market';
-import { contacts } from '../../data/messages';
+import { formatPrice, listings as sampleListings, type Listing } from '../../data/market';
+import { contacts, type Thread } from '../../data/messages';
 import { keep, save } from '../../state/keep';
 import { openConversation, sendMessage } from '../messages/store';
 
@@ -93,14 +93,34 @@ export function sellerContactId(l: Listing) {
   return contacts.find((c) => c.name === l.seller.name)?.id;
 }
 
+/** Første linje, når du skriver om en annonce, fx "Om: Spisebord i massiv eg · 1.200 kr." */
+export function aboutLine(l: Listing) {
+  return `Om: ${l.title} · ${formatPrice(l.price)}`;
+}
+
 /**
- * Skriver til sælgeren. Er sælgeren en kendt kontakt, åbnes samtalen
- * (og teksten sendes, hvis der er en). Returnerer stien, der skal navigeres til.
+ * Skriver til sælgeren – altid som dig ("me"). Er sælgeren en kendt kontakt,
+ * åbnes samtalen. Sender du tekst, kommer først en linje om annoncen
+ * (medmindre samtalen allerede handler om den), og så din besked.
+ * Returnerer stien, der skal navigeres til.
  */
-export function messageSeller(l: Listing, text?: string): string {
+export function messageSeller(l: Listing, text?: string, threads: Thread[] = []): string {
   const contactId = sellerContactId(l);
   if (!contactId) return '/beskeder/ny';
   const threadId = openConversation([contactId]);
-  if (text) sendMessage(threadId, `${text} (Torvet: ${l.title})`);
+  const body = text?.trim();
+  if (body) {
+    const thread = threads.find((t) => t.id === threadId);
+    const lastAbout = [...(thread?.messages ?? [])]
+      .reverse()
+      .find((m) => m.from === 'me' && m.kind === 'text' && m.text.startsWith('Om: '));
+    const about = aboutLine(l);
+    if (!lastAbout || lastAbout.kind !== 'text' || lastAbout.text !== about) {
+      sendMessage(threadId, about);
+      sendMessage(threadId, body);
+    } else {
+      sendMessage(threadId, body);
+    }
+  }
   return `/beskeder/${threadId}`;
 }

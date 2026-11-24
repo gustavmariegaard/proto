@@ -12,6 +12,10 @@ import { keep, save } from '../../state/keep';
 let threads: Thread[] = keep('threads', initialThreads);
 const listeners = new Set<() => void>();
 
+/** Unikt id, også når flere beskeder sendes i samme millisekund */
+let seq = 0;
+const newId = (id: string) => `${id}-${Date.now()}-${seq++}`;
+
 function set(next: Thread[]) {
   threads = next;
   save('threads', next);
@@ -53,7 +57,7 @@ export function markRead(id: string) {
 export function sendMessage(id: string, text: string) {
   const thread = threads.find((t) => t.id === id);
   if (!thread) return;
-  const message: ChatMessage = { id: `${id}-${Date.now()}`, from: 'me', kind: 'text', text };
+  const message: ChatMessage = { id: newId(id), from: 'me', kind: 'text', text };
   const updated: Thread = {
     ...thread,
     messages: [...thread.messages, message],
@@ -68,7 +72,7 @@ export function sendMessage(id: string, text: string) {
 export function sendMedia(id: string, message: { kind: 'image'; src: string } | { kind: 'voice'; duration: string }) {
   const thread = threads.find((t) => t.id === id);
   if (!thread) return;
-  const m: ChatMessage = { id: `${id}-${Date.now()}`, from: 'me', ...message };
+  const m: ChatMessage = { id: newId(id), from: 'me', ...message };
   const updated: Thread = {
     ...thread,
     messages: [...thread.messages, m],

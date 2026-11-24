@@ -121,10 +121,15 @@ export const initialThreads: Thread[] = [
     tone: 'sand',
     avatarSrc: img('person-b.jpg'),
     contactId: 'karen',
-    preview: 'Er spisebordet stadig til salg?',
+    preview: 'Ja, de er her endnu. Du kan hente dem efter kl. 16.',
     time: 'Man.',
     unread: false,
-    messages: [{ id: 'k1', from: 'Karen', kind: 'text', text: 'Er spisebordet stadig til salg?' }],
+    // Karen sælger på Torvet. Du har tidligere spurgt til hendes bogkasse.
+    messages: [
+      { id: 'k1', from: 'me', kind: 'text', text: 'Om: Kasse med 20 romaner · 100 kr.' },
+      { id: 'k2', from: 'me', kind: 'text', text: 'Hej! Er bøgerne stadig til salg?' },
+      { id: 'k3', from: 'Karen', kind: 'text', text: 'Ja, de er her endnu. Du kan hente dem efter kl. 16.' },
+    ],
   },
   {
     id: 'naboerne',

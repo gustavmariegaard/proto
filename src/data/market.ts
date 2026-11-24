@@ -25,8 +25,6 @@ export const myCity = 'Aarhus';
 /** Højst så mange billeder i en annonce */
 export const maxPhotos = 10;
 
-/** Hurtige svar til sælgeren (som på Marketplace) */
-export const quickReplies = ['Er den stadig til salg?', 'Kan du sende den?', 'Hvad er den laveste pris?'];
 
 export type Seller = {
   name: string;
@@ -57,6 +55,8 @@ export type Listing = {
   listed?: string;
   /** Tidspunkt (ms) for egne annoncer */
   createdAt?: number;
+  /** Tingen i bestemt form og stedordet, fx { the: 'spisebordet', it: 'det' } */
+  noun?: { the: string; it: 'den' | 'det' | 'dem' };
   /** Din egen annonce */
   mine?: boolean;
   sold?: boolean;
@@ -83,6 +83,7 @@ export function listedText(l: Listing) {
 export const listings: Listing[] = [
   {
     id: 'spisebord',
+    noun: { the: 'spisebordet', it: 'det' },
     price: 1200,
     title: 'Spisebord i massiv eg',
     category: 'Møbler',
@@ -98,6 +99,7 @@ export const listings: Listing[] = [
   },
   {
     id: 'ladcykel',
+    noun: { the: 'ladcyklen', it: 'den' },
     price: 4500,
     title: 'Ladcykel, brugt',
     category: 'Cykler',
@@ -113,6 +115,7 @@ export const listings: Listing[] = [
   },
   {
     id: 'boernetoej',
+    noun: { the: 'tøjet', it: 'det' },
     price: 150,
     title: 'Børnetøj str. 92–104',
     category: 'Børn',
@@ -127,6 +130,7 @@ export const listings: Listing[] = [
   },
   {
     id: 'baerbar',
+    noun: { the: 'computeren', it: 'den' },
     price: 2900,
     title: 'Bærbar, 14 tommer',
     category: 'Elektronik',
@@ -142,6 +146,7 @@ export const listings: Listing[] = [
   /* ---------- Ekstra eksempelindhold (ikke fra Figma) ---------- */
   {
     id: 'havemoebler',
+    noun: { the: 'havesættet', it: 'det' },
     price: 800,
     title: 'Havebord med to stole',
     category: 'Møbler',
@@ -156,6 +161,7 @@ export const listings: Listing[] = [
   },
   {
     id: 'haandboldsko',
+    noun: { the: 'skoene', it: 'dem' },
     price: 350,
     title: 'Indendørssko str. 42',
     category: 'Fritid',
@@ -170,6 +176,7 @@ export const listings: Listing[] = [
   },
   {
     id: 'boeger',
+    noun: { the: 'bøgerne', it: 'dem' },
     price: 100,
     title: 'Kasse med 20 romaner',
     category: 'Fritid',
@@ -184,6 +191,7 @@ export const listings: Listing[] = [
   },
   {
     id: 'racercykel',
+    noun: { the: 'cyklen', it: 'den' },
     price: 2200,
     title: 'Racercykel, 56 cm stel',
     category: 'Cykler',
@@ -198,3 +206,57 @@ export const listings: Listing[] = [
     sold: true,
   },
 ];
+
+/** "1080" → "1.100": runder et bud pænt (til 100, 50 eller 10 kr.) */
+function roundOffer(kr: number) {
+  const step = kr >= 1000 ? 100 : kr >= 200 ? 50 : 10;
+  return Math.max(step, Math.round(kr / step) * step);
+}
+
+/**
+ * Forslag til en første besked til sælgeren, bygget ud fra annoncen
+ * (kategori, beskrivelse, afhentning/forsendelse og pris). Højst tre.
+ */
+export function sellerSuggestions(l: Listing, today = new Date()): string[] {
+  const the = l.noun?.the ?? 'den';
+  const it = l.noun?.it ?? 'den';
+  const desc = `${l.title} ${l.description}`.toLowerCase();
+  const has = (re: RegExp) => re.test(desc);
+
+  // Lige sat til salg? Så giver det ikke mening at spørge, om den stadig er til salg.
+  const fresh = l.createdAt ? Date.now() - l.createdAt < 864e5 : /min\.|time|lige nu/i.test(l.listed ?? '');
+  const greeting = fresh ? undefined : `Hej! Er ${the} stadig til salg?`;
+
+  // Et spørgsmål, der passer til kategorien – og som annoncen ikke allerede svarer på
+  const byCategory: Record<ListingCategory, [string, boolean][]> = {
+    Møbler: [
+      ['Hvad er målene?', !has(/\d+\s*[×x]\s*\d+/)],
+      [`Kan ${it} skilles ad, så ${it} kan være i en bil?`, true],
+    ],
+    Cykler: [
+      [`Hvor mange km har ${it} kørt?`, !has(/\bkm\b/)],
+      [`Hvornår blev ${it} sidst serviceret?`, !has(/service/)],
+      ['Kan jeg få en prøvetur?', true],
+    ],
+    Børn: [
+      ['Hvilken størrelse er det?', !has(/str\./)],
+      ['Hvilke mærker er det?', true],
+    ],
+    Elektronik: [
+      ['Følger opladeren med?', !has(/oplader/)],
+      ['Er der ridser eller andre skader?', true],
+    ],
+    Fritid: [['Er der nogen fejl eller mangler?', true]],
+  };
+  const question = byCategory[l.category].find(([, ok]) => ok)?.[0];
+
+  // Afhentning eller forsendelse
+  const area = l.location.split(',')[0]!.trim();
+  const day = today.getDay(); // 0 = søndag
+  const when = day === 4 || day === 5 ? 'i weekenden' : 'i dag';
+  const logistics = l.shipping ? `Kan du sende ${it} til mig?` : `Kan jeg hente ${it} ${when} i ${area}?`;
+
+  const offer = l.price >= 100 ? `Vil du tage ${formatPrice(roundOffer(l.price * 0.9))} for ${it}?` : undefined;
+
+  return [greeting, question, logistics, offer].filter((s): s is string => !!s).slice(0, 3);
+}

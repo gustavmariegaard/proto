@@ -8,8 +8,9 @@ import { IconButton } from '../../components/IconButton';
 import { PageHeader } from '../../components/PageHeader';
 import { Sheet } from '../../components/Sheet';
 import { TextField } from '../../components/TextField';
-import { formatPrice, listedText, quickReplies, type Listing } from '../../data/market';
+import { formatPrice, listedText, sellerSuggestions, type Listing } from '../../data/market';
 import { handleOf } from '../../data/handles';
+import { useThreads } from '../messages/store';
 import { deleteListing, messageSeller, setPrice, setSold, toggleSaved, useListing, useSaved } from './store';
 import './ListingDetail.css';
 
@@ -158,6 +159,68 @@ function PriceSheet({
   );
 }
 
+/**
+ * Forslag som chips + et redigerbart beskedfelt. Et tryk på en chip lægger
+ * teksten i feltet (sender ikke), så man kan rette den til før Send.
+ */
+function SellerComposer({ listing, onSend }: { listing: Listing; onSend: (text?: string) => void }) {
+  const [text, setText] = useState('');
+  const fieldRef = useRef<HTMLTextAreaElement>(null);
+  const suggestions = sellerSuggestions(listing);
+  const fieldId = `ld-msg-${listing.id}`;
+
+  const pick = (q: string) => {
+    setText(q);
+    const el = fieldRef.current;
+    if (!el) return;
+    el.focus({ preventScroll: true });
+    requestAnimationFrame(() => el.setSelectionRange(q.length, q.length));
+  };
+
+  return (
+    <form
+      className="ld-compose"
+      onSubmit={(e) => {
+        e.preventDefault();
+        onSend(text.trim() || undefined);
+      }}
+    >
+      <ul className="ld-replies" aria-label="Forslag til en besked">
+        {suggestions.map((q) => (
+          <li key={q}>
+            <Chip onClick={() => pick(q)} aria-pressed={undefined} selected={text === q}>
+              {q}
+            </Chip>
+          </li>
+        ))}
+      </ul>
+      <label htmlFor={fieldId} className="visually-hidden">
+        Besked til {listing.seller.name.split(' ')[0]}
+      </label>
+      <div className="ld-compose__row">
+        <textarea
+          id={fieldId}
+          ref={fieldRef}
+          className="ld-compose__field t-body"
+          rows={1}
+          placeholder={`Skriv til ${listing.seller.name.split(' ')[0]} …`}
+          value={text}
+          onChange={(e) => setText(e.target.value)}
+          onKeyDown={(e) => {
+            if (e.key === 'Enter' && !e.shiftKey) {
+              e.preventDefault();
+              e.currentTarget.form?.requestSubmit();
+            }
+          }}
+        />
+        <button type="submit" className="ld-compose__send" aria-label="Send" disabled={!text.trim()}>
+          <Icon name="send" size={20} />
+        </button>
+      </div>
+    </form>
+  );
+}
+
 const reportReasons = ['Svindel eller snyd', 'Forbudt vare', 'Vildledende annonce', 'Allerede solgt', 'Andet'];
 
 /** Annonce på Torvet (fuld skærm). Rute: /torvet/:id */
@@ -190,7 +253,8 @@ function ListingView({ listing }: { listing: Listing }) {
   const [reported, setReported] = useState(false);
   const close = () => setSheet(null);
 
-  const write = (text?: string) => navigate(messageSeller(listing, text));
+  const threads = useThreads();
+  const write = (text?: string) => navigate(messageSeller(listing, text, threads));
 
   const share = async () => {
     const url = window.location.href;
@@ -267,19 +331,7 @@ function ListingView({ listing }: { listing: Listing }) {
                   <h2 id="ld-message-title" className="t-heading-s ld-message__title">
                     Send en besked til sælgeren
                   </h2>
-                  <ul className="ld-replies" aria-label="Hurtige svar">
-                    {quickReplies.map((q) => (
-                      <li key={q}>
-                        <Chip onClick={() => write(q)} aria-pressed={undefined}>
-                          {q}
-                        </Chip>
-                      </li>
-                    ))}
-                  </ul>
-                  <Button block onClick={() => write()}>
-                    <Icon name="chat" size={20} />
-                    Skriv til sælger
-                  </Button>
+                  <SellerComposer listing={listing} onSend={write} />
                 </section>
               )}
 
