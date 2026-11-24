@@ -2,7 +2,6 @@ import { useRef, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { Chip } from '../../components/Chip';
 import { Icon } from '../../components/Icon';
-import { useScrollFade } from '../../components/useScrollFade';
 import { PostCard } from '../../components/PostCard';
 import { discoverPosts } from '../../data/discover';
 import { usePosts } from '../../state/posts';
@@ -21,7 +20,6 @@ export function Discover() {
   const [off, setOff] = useState<string[]>([]);
   const [editing, setEditing] = useState(false);
   const rowRef = useRef<HTMLUListElement>(null);
-  useScrollFade(rowRef);
 
   const votes = useVotes();
   const [showBuried, setShowBuried] = useState(false);

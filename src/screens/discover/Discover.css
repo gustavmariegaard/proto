@@ -21,16 +21,6 @@
 
 .discover__row::-webkit-scrollbar { display: none; }
 
-/* Blød fade kun i højre side, når der er flere emner at swipe til (aldrig i venstre) */
-.discover__row[data-fade='right'] {
-  -webkit-mask-image: linear-gradient(to right, #000 calc(100% - 56px), transparent);
-  mask-image: linear-gradient(to right, #000 calc(100% - 56px), transparent);
-}
-
-.discover__row[data-fade='both'] {
-  -webkit-mask-image: linear-gradient(to right, #000 calc(100% - 56px), transparent);
-  mask-image: linear-gradient(to right, #000 calc(100% - 56px), transparent);
-}
 
 .discover__edit {
   gap: 6px;

@@ -362,3 +362,18 @@ input:focus-visible + .more-photo__drop { box-shadow: var(--focus-ring); }
 
 /* Medlemslisten: links uden understregning */
 a.more-row { color: inherit; text-decoration: none; }
+
+.member-name {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  min-width: 0;
+}
+
+.member-admin {
+  flex: none;
+  padding: 1px 8px;
+  border-radius: var(--radius-pill);
+  background: var(--color-accent-note-bg);
+  color: var(--color-accent-note-text);
+}

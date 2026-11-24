@@ -38,10 +38,11 @@ export function GroupMembers() {
                 <>
                   <Avatar name={m.name} tone={m.tone} src={m.avatarSrc} />
                   <span className="more-row__text">
-                    <span className="t-heading-s more-ellipsis">{m.name}</span>
-                    <span className="t-caption more-muted more-ellipsis">
-                      {m.admin ? 'Admin' : `@${handleOf(m.name)}`}
+                    <span className="member-name">
+                      <span className="t-heading-s more-ellipsis">{m.name}</span>
+                      {m.admin && <span className="member-admin t-caption-strong">Admin</span>}
                     </span>
+                    <span className="t-caption more-muted more-ellipsis">@{handleOf(m.name)}</span>
                   </span>
                 </>
               );
