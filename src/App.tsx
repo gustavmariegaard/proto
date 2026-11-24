@@ -58,6 +58,7 @@ import { CollectionViewer } from './screens/profile/CollectionViewer';
 import { CollectionEdit } from './screens/profile/CollectionEdit';
 import { NewHighlight } from './screens/profile/NewHighlight';
 import { Interests } from './screens/profile/Interests';
+import { EditProfile } from './screens/profile/EditProfile';
 
 /** Mørk statuslinje og baggrund på de mørke skærme */
 function ThemeColor() {
@@ -157,6 +158,7 @@ export default function App() {
             <Route path="profil/samling/:id/vis" element={<CollectionViewer />} />
             <Route path="profil/samling/:id/rediger" element={<CollectionEdit />} />
             <Route path="profil/interesser" element={<Interests />} />
+            <Route path="profil/rediger" element={<EditProfile />} />
             <Route path="torvet/saelg" element={<SellListing />} />
             <Route path="torvet/:id" element={<ListingDetail />} />
             <Route element={<AppShell />}>
