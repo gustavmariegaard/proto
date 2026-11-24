@@ -68,6 +68,7 @@ export function NewEvent() {
       allowShare: isPublic && allowShare,
       rsvp: 'deltager',
       invitedMe: false,
+      createdByMe: true,
       guests: { going: [], notGoing: [], invited },
     });
     navigate(`/begivenheder/${id}`, { replace: true });
@@ -109,7 +110,7 @@ export function NewEvent() {
         </div>
         <p className="t-caption event-screen__muted new-event__full">
           {isPublic
-            ? 'Offentlig: alle verificerede kan finde den, vise interesse og tilmelde sig. Den vises under Begivenheder og Opdag.'
+            ? 'Offentlig: alle kan finde den under Begivenheder › Find begivenheder, vise interesse og tilmelde sig uden invitation.'
             : 'Privat: kun dem, du inviterer, kan se den og tilmelde sig.'}
         </p>
 

@@ -6,7 +6,7 @@ import { Button } from '../../components/Button';
 import { Icon } from '../../components/Icon';
 import { PageHeader } from '../../components/PageHeader';
 import { Tag } from '../../components/Tag';
-import { longDate, type EventItem, type Guest, type Rsvp } from '../../data/events';
+import { attendeeCount, isMine, longDate, type EventItem, type Guest, type Rsvp } from '../../data/events';
 import { img } from '../../data/sample';
 import { setRsvp, useEvent } from './store';
 import './EventDetail.css';
@@ -55,6 +55,9 @@ export function EventDetail() {
   const eventPosts = posts.filter((p) => p.group?.kind === 'begivenhed' && p.group.name === event.title);
   const toggle = (value: Exclude<Rsvp, 'none'>) => setRsvp(event.id, rsvp === value ? 'none' : value);
   const isPublic = event.visibility === 'offentlig';
+  /** Offentlig begivenhed, du ikke er inviteret til – du kan tilmelde dig direkte */
+  const openToJoin = isPublic && !event.invitedMe && !event.createdByMe;
+  const count = attendeeCount(event);
 
   return (
     <div className="event-screen">
@@ -100,7 +103,13 @@ export function EventDetail() {
         <div className="event-privacy">
           <Tag>{isPublic ? 'Offentlig begivenhed' : 'Privat begivenhed'}</Tag>
           <p className="t-caption event-screen__muted">
-            {isPublic ? 'Alle verificerede kan se og tilmelde sig.' : 'Kun inviterede kan se og tilmelde sig.'}
+            {!isPublic
+              ? 'Kun inviterede kan se og tilmelde sig.'
+              : event.createdByMe
+                ? 'Synlig for alle under Find begivenheder. Alle kan tilmelde sig.'
+                : openToJoin
+                  ? 'Alle kan se og tilmelde sig. Du behøver ikke en invitation.'
+                  : 'Alle kan se og tilmelde sig.'}
           </p>
         </div>
 
@@ -129,10 +138,23 @@ export function EventDetail() {
           ))}
         </div>
 
+        {openToJoin && (
+          <p className="t-caption event-join-note" aria-live="polite">
+            {rsvp === 'deltager-ikke'
+              ? 'Du har meldt fra. Den ligger under Dine begivenheder, så du kan ombestemme dig.'
+              : rsvp === 'interesseret'
+                ? 'Du er interesseret. Begivenheden ligger nu under Dine begivenheder.'
+                : isMine(event)
+                  ? 'Du deltager. Begivenheden ligger nu under Dine begivenheder.'
+              : 'Tryk Deltager eller Interesseret for at være med. Så ligger den under Dine begivenheder.'}
+          </p>
+        )}
+
         <section className="event-guests" aria-labelledby="event-guests-title">
           <h3 id="event-guests-title" className="t-heading-m">
             Gæster
           </h3>
+          {isPublic && <p className="t-caption event-screen__muted">{count} deltager</p>}
           {guestRows(event, rsvp).map((row) => (
             <div key={row.label} className="event-guests__row">
               <span className="t-caption-strong event-guests__label">{row.label}</span>

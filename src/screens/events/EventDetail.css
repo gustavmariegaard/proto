@@ -130,3 +130,12 @@
   flex-direction: column;
   gap: 12px;
 }
+
+.event-join-note {
+  width: 100%;
+  margin: 0;
+  padding: 10px 14px;
+  border-radius: var(--radius-md);
+  background: var(--color-accent-note-bg);
+  color: var(--color-accent-note-text);
+}

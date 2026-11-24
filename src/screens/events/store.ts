@@ -9,7 +9,13 @@ import { initialEvents, type EventItem, type Rsvp } from '../../data/events';
 
 import { keep, save } from '../../state/keep';
 
-let events: EventItem[] = keep('events', initialEvents);
+/** Gemte svar beholdes, og nye eksempler, der ikke var gemt endnu, kommer med. */
+function withNewSamples(saved: EventItem[]) {
+  const ids = new Set(saved.map((e) => e.id));
+  return [...saved, ...initialEvents.filter((e) => !ids.has(e.id))];
+}
+
+let events: EventItem[] = withNewSamples(keep('events', initialEvents));
 const listeners = new Set<() => void>();
 
 function set(next: EventItem[]) {
