@@ -280,3 +280,5 @@
 
 .flick__act:focus-visible { outline: none; box-shadow: 0 0 0 2px var(--color-accent-highlight); border-radius: 12px; }
 .flick__saved svg path { fill: currentColor; }
+
+.flick__tags { color: rgb(255 255 255 / 0.8); }

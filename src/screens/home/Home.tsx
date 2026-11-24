@@ -78,7 +78,7 @@ export function Home() {
               fullName={profile.name || 'Dig'}
               state="add"
               src={profile.avatar ?? img('mig.jpg')}
-              onClick={() => navigate('/flicks/ny')}
+              onClick={() => navigate('/flicks/ny?som=moment')}
             />
           </li>
         )}

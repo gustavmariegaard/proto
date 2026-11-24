@@ -19,6 +19,8 @@ export type Flick = {
   friends?: { name: string; tone: AvatarTone; avatarSrc?: string }[];
   author: string;
   text: string;
+  /** Tags, som på opslag */
+  tags?: string[];
   /** Sti til billede i public/img, ellers en pladsholder */
   image?: string;
   /** Pladsholderens farvetone (kun grå nuancer) */
@@ -32,6 +34,7 @@ export const flicks: Flick[] = [
     reason: 'Fordi du følger Kultur',
     author: 'Kulturhuset',
     text: 'Syv minutter uden replikker, kun bevægelse.',
+    tags: ['Kultur', 'Dans'],
     image: img('dans.jpg'),
     placeholder: 'dark',
   },
@@ -41,6 +44,7 @@ export const flicks: Flick[] = [
     reason: 'Fordi du følger Byudvikling',
     author: 'Byens Cyklister',
     text: 'Ny cykelrute langs åen åbner til foråret.',
+    tags: ['Byudvikling', 'Cykelstier'],
     image: img('cykelsti.jpg'),
     placeholder: 'light',
   },
@@ -54,6 +58,7 @@ export const flicks: Flick[] = [
     ],
     author: 'Mette Lund',
     text: 'Søndagens rugblime, trin for trin.',
+    tags: ['Madlavning', 'Bagning'],
     image: img('mad.jpg'),
     placeholder: 'mid',
   },

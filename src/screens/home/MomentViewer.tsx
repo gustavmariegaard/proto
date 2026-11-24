@@ -3,6 +3,8 @@ import { Link, Navigate, useNavigate, useParams } from 'react-router-dom';
 import { Avatar } from '../../components/Avatar';
 import { Icon } from '../../components/Icon';
 import { SideProgress } from '../../components/SideProgress';
+import { VoteControl } from '../../components/VoteControl';
+import { publicKind } from '../../data/publicProfiles';
 import { at, handleOf } from '../../data/handles';
 import { moments, pageAccounts, people } from '../../data/sample';
 import { useMoments } from '../../state/moments';
@@ -27,7 +29,6 @@ function Viewer({ personId }: { personId: string }) {
   const paused = typing || held;
   const holdTimer = useRef<number | undefined>(undefined);
   const wasHeld = useRef(false);
-  const [liked, setLiked] = useState(false);
   const [reply, setReply] = useState('');
 
   // Personer (Hjem › Brugere) og sider (Hjem › Interesser) bladres hver for sig
@@ -172,6 +173,10 @@ function Viewer({ personId }: { personId: string }) {
         </button>
       </div>
 
+      {current.tags && current.tags.length > 0 && (
+        <p className="t-caption-strong moment-full__tags">{current.tags.map((t) => `#${t}`).join('  ')}</p>
+      )}
+
       <div className="moment-full__spacer" />
 
       <form
@@ -192,15 +197,8 @@ function Viewer({ personId }: { personId: string }) {
           onBlur={() => setTyping(false)}
           enterKeyHint="send"
         />
-        <button
-          type="button"
-          className="moment-view__like"
-          aria-label="Synes godt om"
-          aria-pressed={liked}
-          onClick={() => setLiked((v) => !v)}
-        >
-          <Icon name={liked ? 'heart-filled' : 'heart'} />
-        </button>
+        {/* Som opslag: almindelige brugere kun op, offentlige personer og sider op og ned */}
+        <VoteControl id={current.id} base={momentScore(current.id)} allowDown={publicKind(person.fullName) !== null} variant="row" />
         {/* Del eller send momentet videre, præcis som et opslag */}
         <button
           type="button"
@@ -215,3 +213,10 @@ function Viewer({ personId }: { personId: string }) {
   );
 }
 
+
+/** Faste eksempeltal pr. moment */
+function momentScore(id: string) {
+  let h = 17;
+  for (const c of id) h = (h * 31 + c.charCodeAt(0)) >>> 0;
+  return 4 + (h % 90);
+}

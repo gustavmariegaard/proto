@@ -119,3 +119,49 @@
 .newflick__shutter:active .newflick__shutter-inner { transform: scale(0.92); }
 .newflick__shutter--recording .newflick__shutter-inner { transform: scale(0.55); border-radius: 12px; }
 .newflick__shutter:focus-visible { outline: 2px solid var(--color-text-on-action); outline-offset: 3px; }
+
+/* ---------- Efter optagelse: flick/moment, tags og del ---------- */
+.newflick__panel {
+  position: absolute;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  z-index: 5;
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  max-height: 62%;
+  overflow-y: auto;
+  padding: 16px 20px calc(16px + var(--safe-bottom));
+  border-radius: 24px 24px 0 0;
+  background: var(--color-bg-surface);
+  color: var(--color-text-primary);
+  animation: newflick-panel-up 0.25s ease;
+}
+
+@keyframes newflick-panel-up {
+  from { transform: translateY(40px); opacity: 0; }
+  to { transform: none; opacity: 1; }
+}
+
+.newflick__kinds {
+  display: flex;
+  gap: 4px;
+  padding: 4px;
+  border-radius: var(--radius-md);
+  background: var(--color-bg-subtle);
+}
+
+.newflick__kind {
+  flex: 1;
+  height: 40px;
+  border-radius: var(--radius-sm);
+  font: 600 14px/20px var(--font-body);
+  color: var(--color-text-secondary);
+}
+
+.newflick__kind--on {
+  background: var(--color-bg-surface);
+  color: var(--color-text-primary);
+  box-shadow: 0 1px 3px rgb(0 0 0 / 0.08);
+}

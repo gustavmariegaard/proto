@@ -4,7 +4,7 @@ import { Avatar, type AvatarTone } from './Avatar';
 import { Icon, type IconName } from './Icon';
 import { PostMenu } from './PostMenu';
 import { setHidden, useHidden } from '../state/posts';
-import { scoreWith, useVotes, vote } from '../state/votes';
+import { VoteControl } from './VoteControl';
 import { publicKind, publicLabel, type PublicKind } from '../data/publicProfiles';
 import { handleOf } from '../data/handles';
 import './PostCard.css';
@@ -219,26 +219,6 @@ function Action({ icon, label, count, pressed, className, onClick }: ActionProps
   );
 }
 
-/** Stem op / ned (Offentlig debat). Samme stemme igen fjerner den. */
-function VoteControl({ id, base, allowDown }: { id: string; base: number; allowDown: boolean }) {
-  const mine = useVotes()[id];
-  const score = scoreWith(base, mine);
-  return (
-    <div className={['post__vote', mine === 1 && 'post__vote--up', mine === -1 && 'post__vote--down'].filter(Boolean).join(' ')} role="group" aria-label={`Score ${score}`}>
-      <button type="button" className="post__vote-btn" aria-label="Stem op" aria-pressed={mine === 1} onClick={() => vote(id, 1)}>
-        <Icon name="vote-up" size={20} />
-      </button>
-      <span className={['t-caption-strong post__score', !allowDown && 'post__score--end'].filter(Boolean).join(' ')} aria-live="polite">
-        {fmt(score)}
-      </span>
-      {allowDown && (
-        <button type="button" className="post__vote-btn" aria-label="Stem ned" aria-pressed={mine === -1} onClick={() => vote(id, -1)}>
-          <Icon name="vote-down" size={20} />
-        </button>
-      )}
-    </div>
-  );
-}
 
 /** Lille mærke ved navnet: megafon = offentlig person, bygning = side, to personer = gruppe. */
 export function PublicBadge({ kind }: { kind: PublicKind | 'gruppe' }) {

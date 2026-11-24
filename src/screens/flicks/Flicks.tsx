@@ -1,6 +1,8 @@
 import { useCallback, useEffect, useRef, useState } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import { PostMenu } from '../../components/PostMenu';
+import { VoteControl } from '../../components/VoteControl';
+import { publicKind } from '../../data/publicProfiles';
 import { setHidden, useHidden } from '../../state/posts';
 import { Icon } from '../../components/Icon';
 import { TabBar } from '../../components/TabBar';
@@ -24,7 +26,6 @@ export function Flicks() {
   const feedRef = useRef<HTMLDivElement>(null);
   const [index, setIndex] = useState(0);
   const [hasSwiped, setHasSwiped] = useState(false);
-  const [liked, setLiked] = useState<string[]>([]);
   const [saved, setSaved] = useState<string[]>([]);
   const [commentsFor, setCommentsFor] = useState<string | null>(null);
 
@@ -104,9 +105,7 @@ export function Flicks() {
               setHasSwiped(true);
               scrollTo(i + 1);
             }}
-            liked={liked.includes(f.id)}
             saved={saved.includes(f.id)}
-            onLike={() => setLiked((l) => toggle(l, f.id))}
             onSave={() => setSaved((s) => toggle(s, f.id))}
             onComments={() => setCommentsFor(f.id)}
             // Samme deling som alle andre opslag: Besked, Opslag eller Moment
@@ -129,15 +128,13 @@ type FlickViewProps = {
   /** Hopper let, indtil man har swipet første gang */
   bounce: boolean;
   onNext: () => void;
-  liked: boolean;
   saved: boolean;
-  onLike: () => void;
   onSave: () => void;
   onComments: () => void;
   onShare: () => void;
 };
 
-function FlickView({ flick, position, showHint, bounce, onNext, liked, saved, onLike, onSave, onComments, onShare }: FlickViewProps) {
+function FlickView({ flick, position, showHint, bounce, onNext, saved, onSave, onComments, onShare }: FlickViewProps) {
   const navigate = useNavigate();
   const [menu, setMenu] = useState(false);
   const hidden = useHidden(flick.id);
@@ -179,7 +176,8 @@ function FlickView({ flick, position, showHint, bounce, onNext, liked, saved, on
 
       <div className="flick__bottom">
         <div className="flick__actions">
-          <FlickAction icon={liked ? 'heart-filled' : 'heart'} label="Synes godt om" count={counts.likes + (liked ? 1 : 0)} pressed={liked} onClick={onLike} />
+          {/* Som opslag: almindelige brugere kun op, offentlige personer og sider op og ned */}
+          <VoteControl id={flick.id} base={counts.likes} allowDown={publicKind(flick.author) !== null} variant="stack" />
           <FlickAction icon="chat" label="Kommentarer" count={counts.comments} onClick={onComments} />
           <FlickAction icon="send" label="Delinger" count={counts.shares} onClick={onShare} />
           <FlickAction icon="bookmark" label="Gem" pressed={saved} className={saved ? 'flick__saved' : undefined} onClick={onSave} />
@@ -192,6 +190,9 @@ function FlickView({ flick, position, showHint, bounce, onNext, liked, saved, on
             </Link>
           </p>
           <p className="t-body-s flick__text">{flick.text}</p>
+          {flick.tags && flick.tags.length > 0 && (
+            <p className="t-caption-strong flick__tags">{flick.tags.map((t) => `#${t}`).join('  ')}</p>
+          )}
         </div>
       </div>
     </article>

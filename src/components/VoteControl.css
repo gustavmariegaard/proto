@@ -1,0 +1,53 @@
+/* Valgt stemme: pilen fyldes (sort på lyse skærme, hvid på mørke) */
+.vote--up .vote__btn--up svg path,
+.vote--down .vote__btn--down svg path {
+  fill: currentColor;
+}
+
+/* ---------- Flicks: lodret, hvid ---------- */
+.vote--stack {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 0;
+  color: #fff;
+  filter: drop-shadow(0 1px 3px rgb(0 0 0 / 0.55));
+}
+
+.vote--stack .vote__btn {
+  display: grid;
+  place-items: center;
+  width: 48px;
+  height: 40px;
+  color: #fff;
+}
+
+.vote--stack .vote__score { color: #fff; }
+
+/* ---------- Moments: vandret, hvid ---------- */
+.vote--row {
+  display: inline-flex;
+  align-items: center;
+  flex-shrink: 0;
+  color: #fff;
+}
+
+.vote--row .vote__btn {
+  display: grid;
+  place-items: center;
+  width: 40px;
+  height: 44px;
+  color: #fff;
+}
+
+.vote--row .vote__score {
+  min-width: 20px;
+  text-align: center;
+  color: #fff;
+  font-variant-numeric: tabular-nums;
+}
+
+.vote--row .vote__score--end { padding-right: 4px; }
+
+.vote--stack .vote__btn:focus-visible,
+.vote--row .vote__btn:focus-visible { outline: none; box-shadow: 0 0 0 2px var(--color-accent-highlight); border-radius: 12px; }

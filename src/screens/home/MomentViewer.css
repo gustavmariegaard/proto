@@ -336,3 +336,13 @@
 .moment-view--full { transition: transform 0.2s ease, border-radius 0.2s ease; }
 .moment-view--full.is-dragging { transition: none; overflow: hidden; }
 .moment-full__photo { touch-action: none; }
+
+/* Tags under brugernavnet */
+.moment-full__tags {
+  position: relative;
+  z-index: 3;
+  margin: 2px 0 0 62px;
+  color: rgb(255 255 255 / 0.85);
+  text-shadow: 0 1px 2px rgb(0 0 0 / 0.45);
+  pointer-events: none;
+}

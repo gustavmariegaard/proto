@@ -1,5 +1,6 @@
 import { useEffect, useRef, useState } from 'react';
-import { useNavigate } from 'react-router-dom';
+import { useNavigate, useSearchParams } from 'react-router-dom';
+import { TagInput } from '../../components/TagInput';
 import { Button } from '../../components/Button';
 import { IconButton } from '../../components/IconButton';
 import { useSession } from '../../state/session';
@@ -28,8 +29,12 @@ export function NewFlick() {
   const [facing, setFacing] = useState<'environment' | 'user'>('environment');
   const [recording, setRecording] = useState(false);
   const [captured, setCaptured] = useState<Captured | null>(null);
+  // Flick eller moment: begge laves her og får tags, ligesom opslag
+  const [params] = useSearchParams();
+  const [kind, setKind] = useState<'flick' | 'moment'>(params.get('som') === 'moment' ? 'moment' : 'flick');
+  const [tags, setTags] = useState<string[]>([]);
 
-  const close = () => navigate('/flicks', { replace: true });
+  const close = () => navigate(kind === 'moment' ? '/' : '/flicks', { replace: true });
 
   // Start kameraet, hvis browseren tillader det
   useEffect(() => {
@@ -188,11 +193,7 @@ export function NewFlick() {
         </div>
 
         <div className="newflick__controls">
-          {captured ? (
-            <Button variant="highlight" onClick={() => navigate('/flicks', { replace: true })}>
-              Del
-            </Button>
-          ) : (
+          {captured ? null : (
             <>
               <IconButton icon="image" label="Vælg fra billeder" className="newflick__btn" onClick={() => galleryInput.current?.click()} />
               <button
@@ -220,6 +221,34 @@ export function NewFlick() {
           )}
         </div>
       </div>
+
+      {/* Efter optagelse: vælg flick eller moment, tilføj tags, og del */}
+      {captured && (
+        <div className="newflick__panel">
+          <div className="newflick__kinds" role="radiogroup" aria-label="Del som">
+            {(['flick', 'moment'] as const).map((k) => (
+              <button
+                key={k}
+                type="button"
+                role="radio"
+                aria-checked={kind === k}
+                className={['newflick__kind', kind === k && 'newflick__kind--on'].filter(Boolean).join(' ')}
+                onClick={() => setKind(k)}
+              >
+                {k === 'flick' ? 'Flick' : 'Moment'}
+              </button>
+            ))}
+          </div>
+          <TagInput
+            tags={tags}
+            onTags={setTags}
+            hint={kind === 'moment' ? 'Fx #Natur eller #Koncert. Forsvinder efter 24 timer.' : 'Fx #Dans eller #Cykelstier, så andre kan finde den.'}
+          />
+          <Button variant="highlight" block onClick={close}>
+            Del {kind === 'flick' ? 'flick' : 'moment'}
+          </Button>
+        </div>
+      )}
 
       <input ref={captureInput} type="file" accept="image/*,video/*" capture="environment" hidden onChange={onFile} />
       <input ref={galleryInput} type="file" accept="image/*,video/*" hidden onChange={onFile} />
