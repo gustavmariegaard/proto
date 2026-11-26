@@ -1,6 +1,6 @@
 import { Image } from 'expo-image';
-import { router } from 'expo-router';
-import { useState } from 'react';
+import { router, useLocalSearchParams } from 'expo-router';
+import { useEffect, useState } from 'react';
 import { KeyboardAvoidingView, Platform, Pressable, ScrollView, StyleSheet, TextInput, View } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { Button } from '@/components/Button';
@@ -22,6 +22,20 @@ const MAX_TEXT = 2200;
 /** Opret et opslag: tekst, billeder, Offentlig debat med tags og "Tillad deling" */
 export default function Create() {
   const me = useMe();
+  // Opslag i en gruppe, en begivenhed eller som en side (?gruppe= | ?begivenhed= | ?side=)
+  const params = useLocalSearchParams<{ gruppe?: string; begivenhed?: string; side?: string }>();
+  const where = params.gruppe ? { col: 'group_id', id: params.gruppe } : params.begivenhed ? { col: 'event_id', id: params.begivenhed } : params.side ? { col: 'page_id', id: params.side } : null;
+  const [placeName, setPlaceName] = useState<string | null>(null);
+  useEffect(() => {
+    if (!where) return;
+    const q =
+      where.col === 'group_id'
+        ? supabase.from('groups').select('name').eq('id', where.id).maybeSingle()
+        : where.col === 'event_id'
+          ? supabase.from('events').select('name:title').eq('id', where.id).maybeSingle()
+          : supabase.from('pages').select('name').eq('id', where.id).maybeSingle();
+    q.then(({ data }) => setPlaceName((data as { name?: string } | null)?.name ?? null));
+  }, [where?.col, where?.id]);
   const [text, setText] = useState('');
   const [images, setImages] = useState<{ uri: string; mime: string }[]>([]);
   const [debate, setDebate] = useState(false);
@@ -60,10 +74,12 @@ export default function Create() {
         image_paths,
         tags: debate ? tags : [],
         allow_share: share,
+        ...(where ? { [where.col]: where.id } : {}),
       });
       if (error) throw error;
       close();
-      router.navigate(debate ? '/debat' : '/');
+      // I en gruppe/begivenhed/side: tilbage dertil. Ellers til feedet.
+      if (!where) router.navigate(debate ? '/debat' : '/');
     } catch {
       setError('Opslaget kunne ikke deles. Prøv igen.');
       setBusy(false);
@@ -82,6 +98,14 @@ export default function Create() {
         </View>
 
         <ScrollView contentContainerStyle={s.content} keyboardShouldPersistTaps="handled">
+          {where && (
+            <View style={s.place}>
+              <Icon name={where.col === 'group_id' ? 'circles' : where.col === 'event_id' ? 'calendar' : 'building'} size={18} />
+              <T v="label" numberOfLines={1} style={{ flex: 1 }}>
+                {where.col === 'page_id' ? 'Deles som' : 'Deles i'} {placeName ?? '…'}
+              </T>
+            </View>
+          )}
           <View style={s.writer}>
             <TextInput
               style={s.text}
@@ -128,7 +152,7 @@ export default function Create() {
             )}
           </View>
 
-          <Toggle title="Offentlig debat" hint="Til alle" value={debate} onChange={setDebate} />
+          {!where && <Toggle title="Offentlig debat" hint="Til alle" value={debate} onChange={setDebate} />}
 
           {debate && (
             <View style={s.tagsBox}>
@@ -206,6 +230,7 @@ const s = StyleSheet.create({
     backgroundColor: color.bgSurface,
   },
   wrap: { flexDirection: 'row', flexWrap: 'wrap', gap: 8 },
+  place: { flexDirection: 'row', alignItems: 'center', gap: 8, minHeight: TAP, paddingHorizontal: 14, borderRadius: radius.pill, backgroundColor: color.noteBg },
   tagInput: {
     minHeight: TAP + 4,
     paddingHorizontal: 18,
