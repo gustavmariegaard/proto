@@ -228,7 +228,7 @@
 
     "rate_limit": {
       // Number of emails that can be sent per hour. Requires auth.email.smtp to be enabled.
-      "email_sent": 2,
+      "email_sent": 100,
       // Number of SMS messages that can be sent per hour. Requires auth.sms to be enabled.
       "sms_sent": 30,
       // Number of anonymous sign-ins that can be made per hour per IP address. Requires enable_anonymous_sign_ins = true.
@@ -282,13 +282,17 @@
       //   "sender_name": "Admin"
       // },
 
-      // Uncomment to customize email template
-      // "template": {
-      //   "invite": {
-      //     "subject": "You have been invited",
-      //     "content_path": "./supabase/templates/invite.html"
-      //   }
-      // },
+      // Danske mails med en kode på 6 cifre (appen bruger koden, ikke et link)
+      "template": {
+        "confirmation": {
+          "subject": "Din kode til ciircle",
+          "content_path": "./supabase/templates/confirmation.html"
+        },
+        "magic_link": {
+          "subject": "Din kode til ciircle",
+          "content_path": "./supabase/templates/magic_link.html"
+        }
+      },
 
       // Uncomment to customize notification email template
       // "notification": {

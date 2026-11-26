@@ -1,17 +1,25 @@
 {
   "expo": {
-    "name": "app",
-    "slug": "app",
-    "version": "1.0.0",
+    "name": "ciircle",
+    "slug": "ciircle",
+    "scheme": "ciircle",
+    "version": "0.1.0",
     "orientation": "portrait",
     "icon": "./assets/icon.png",
     "userInterfaceStyle": "light",
     "ios": {
-      "supportsTablet": true
+      "supportsTablet": false,
+      "bundleIdentifier": "dk.ciircle.app",
+      "infoPlist": {
+        "NSPhotoLibraryUsageDescription": "ciircle bruger dine billeder, når du vælger et profilbillede eller deler et opslag.",
+        "NSCameraUsageDescription": "ciircle bruger kameraet, når du tager et billede til et opslag.",
+        "ITSAppUsesNonExemptEncryption": false
+      }
     },
     "android": {
+      "package": "dk.ciircle.app",
       "adaptiveIcon": {
-        "backgroundColor": "#E6F4FE",
+        "backgroundColor": "#FFFFFF",
         "foregroundImage": "./assets/android-icon-foreground.png",
         "backgroundImage": "./assets/android-icon-background.png",
         "monochromeImage": "./assets/android-icon-monochrome.png"
@@ -19,14 +27,20 @@
       "predictiveBackGestureEnabled": false
     },
     "web": {
-      "favicon": "./assets/favicon.png"
+      "favicon": "./assets/favicon.png",
+      "output": "single"
     },
     "plugins": [
       "expo-router",
       "expo-status-bar",
       "expo-font",
       "expo-image",
-      "expo-secure-store"
+      "expo-secure-store",
+      [
+        "expo-image-picker",
+        { "photosPermission": "ciircle bruger dine billeder, når du vælger et profilbillede eller deler et opslag." }
+      ],
+      "expo-notifications"
     ]
   }
 }
