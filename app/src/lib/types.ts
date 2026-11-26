@@ -18,7 +18,17 @@ export type Stance = 'enig' | 'uenig';
 /** Et opslag med forfatter, tal og dine egne valg (viewet post_cards) */
 export type PostCard = {
   id: string;
-  kind: 'feed' | 'debat';
+  kind: 'feed' | 'debat' | 'flick';
+  media_type: 'image' | 'video';
+  group_id: string | null;
+  group_name: string | null;
+  group_avatar_path: string | null;
+  event_id: string | null;
+  event_title: string | null;
+  page_id: string | null;
+  page_handle: string | null;
+  page_name: string | null;
+  page_avatar_path: string | null;
   text: string;
   image_paths: string[];
   tags: string[];

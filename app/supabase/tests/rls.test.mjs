@@ -127,6 +127,42 @@ check('Anna kan uploade i sin egen mappe', !up.error, up.error?.message);
 const bad = await anna.c.storage.from('media').upload(`${lars.id}/x.png`, new Blob([new Uint8Array([1])], { type: 'image/png' }));
 check('… men ikke i andres', !!bad.error);
 
+// Grupper: privat gruppe – kun medlemmer ser opslag
+const { data: grp, error: ge } = await anna.c.from('groups').insert({ name: 'Haveklubben', privacy: 'privat', created_by: anna.id }).select().single();
+check('Anna kan oprette en privat gruppe', !ge, ge?.message);
+const { data: gPost, error: gpe } = await anna.c.from('posts').insert({ author_id: anna.id, text: 'Kun for medlemmer', group_id: grp.id }).select().single();
+check('Admin kan skrive i gruppen', !gpe, gpe?.message);
+const { data: lars2 } = { data: await user('Lars To', 'larsto') };
+r = await lars2.c.from('posts').select('id').eq('id', gPost.id);
+check('Ikke-medlem kan ikke se opslag i privat gruppe', r.data.length === 0);
+const { error: joinErr } = await lars2.c.from('group_members').insert({ group_id: grp.id, user_id: lars2.id, status: 'medlem' });
+check('Man kan ikke selv melde sig ind i en privat gruppe', !!joinErr);
+await lars2.c.from('group_members').insert({ group_id: grp.id, user_id: lars2.id, status: 'anmodet' });
+await anna.c.from('group_members').update({ status: 'medlem' }).eq('group_id', grp.id).eq('user_id', lars2.id);
+r = await lars2.c.from('posts').select('id').eq('id', gPost.id);
+check('Efter godkendelse kan medlemmet se opslaget', r.data.length === 1);
+
+// Sider: følg og Interesser-feed
+const { data: page, error: pge } = await anna.c.from('pages').insert({ handle: 'kulturhuset' + (Date.now() % 10000), name: 'Kulturhuset', created_by: anna.id }).select().single();
+check('Anna kan oprette en side', !pge, pge?.message);
+const { error: pagePostErr } = await lars2.c.from('posts').insert({ author_id: lars2.id, text: 'Falsk side', page_id: page.id });
+check('Kun sidens administratorer kan skrive som siden', !!pagePostErr);
+const { data: pPost } = await anna.c.from('posts').insert({ author_id: anna.id, text: 'Koncert i aften', page_id: page.id }).select().single();
+await lars2.c.from('page_follows').insert({ page_id: page.id, user_id: lars2.id });
+r = await lars2.c.rpc('feed_interests');
+check('Opslag fra en fulgt side vises under Interesser', r.data?.some((p) => p.id === pPost.id), JSON.stringify(r.error));
+
+// Begivenheder: kun inviterede ser en lukket begivenhed
+const { data: ev, error: eve } = await anna.c.from('events').insert({ title: 'Fødselsdag', starts_at: new Date(Date.now() + 864e5).toISOString(), privacy: 'inviterede', created_by: anna.id }).select().single();
+check('Anna kan oprette en lukket begivenhed', !eve, eve?.message);
+r = await lars2.c.from('events').select('id').eq('id', ev.id);
+check('Ikke-inviteret kan ikke se den', r.data.length === 0);
+await anna.c.from('event_invites').insert({ event_id: ev.id, user_id: lars2.id, invited_by: anna.id });
+r = await lars2.c.from('events').select('id').eq('id', ev.id);
+check('Inviteret kan se den', r.data.length === 1);
+const { error: rsvpErr } = await lars2.c.from('event_rsvps').upsert({ event_id: ev.id, user_id: lars2.id, status: 'deltager' });
+check('Inviteret kan svare "Deltager"', !rsvpErr, rsvpErr?.message);
+
 // Slet konto
 const del = await emil.c.rpc('delete_my_account');
 r = await admin.from('profiles').select('id').eq('id', emil.id);

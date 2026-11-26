@@ -55,3 +55,25 @@ export async function uploadImage(userId: string, uri: string, _mime = 'image/jp
   if (error) throw error;
   return path;
 }
+
+/** Upload af video (flicks og moments). Telefonen komprimerer selv videoen ved valg. Returnerer stien. */
+export async function uploadVideo(userId: string, uri: string, mime = 'video/mp4') {
+  const ext = mime.includes('quicktime') ? 'mov' : mime.includes('webm') ? 'webm' : 'mp4';
+  const path = `${userId}/${Date.now()}-${Math.random().toString(36).slice(2, 8)}.${ext}`;
+  const body = await (await fetch(uri)).arrayBuffer();
+  const { error } = await supabase.storage.from('media').upload(path, body, { contentType: mime, upsert: false });
+  if (error) throw error;
+  return path;
+}
+
+/** Vælg billede eller video (moments og flicks) */
+export async function pickMedia(allowVideo = true) {
+  const res = await ImagePicker.launchImageLibraryAsync({
+    mediaTypes: allowVideo ? ['images', 'videos'] : ['images'],
+    quality: 0.8,
+    videoMaxDuration: 60,
+    videoQuality: ImagePicker.UIImagePickerControllerQualityType.Medium,
+  });
+  if (res.canceled || !res.assets?.[0]) return null;
+  return res.assets[0];
+}

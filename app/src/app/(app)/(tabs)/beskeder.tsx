@@ -53,7 +53,6 @@ export default function Messages() {
   return (
     <Screen
       title="Beskeder"
-      back={false}
       edges={['top']}
       scroll={false}
       right={<IconButton icon="edit" label="Ny besked" onPress={() => router.push('/ny-besked')} />}

@@ -59,6 +59,7 @@ export default function Home() {
         </T>
         <View style={s.icons}>
           <IconButton icon="search" label="Søg" onPress={() => router.push('/soeg')} />
+          <IconButton icon="chat" label="Beskeder" dot={unread.messages > 0} onPress={() => router.push('/beskeder')} />
           <IconButton icon="bell" label="Notifikationer" dot={unread.notifications > 0} onPress={() => router.push('/notifikationer')} />
         </View>
       </View>

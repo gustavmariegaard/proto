@@ -50,20 +50,73 @@ export function PostCard({ post, onRemoved, onComments }: Props) {
   return (
     <View style={s.card} accessibilityLabel={`Opslag fra ${post.author_name}`}>
       <View style={s.header}>
-        <Pressable accessibilityRole="link" accessibilityLabel={`Gå til ${post.author_name}`} onPress={profile} style={s.who}>
-          <Avatar name={post.author_name} path={post.author_avatar_path} />
-          <View style={{ flex: 1 }}>
-            <View style={s.nameRow}>
-              <T v="headingS" numberOfLines={1}>
-                {post.author_name}
-              </T>
-              {post.author_public_kind && <Icon name={post.author_public_kind === 'side' ? 'building' : 'globe'} size={13} color={color.green700} />}
+        {post.group_id || post.event_id ? (
+          // Gruppe/begivenhed øverst, forfatteren under (som i prototypen)
+          <View style={s.who}>
+            <Pressable
+              accessibilityRole="link"
+              accessibilityLabel={`Gå til ${post.group_name ?? post.event_title}`}
+              onPress={() => router.push(post.group_id ? `/grupper/${post.group_id}` : `/begivenheder/${post.event_id}`)}
+              style={s.ctx}
+            >
+              <View style={s.ctxThumb}>
+                {post.group_id ? (
+                  <Avatar name={post.group_name ?? '?'} path={post.group_avatar_path} />
+                ) : (
+                  <View style={s.ctxIcon}>
+                    <Icon name="calendar" size={20} />
+                  </View>
+                )}
+                <View style={s.ctxAuthor}>
+                  <Avatar name={post.author_name} path={post.author_avatar_path} size="S" />
+                </View>
+              </View>
+            </Pressable>
+            <View style={{ flex: 1 }}>
+              <Pressable onPress={() => router.push(post.group_id ? `/grupper/${post.group_id}` : `/begivenheder/${post.event_id}`)}>
+                <T v="headingS" numberOfLines={1}>
+                  {post.group_name ?? post.event_title}
+                </T>
+              </Pressable>
+              <Pressable onPress={profile}>
+                <T v="caption" c={color.textSecondary} numberOfLines={1}>
+                  {post.author_name} · {ago(post.created_at)}
+                </T>
+              </Pressable>
             </View>
-            <T v="caption" c={color.textSecondary} numberOfLines={1}>
-              @{post.author_username} · {debate ? post.tags[0] : ago(post.created_at)}
-            </T>
           </View>
-        </Pressable>
+        ) : post.page_id ? (
+          // Opslag fra en side: siden er afsender
+          <Pressable accessibilityRole="link" accessibilityLabel={`Gå til ${post.page_name}`} onPress={() => router.push(`/sider/${post.page_handle}`)} style={s.who}>
+            <Avatar name={post.page_name ?? '?'} path={post.page_avatar_path} />
+            <View style={{ flex: 1 }}>
+              <View style={s.nameRow}>
+                <T v="headingS" numberOfLines={1}>
+                  {post.page_name}
+                </T>
+                <Icon name="building" size={13} color={color.green700} />
+              </View>
+              <T v="caption" c={color.textSecondary} numberOfLines={1}>
+                @{post.page_handle} · {ago(post.created_at)}
+              </T>
+            </View>
+          </Pressable>
+        ) : (
+          <Pressable accessibilityRole="link" accessibilityLabel={`Gå til ${post.author_name}`} onPress={profile} style={s.who}>
+            <Avatar name={post.author_name} path={post.author_avatar_path} />
+            <View style={{ flex: 1 }}>
+              <View style={s.nameRow}>
+                <T v="headingS" numberOfLines={1}>
+                  {post.author_name}
+                </T>
+                {post.author_public_kind && <Icon name={post.author_public_kind === 'side' ? 'building' : 'globe'} size={13} color={color.green700} />}
+              </View>
+              <T v="caption" c={color.textSecondary} numberOfLines={1}>
+                @{post.author_username} · {debate ? post.tags[0] : ago(post.created_at)}
+              </T>
+            </View>
+          </Pressable>
+        )}
         <IconButton icon="dots" label="Flere muligheder" onPress={() => setMenu('menu')} />
       </View>
 
@@ -215,6 +268,10 @@ const s = StyleSheet.create({
   header: { flexDirection: 'row', alignItems: 'center', gap: 4 },
   who: { flex: 1, flexDirection: 'row', alignItems: 'center', gap: 10 },
   nameRow: { flexDirection: 'row', alignItems: 'center', gap: 4 },
+  ctx: { width: 48, height: 44 },
+  ctxThumb: { width: 48, height: 44 },
+  ctxIcon: { width: 40, height: 40, borderRadius: 12, backgroundColor: color.bgSubtle, alignItems: 'center', justifyContent: 'center' },
+  ctxAuthor: { position: 'absolute', right: 0, bottom: -2, borderRadius: 14, borderWidth: 2, borderColor: color.bgSurface },
   image: { width: '100%', borderRadius: radius.md, backgroundColor: color.bgSubtle },
   tags: { flexDirection: 'row', flexWrap: 'wrap', gap: 6 },
   tag: { paddingHorizontal: 10, paddingVertical: 4, borderRadius: radius.pill, backgroundColor: color.bgSubtle },
