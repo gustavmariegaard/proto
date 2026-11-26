@@ -1,47 +1,90 @@
+/* Før man stemmer: to tydelige knapper og "Vis stemmer" */
 .stance {
   display: flex;
   align-items: center;
-  gap: 12px;
+  gap: 8px;
 }
 
-/* Grøn = enige, grå = uenige. Skillet flytter sig med stemmerne. */
-.stance__bar {
-  flex: 1;
-  display: flex;
-  height: 44px;
-  overflow: hidden;
-  border: 1px solid var(--color-border-default);
-  border-radius: var(--radius-pill);
-  background: linear-gradient(
-    90deg,
-    var(--color-accent-verified-bg) 0 var(--pct),
-    var(--gray-150) var(--pct) 100%
-  );
-  transition: background 0.3s;
-}
-
-.stance__btn {
-  flex: 1;
+.stance__choice {
   display: inline-flex;
   align-items: center;
   justify-content: center;
   gap: 6px;
-  min-width: 0;
+  height: 44px;
+  padding: 0 18px;
+  border: 1px solid var(--color-border-strong);
+  border-radius: var(--radius-pill);
+  background: var(--color-bg-surface);
   color: var(--color-text-primary);
 }
 
-.stance__btn + .stance__btn { border-left: 1px solid rgb(0 0 0 / 0.06); }
+.stance__peek {
+  margin-left: auto;
+  min-height: 44px;
+  padding: 0 4px;
+  color: var(--color-text-secondary);
+  text-decoration: underline;
+  text-underline-offset: 3px;
+}
 
-.stance__pct { color: var(--color-text-secondary); }
-.stance__btn--on .stance__pct { color: var(--color-text-primary); font-weight: 600; }
+/* Efter: fordelingen */
+.stance--open {
+  flex-direction: column;
+  align-items: stretch;
+  gap: 4px;
+}
 
-.stance__btn:focus-visible {
-  outline: 2px solid var(--color-accent-highlight);
-  outline-offset: -2px;
+.stance__labels {
+  display: flex;
+  justify-content: space-between;
+}
+
+.stance__side {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  min-height: 40px;
+  padding: 0 14px;
+  border: 1px solid var(--color-border-strong);
   border-radius: var(--radius-pill);
+  color: var(--color-text-primary);
+}
+
+.stance__side--on {
+  background: var(--color-action-primary);
+  border-color: var(--color-action-primary);
+  color: var(--color-text-on-action);
+}
+
+.stance__side--on .stance__pct { color: inherit; font-weight: 700; }
+.stance__pct { color: var(--color-text-secondary); }
+
+.stance--open .stance__bar { margin-top: 6px; }
+
+.stance__bar {
+  height: 8px;
+  overflow: hidden;
+  border-radius: var(--radius-pill);
+  background: var(--gray-200);
+}
+
+.stance__fill {
+  display: block;
+  height: 100%;
+  border-radius: var(--radius-pill);
+  background: var(--color-accent-highlight);
+  transition: width 0.4s ease;
 }
 
 .stance__total {
-  flex-shrink: 0;
+  margin-top: 4px;
   color: var(--color-text-secondary);
+}
+
+.stance__choice:focus-visible,
+.stance__peek:focus-visible,
+.stance__side:focus-visible { outline: none; box-shadow: var(--focus-ring); border-radius: var(--radius-pill); }
+
+@media (prefers-reduced-motion: reduce) {
+  .stance__fill { transition: none; }
 }

@@ -21,7 +21,7 @@ export function FlickCommentsSheet({ open, onClose }: Props) {
   const [liked, setLiked] = useState<string[]>([]);
   const [expanded, setExpanded] = useState<string[]>([]);
   const [text, setText] = useState('');
-  const [order, setOrder] = useState<CommentOrder>('populaere');
+  const [order, setOrder] = useState<CommentOrder>('relevante');
   const inputRef = useRef<HTMLInputElement>(null);
   const me = profile.name || 'Du';
   const myHandle = profile.username.trim().replace(/^@/, '') || handleOf(profile.name) || 'dit.navn';

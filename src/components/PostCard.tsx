@@ -174,14 +174,21 @@ export function PostCard({ post, onComment, onShare, onReport, onMute }: PostCar
         </ul>
       )}
 
+      {/* Som Community Notes på X: overskrift, note, kilde og "Bedøm" */}
       {note && (
         <aside className="post-note" aria-label="Fællesskabsnote">
-          <p className="t-caption-strong post-note__title">Fællesskabsnote</p>
+          <p className="t-caption-strong post-note__title">
+            <Icon name="circles" size={18} />
+            Læsere har tilføjet kontekst
+          </p>
           <p className="t-body-s">{note.text}</p>
-          {note.source && <p className="t-caption post-note__source">Kilde: {note.source}</p>}
-          <Link to={`/opslag/${post.id}/noter`} className="t-caption-strong post-note__rate">
-            Vurder noten
-          </Link>
+          {note.source && <p className="t-caption post-note__source">{note.source}</p>}
+          <div className="post-note__foot">
+            <span className="t-caption post-note__muted">Er noten hjælpsom?</span>
+            <Link to={`/opslag/${post.id}/noter`} className="t-caption-strong post-note__rate">
+              Bedøm
+            </Link>
+          </div>
         </aside>
       )}
 

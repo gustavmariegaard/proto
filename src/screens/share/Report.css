@@ -25,3 +25,14 @@
 @media (pointer: coarse) {
   .report__field { font-size: 16px; }
 }
+
+/* Forkert kategoriseret: vælg de tags, der ikke passer */
+.report__tagpick { padding: 10px 4px 4px; }
+
+.report__tags {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+}
+
+.report__tags .chip { gap: 6px; }

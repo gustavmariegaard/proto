@@ -1,6 +1,8 @@
 import { useState } from 'react';
 import { Navigate, useParams } from 'react-router-dom';
 import { Button } from '../../components/Button';
+import { Chip } from '../../components/Chip';
+import { Icon } from '../../components/Icon';
 import { pronouns, reportReasons } from '../../data/create';
 import { discoverPosts } from '../../data/discover';
 import { flicks } from '../../data/flicks';
@@ -23,19 +25,23 @@ export function Report() {
   const [reason, setReason] = useState<string | null>(null);
   const [other, setOther] = useState('');
   const [sent, setSent] = useState(false);
+  // Forkert kategoriseret: hvilke tags passer ikke? (ét tag vælges af sig selv)
+  const [wrongTags, setWrongTags] = useState<string[]>([]);
 
   if (!post) return <Navigate to="/" replace />;
   // Opslag med tags (Offentlig debat, flicks): man kan også melde forkert kategori
-  const tags = 'tags' in post ? (post.tags as string[] | undefined) : undefined;
+  // Debatversionen først: samme opslag i feedet har ikke altid sine tags med
+  const tags = discoverPosts.find((p) => p.id === post.id)?.tags ?? ('tags' in post ? (post.tags as string[] | undefined) : undefined);
   const reasons = tags?.length
     ? [
-        { id: 'kategori', title: 'Forkert kategoriseret', hint: `Passer ikke til ${tags.map((t) => `#${t}`).join(' ')}` },
+        { id: 'kategori', title: 'Forkert kategoriseret', hint: tags.length > 1 ? 'Et eller flere tags passer ikke' : `Passer ikke til #${tags[0]}` },
         ...reportReasons,
       ]
     : reportReasons;
   const { object } = pronouns(post.author);
   const needsText = reason === 'andet';
-  const canSend = reason !== null && (!needsText || other.trim().length > 2);
+  const pickTags = reason === 'kategori' && (tags?.length ?? 0) > 1;
+  const canSend = reason !== null && (!needsText || other.trim().length > 2) && (!pickTags || wrongTags.length > 0);
 
   if (sent) {
     return (
@@ -80,6 +86,26 @@ export function Report() {
                     <span className="t-caption choice__hint">{r.hint}</span>
                   </span>
                 </button>
+                {/* Tags vises lige under valget */}
+                {r.id === 'kategori' && pickTags && (
+                  <div className="report__other report__tagpick">
+                    <span id="report-tags" className="t-label">Hvilke tags passer ikke?</span>
+                    <div className="report__tags" role="group" aria-labelledby="report-tags">
+                      {tags!.map((t) => {
+                        const on = wrongTags.includes(t);
+                        return (
+                          <Chip
+                            key={t}
+                            selected={on}
+                            onClick={() => setWrongTags((w) => (on ? w.filter((x) => x !== t) : [...w, t]))}
+                          >
+                            {on && <Icon name="check" size={16} />}#{t}
+                          </Chip>
+                        );
+                      })}
+                    </div>
+                  </div>
+                )}
               </div>
             );
           })}
@@ -98,7 +124,13 @@ export function Report() {
           </label>
         )}
         <p className="t-caption modal-screen__muted" aria-live="polite">
-          {reason === null ? 'Vælg en kategori for at sende rapporten.' : needsText && !canSend ? 'Skriv et par ord om problemet.' : ''}
+          {reason === null
+            ? 'Vælg en kategori for at sende rapporten.'
+            : pickTags && wrongTags.length === 0
+              ? 'Vælg mindst ét tag.'
+              : needsText && !canSend
+                ? 'Skriv et par ord om problemet.'
+                : ''}
         </p>
         <Button block disabled={!canSend} onClick={() => setSent(true)}>
           Send rapport

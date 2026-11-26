@@ -1,31 +1,60 @@
-import { Chip } from './Chip';
+import { useState } from 'react';
+import { Icon } from './Icon';
 import './CommentSort.css';
 
-/** Sortering af kommentarer (egne navne, inspireret af Reddits Hot / New / Controversial / Old) */
-export type CommentOrder = 'populaere' | 'nyeste' | 'debat' | 'aeldste';
+/** Sortering af kommentarer (inspireret af Reddit, Instagram og YouTube) */
+export type CommentOrder = 'relevante' | 'nyeste' | 'omdiskuterede' | 'aeldste';
 
 const options: { id: CommentOrder; label: string }[] = [
-  { id: 'populaere', label: 'Populære' },
-  { id: 'nyeste', label: 'Nyeste' },
-  { id: 'debat', label: 'Mest debat' },
-  { id: 'aeldste', label: 'Ældste' },
+  { id: 'relevante', label: 'Mest relevante' },
+  { id: 'nyeste', label: 'Nyeste først' },
+  { id: 'omdiskuterede', label: 'Mest omdiskuterede' },
+  { id: 'aeldste', label: 'Ældste først' },
 ];
 
+/** Én lille knap øverst i kommentarerne, der åbner en kort liste */
 export function CommentSort({ value, onChange }: { value: CommentOrder; onChange: (v: CommentOrder) => void }) {
+  const [open, setOpen] = useState(false);
+  const current = options.find((o) => o.id === value)!;
   return (
-    <div className="comment-sort" role="radiogroup" aria-label="Sorter kommentarer">
-      {options.map((o) => (
-        <Chip
-          key={o.id}
-          role="radio"
-          aria-checked={value === o.id}
-          aria-pressed={undefined}
-          selected={value === o.id}
-          onClick={() => onChange(o.id)}
-        >
-          {o.label}
-        </Chip>
-      ))}
+    <div className="comment-sort">
+      <button
+        type="button"
+        className="t-caption-strong comment-sort__btn"
+        aria-haspopup="listbox"
+        aria-expanded={open}
+        aria-label={`Sorter kommentarer: ${current.label}`}
+        onClick={() => setOpen((v) => !v)}
+      >
+        {current.label}
+        <span className={['comment-sort__chev', open && 'comment-sort__chev--up'].filter(Boolean).join(' ')}>
+          <Icon name="chevron-right" size={16} />
+        </span>
+      </button>
+      {open && (
+        <>
+          <button type="button" className="comment-sort__scrim" aria-label="Luk" tabIndex={-1} onClick={() => setOpen(false)} />
+          <ul className="comment-sort__menu" role="listbox" aria-label="Sorter kommentarer">
+            {options.map((o) => (
+              <li key={o.id} role="none">
+                <button
+                  type="button"
+                  role="option"
+                  aria-selected={o.id === value}
+                  className="t-body-s comment-sort__opt"
+                  onClick={() => {
+                    onChange(o.id);
+                    setOpen(false);
+                  }}
+                >
+                  {o.label}
+                  {o.id === value && <Icon name="check" size={18} />}
+                </button>
+              </li>
+            ))}
+          </ul>
+        </>
+      )}
     </div>
   );
 }
@@ -47,11 +76,13 @@ type Sortable = { likes: number; time: string; replies: number; index: number };
 /** Sorterer tråde. index = rækkefølgen, de blev skrevet i (højere = nyere). */
 export function sortThreads<T>(items: T[], key: (t: T) => Sortable, order: CommentOrder): T[] {
   const age = (t: T) => ageMinutes(key(t).time) * 1000 - key(t).index;
+  // Mest relevante: hjerter og svar, men nyere kommentarer vejer tungere
+  const hot = (t: T) => (key(t).likes + key(t).replies * 2 + 1) / Math.pow(ageMinutes(key(t).time) / 60 + 2, 1.2);
   const by: Record<CommentOrder, (a: T, b: T) => number> = {
-    populaere: (a, b) => key(b).likes - key(a).likes || age(a) - age(b),
+    relevante: (a, b) => hot(b) - hot(a),
     nyeste: (a, b) => age(a) - age(b),
     aeldste: (a, b) => age(b) - age(a),
-    debat: (a, b) => key(b).replies - key(a).replies || key(b).likes - key(a).likes,
+    omdiskuterede: (a, b) => key(b).replies - key(a).replies || key(b).likes - key(a).likes,
   };
   return [...items].sort(by[order]);
 }

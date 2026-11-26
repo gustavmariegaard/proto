@@ -1,15 +1,64 @@
-/* Sortering øverst i kommentarerne. Ruller sidelæns, hvis der ikke er plads. */
+/* Lille sorteringsknap øverst i kommentarerne, med en kort liste under */
 .comment-sort {
+  position: relative;
+  padding: 0 12px;
+}
+
+.comment-sort__btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 2px;
+  min-height: 44px;
+  padding: 0 8px;
+  color: var(--color-text-secondary);
+}
+
+.comment-sort__chev {
+  display: inline-grid;
+  transform: rotate(90deg);
+  transition: transform 0.15s;
+}
+
+.comment-sort__chev--up { transform: rotate(-90deg); }
+
+.comment-sort__scrim {
+  position: fixed;
+  inset: 0;
+  z-index: 20;
+  background: transparent;
+  cursor: default;
+}
+
+.comment-sort__menu {
+  position: absolute;
+  z-index: 21;
+  top: 42px;
+  left: 16px;
+  min-width: 220px;
+  margin: 0;
+  padding: 6px;
+  list-style: none;
+  border: 1px solid var(--color-border-default);
+  border-radius: var(--radius-lg);
+  background: var(--color-bg-surface);
+  box-shadow: 0 8px 24px rgb(0 0 0 / 0.12);
+}
+
+.comment-sort__opt {
   display: flex;
-  gap: 8px;
-  padding: 4px 20px 0;
-  overflow-x: auto;
-  scrollbar-width: none;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  width: 100%;
+  min-height: 44px;
+  padding: 0 12px;
+  border-radius: var(--radius-sm);
+  color: var(--color-text-primary);
+  text-align: left;
 }
 
-.comment-sort::-webkit-scrollbar { display: none; }
+.comment-sort__opt[aria-selected='true'] { font-weight: 600; }
+.comment-sort__opt:hover { background: var(--color-bg-subtle); }
 
-.comment-sort .chip {
-  padding: 0 14px;
-  font-size: 13px;
-}
+.comment-sort__btn:focus-visible,
+.comment-sort__opt:focus-visible { outline: none; box-shadow: var(--focus-ring); border-radius: var(--radius-sm); }
