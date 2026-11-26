@@ -1,4 +1,5 @@
-# Bygger appen og lægger den på GitHub Pages, hver gang branchen "prototype" opdateres.
+# Bygger prototypen og appen (branchen "app") og lægger dem på GitHub Pages.
+# Kører, når "prototype" opdateres, eller manuelt (fx efter ændringer i appen).
 name: Udgiv på GitHub Pages
 
 on:
@@ -28,9 +29,33 @@ jobs:
       - run: npm run build
         env:
           BASE_PATH: /${{ github.event.repository.name }}/
-      # GitHub Pages kender ikke appens egne adresser (fx /proto/log-ind),
-      # så vi viser appen i stedet for en fejlside.
-      - run: cp dist/index.html dist/404.html
+      # Den rigtige app (Expo, branchen "app") lægges under /proto/app/
+      - uses: actions/checkout@v4
+        with:
+          ref: app
+          path: app-src
+      - run: npm ci
+        working-directory: app-src/app
+      - run: npx expo export --platform web --output-dir ../../dist/app
+        working-directory: app-src/app
+        env:
+          EXPO_BASE_URL: /${{ github.event.repository.name }}/app
+          # Offentlige værdier (må ligge i appen). Databasens regler beskytter data.
+          EXPO_PUBLIC_SUPABASE_URL: https://pgxpcrynivyvfivxalxr.supabase.co
+          EXPO_PUBLIC_SUPABASE_KEY: sb_publishable_kBta1LMLbJAvmBQWsXji5A_DJWrjCVu
+      # GitHub Pages kender ikke appernes egne adresser (fx /proto/log-ind),
+      # så vi viser prototypen i stedet for en fejlside. Under /proto/app/
+      # sendes man til appen med stien bagefter (#!/sti), som appen selv åbner.
+      - run: |
+          node -e '
+            const fs = require("fs");
+            const base = "/" + process.env.REPO + "/app";
+            const js = `<script>(function(){var b=${JSON.stringify(base)};var p=location.pathname;if(p.indexOf(b+"/")===0&&p.length>b.length+1){location.replace(b+"/#!"+p.slice(b.length)+location.search);}})();</script>`;
+            const html = fs.readFileSync("dist/index.html", "utf8").replace("<head>", "<head>" + js);
+            fs.writeFileSync("dist/404.html", html);
+          '
+        env:
+          REPO: ${{ github.event.repository.name }}
       - uses: actions/upload-pages-artifact@v3
         with:
           path: dist
