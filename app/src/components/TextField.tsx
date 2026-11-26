@@ -1,11 +1,13 @@
-import { StyleSheet, TextInput, View, type TextInputProps } from 'react-native';
+import { useState } from 'react';
+import { Platform, StyleSheet, TextInput, View, type TextInputProps } from 'react-native';
 import { color, font, radius } from '@/theme/tokens';
 import { T } from './T';
 
 type Props = TextInputProps & { label: string; showLabel?: boolean; hint?: string; error?: string; multiline?: boolean };
 
 /** Tekstfelt med synlig label over (som Rediger profil i prototypen) */
-export function TextField({ label, showLabel = true, hint, error, multiline, style, ...rest }: Props) {
+export function TextField({ label, showLabel = true, hint, error, multiline, style, onFocus, onBlur, ...rest }: Props) {
+  const [focus, setFocus] = useState(false);
   return (
     <View style={s.group}>
       {showLabel && (
@@ -17,7 +19,9 @@ export function TextField({ label, showLabel = true, hint, error, multiline, sty
         accessibilityLabel={label}
         placeholderTextColor={color.textSecondary}
         multiline={multiline}
-        style={[s.field, multiline && s.multi, style]}
+        onFocus={(e) => (setFocus(true), onFocus?.(e))}
+        onBlur={(e) => (setFocus(false), onBlur?.(e))}
+        style={[s.field, multiline && s.multi, focus && s.focus, noOutline, style]}
         {...rest}
       />
       {error ? (
@@ -33,6 +37,9 @@ export function TextField({ label, showLabel = true, hint, error, multiline, sty
   );
 }
 
+/** Browserens egen fokusramme passer ikke til de runde felter; vi viser en mørk kant i stedet */
+export const noOutline = Platform.OS === 'web' ? ({ outlineStyle: 'none' } as object) : null;
+
 const s = StyleSheet.create({
   group: { gap: 6, alignSelf: 'stretch' },
   label: { paddingLeft: 4 },
@@ -47,5 +54,6 @@ const s = StyleSheet.create({
     fontFamily: font.body,
     fontSize: 16,
   },
+  focus: { borderColor: color.textPrimary, borderWidth: 1.5 },
   multi: { minHeight: 110, borderRadius: 20, paddingTop: 14, paddingBottom: 14, textAlignVertical: 'top' },
 });

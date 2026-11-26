@@ -31,11 +31,13 @@ function Loading() {
 
 /** Ikke logget ind → velkomst. Logget ind uden profil → opret profil. Ellers appen. */
 function Gate() {
-  const { session, profile } = useSession();
+  const { session, profile, recovering } = useSession();
   // Web på GitHub Pages: en genindlæst underside sendes hertil som #!/sti (se 404.html)
   useEffect(() => {
     if (Platform.OS !== 'web' || !session || !profile) return;
     const h = window.location.hash;
+    // Efter linket i en mail: fjern login-oplysningerne fra adresselinjen
+    if (h.includes('access_token=')) window.history.replaceState(null, '', window.location.pathname);
     if (h.startsWith('#!/')) {
       window.history.replaceState(null, '', window.location.pathname);
       router.replace(h.slice(2) as never);
@@ -49,10 +51,13 @@ function Gate() {
       <Stack.Protected guard={!loggedIn}>
         <Stack.Screen name="(auth)" />
       </Stack.Protected>
-      <Stack.Protected guard={loggedIn && !hasProfile}>
+      <Stack.Protected guard={loggedIn && recovering}>
+        <Stack.Screen name="ny-adgangskode" />
+      </Stack.Protected>
+      <Stack.Protected guard={loggedIn && !recovering && !hasProfile}>
         <Stack.Screen name="opret-profil" />
       </Stack.Protected>
-      <Stack.Protected guard={loggedIn && hasProfile}>
+      <Stack.Protected guard={loggedIn && !recovering && hasProfile}>
         <Stack.Screen name="(app)" />
       </Stack.Protected>
     </Stack>

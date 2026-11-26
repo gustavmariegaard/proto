@@ -10,6 +10,9 @@ type Ctx = {
   profile: Profile | null | undefined;
   refreshProfile: () => Promise<void>;
   signOut: () => Promise<void>;
+  /** Man har trykket på linket i "glemt adgangskode"-mailen og skal vælge en ny */
+  recovering: boolean;
+  doneRecovering: () => void;
 };
 
 const SessionContext = createContext<Ctx | null>(null);
@@ -18,10 +21,14 @@ const SessionContext = createContext<Ctx | null>(null);
 export function SessionProvider({ children }: { children: ReactNode }) {
   const [session, setSession] = useState<Session | null | undefined>(undefined);
   const [profile, setProfile] = useState<Profile | null | undefined>(undefined);
+  const [recovering, setRecovering] = useState(false);
 
   useEffect(() => {
     supabase.auth.getSession().then(({ data }) => setSession(data.session));
-    const { data } = supabase.auth.onAuthStateChange((_e, s) => setSession(s));
+    const { data } = supabase.auth.onAuthStateChange((event, s) => {
+      if (event === 'PASSWORD_RECOVERY') setRecovering(true);
+      setSession(s);
+    });
     return () => data.subscription.unsubscribe();
   }, []);
 
@@ -44,7 +51,7 @@ export function SessionProvider({ children }: { children: ReactNode }) {
     setProfile(null);
   }, []);
 
-  return <SessionContext.Provider value={{ session, profile, refreshProfile, signOut }}>{children}</SessionContext.Provider>;
+  return <SessionContext.Provider value={{ session, profile, refreshProfile, signOut, recovering, doneRecovering: () => setRecovering(false) }}>{children}</SessionContext.Provider>;
 }
 
 export function useSession() {

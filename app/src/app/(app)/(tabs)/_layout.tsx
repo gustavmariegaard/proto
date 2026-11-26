@@ -20,7 +20,7 @@ function TabBar({ state }: BottomTabBarProps) {
   const unread = useUnread();
   const current = state.routes[state.index]?.name;
   return (
-    <View style={[s.wrap, { paddingBottom: Math.max(insets.bottom, 12) }]} pointerEvents="box-none">
+    <View style={[s.wrap, { paddingBottom: Math.max(insets.bottom, 12), pointerEvents: 'box-none' }]}>
       <View style={s.bar} accessibilityRole="tablist">
         {items.map((it) => {
           const on = current === it.name;

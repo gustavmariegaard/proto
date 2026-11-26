@@ -5,7 +5,8 @@ Prototypen (web) ligger stadig i roden af repoet og på branchen `prototype`.
 
 ## Hvad er med
 
-- Opret konto med e-mail og adgangskode. Bekræftelsesmailen har et link, der logger ind. Opret profil med navn, brugernavn og billede.
+- Landingsside og rigtig tilmelding i tre trin: navn og brugernavn (tjekkes live), fødselsdato (mindst 13 år, vises ikke på profilen), e-mail og adgangskode. Bekræftelsesmailen har et link, der logger ind. Profilen oprettes af databasen samtidig med kontoen.
+- Log ind, glemt adgangskode (mail med link) og ny adgangskode.
 - Billeder gøres mindre før upload (længste side 1080 px, profilbilleder 400 px).
 - **Hjem:** opslag fra dem, du følger, med hjerter, kommentarer, svar og sortering (Relevante, Omdiskuterede, Nyeste, Ældste).
 - **Opret:** tekst, op til 4 billeder, Offentlig debat med højst 5 tags, Tillad deling.
