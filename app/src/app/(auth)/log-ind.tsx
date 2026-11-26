@@ -9,8 +9,8 @@ import { color, TAP } from '@/theme/tokens';
 
 /*
  * Log ind eller opret konto med e-mail og adgangskode.
- * Testfase: e-mailen bekræftes ikke (slået fra i Supabase), så der sendes ingen mails.
- * Før offentlig lancering: slå bekræftelse til igen (eller brug koden i kode.tsx).
+ * Er "Confirm email" slået til i Supabase, sendes en mail med et link.
+ * Linket åbner appen og logger ind. Er det slået fra, logges man ind med det samme.
  */
 export default function LogIn() {
   const [mode, setMode] = useState<'login' | 'opret'>('login');
@@ -18,6 +18,7 @@ export default function LogIn() {
   const [password, setPassword] = useState('');
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState('');
+  const [sent, setSent] = useState(false);
   const cleanEmail = email.trim().toLowerCase();
   const ok = /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(cleanEmail) && password.length >= 8;
 
@@ -26,15 +27,34 @@ export default function LogIn() {
     setBusy(true);
     setError('');
     if (mode === 'opret') {
-      const { data, error } = await supabase.auth.signUp({ email: cleanEmail, password });
-      if (error) setError(error.message.includes('registered') ? 'Der findes allerede en konto med den e-mail.' : 'Kontoen kunne ikke oprettes. Prøv igen.');
-      else if (!data.session) setError('Kontoen er oprettet, men e-mailen skal bekræftes først.');
+      // Linket i mailen skal føre tilbage til appen (web: samme adresse som nu)
+      const emailRedirectTo = Platform.OS === 'web' ? window.location.origin + window.location.pathname.replace(/log-ind\/?$/, '') : undefined;
+      const { data, error } = await supabase.auth.signUp({ email: cleanEmail, password, options: { emailRedirectTo } });
+      if (error) setError(error.message.includes('registered') ? 'Der findes allerede en konto med den e-mail.' : error.status === 429 ? 'For mange forsøg. Prøv igen om lidt.' : 'Kontoen kunne ikke oprettes. Prøv igen.');
+      else if (!data.session) setSent(true);
     } else {
       const { error } = await supabase.auth.signInWithPassword({ email: cleanEmail, password });
-      if (error) setError('Forkert e-mail eller adgangskode.');
+      if (error) setError(error.message.toLowerCase().includes('confirm') ? 'Bekræft din e-mail først via linket i mailen.' : 'Forkert e-mail eller adgangskode.');
     }
     setBusy(false);
   };
+
+  if (sent) {
+    return (
+      <Screen title="Tjek din mail">
+        <T v="body">Vi har sendt et link til {cleanEmail}. Tryk på linket for at bekræfte din e-mail.</T>
+        <Button
+          title="Log ind"
+          variant="secondary"
+          block
+          onPress={() => {
+            setSent(false);
+            setMode('login');
+          }}
+        />
+      </Screen>
+    );
+  }
 
   return (
     <KeyboardAvoidingView style={{ flex: 1 }} behavior={Platform.OS === 'ios' ? 'padding' : undefined}>

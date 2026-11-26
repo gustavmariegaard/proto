@@ -5,7 +5,8 @@ Prototypen (web) ligger stadig i roden af repoet og på branchen `prototype`.
 
 ## Hvad er med
 
-- Log ind med e-mail og en kode på 6 cifre. Opret profil med navn, brugernavn og billede.
+- Opret konto med e-mail og adgangskode. Bekræftelsesmailen har et link, der logger ind. Opret profil med navn, brugernavn og billede.
+- Billeder gøres mindre før upload (længste side 1080 px, profilbilleder 400 px).
 - **Hjem:** opslag fra dem, du følger, med hjerter, kommentarer, svar og sortering (Relevante, Omdiskuterede, Nyeste, Ældste).
 - **Opret:** tekst, op til 4 billeder, Offentlig debat med højst 5 tags, Tillad deling.
 - **Offentlig debat:** interesser, enig/uenig-barometer (fordeling først efter stemme eller "Vis stemmer"), fællesskabsnoter med kilder og vurderinger, skjul afsender i debatten, rapportér (også "Forkert kategoriseret").
@@ -42,14 +43,14 @@ npm run db:test             # 33 tests af privatlivsreglerne
 npx expo start --web        # åbner appen i browseren
 ```
 
-Mails med login-koden kan ses på http://127.0.0.1:54324 (Mailpit).
+Bekræftelsesmails kan ses på http://127.0.0.1:54324 (Mailpit).
 På en telefon: installér **Expo Go**, kør `npx expo start` og scan QR-koden (telefonen skal kunne nå computerens IP; sæt så `EXPO_PUBLIC_SUPABASE_URL` til computerens IP i stedet for 127.0.0.1).
 
 ## Fra lokal til test på telefoner
 
 1. **Supabase-projekt** (gratis start): opret et projekt i region *Frankfurt (eu-central-1)*.
    - Kør migrationerne: `npx supabase link --project-ref <ref>` og `npx supabase db push`.
-   - Authentication → Emails: indsæt skabelonerne fra `supabase/templates/` (koden `{{ .Token }}` skal med).
+   - Authentication → URL Configuration: Site URL og Redirect URLs = appens webadresse (fx `https://gustavmariegaard.github.io/proto/app/**`).
    - Authentication → SMTP: Supabase' indbyggede mail sender kun få mails i timen. Til en test med flere personer kræves egen SMTP (fx en gratis plan hos en mailudbyder).
    - Indsæt *Project URL* og *Publishable key* i `eas.json` (preview/production) og i `.env`.
 2. **Expo-konto** (gratis): `npx eas-cli@latest login`, derefter `npx eas-cli@latest init` (giver projekt-id til push).

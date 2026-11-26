@@ -31,7 +31,7 @@ export default function CreateProfile() {
     setBusy(true);
     setError('');
     try {
-      const avatar_path = photo ? await uploadImage(session.user.id, photo.uri, photo.mime) : null;
+      const avatar_path = photo ? await uploadImage(session.user.id, photo.uri, photo.mime, 'avatar') : null;
       const { error } = await supabase.from('profiles').insert({ id: session.user.id, name: name.trim(), username: clean, avatar_path });
       if (error) throw error;
       await refreshProfile();

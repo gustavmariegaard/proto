@@ -36,7 +36,7 @@ export default function EditProfile() {
     setBusy(true);
     setError('');
     try {
-      const avatar_path = photo ? await uploadImage(me.id, photo.uri, photo.mime) : me.avatar_path;
+      const avatar_path = photo ? await uploadImage(me.id, photo.uri, photo.mime, 'avatar') : me.avatar_path;
       const { error } = await supabase.from('profiles').update({ name: name.trim(), username: clean, bio: bio.trim(), avatar_path }).eq('id', me.id);
       if (error) throw error;
       await refreshProfile();

@@ -23,7 +23,8 @@ export const supabase = createClient(url, key, {
     storage: Platform.OS === 'web' ? undefined : AsyncStorage,
     autoRefreshToken: true,
     persistSession: true,
-    detectSessionInUrl: false,
+    // Web: linket i bekræftelsesmailen logger ind via adressen (#access_token=…)
+    detectSessionInUrl: Platform.OS === 'web',
   },
 });
 
