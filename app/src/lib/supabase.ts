@@ -17,6 +17,10 @@ if (!url || !key) {
 
 export const SUPABASE_URL = url;
 
+/** Web: kom man ind via linket i "glemt adgangskode"-mailen? (læses før adressen ryddes) */
+export const openedFromRecoveryLink =
+  Platform.OS === 'web' && typeof window !== 'undefined' && /(^|[#&?])type=recovery(&|$)/.test(window.location.hash + window.location.search);
+
 export const supabase = createClient(url, key, {
   auth: {
     // På web bruges browserens egen lagring; på telefonen AsyncStorage

@@ -5,7 +5,7 @@ import { T } from './T';
 
 type Props = Omit<PressableProps, 'children' | 'style'> & {
   title: string;
-  variant?: 'primary' | 'secondary' | 'ghost' | 'danger';
+  variant?: 'primary' | 'secondary' | 'ghost' | 'danger' | 'accent' | 'outlineLight' | 'ghostLight';
   icon?: IconName;
   loading?: boolean;
   block?: boolean;
@@ -14,7 +14,12 @@ type Props = Omit<PressableProps, 'children' | 'style'> & {
 
 /** Knap: primary = sort, secondary = hvid med kant, ghost = kun tekst */
 export function Button({ title, variant = 'primary', icon, loading, block, disabled, style, ...rest }: Props) {
-  const fg = variant === 'primary' ? color.textOnAction : variant === 'danger' ? color.danger : color.textPrimary;
+  const fg =
+    variant === 'primary' || variant === 'outlineLight' || variant === 'ghostLight'
+      ? color.textOnAction
+      : variant === 'danger'
+        ? color.danger
+        : color.textPrimary;
   return (
     <Pressable
       accessibilityRole="button"
@@ -58,6 +63,9 @@ const s = StyleSheet.create({
   secondary: { backgroundColor: color.bgSurface, borderWidth: 1, borderColor: color.borderStrong },
   ghost: { backgroundColor: 'transparent', paddingHorizontal: 12 },
   danger: { backgroundColor: 'transparent' },
+  accent: { backgroundColor: color.accent, minHeight: 54 },
+  outlineLight: { backgroundColor: 'transparent', borderWidth: 1.5, borderColor: 'rgba(255,255,255,0.5)', minHeight: 54 },
+  ghostLight: { backgroundColor: 'transparent', paddingHorizontal: 12 },
   block: { alignSelf: 'stretch' },
   disabled: { opacity: 0.4 },
   pressed: { opacity: 0.75 },

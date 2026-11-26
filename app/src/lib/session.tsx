@@ -1,6 +1,6 @@
 import type { Session } from '@supabase/supabase-js';
 import { createContext, useCallback, useContext, useEffect, useState, type ReactNode } from 'react';
-import { supabase } from './supabase';
+import { openedFromRecoveryLink, supabase } from './supabase';
 import type { Profile } from './types';
 
 type Ctx = {
@@ -21,7 +21,7 @@ const SessionContext = createContext<Ctx | null>(null);
 export function SessionProvider({ children }: { children: ReactNode }) {
   const [session, setSession] = useState<Session | null | undefined>(undefined);
   const [profile, setProfile] = useState<Profile | null | undefined>(undefined);
-  const [recovering, setRecovering] = useState(false);
+  const [recovering, setRecovering] = useState(openedFromRecoveryLink);
 
   useEffect(() => {
     supabase.auth.getSession().then(({ data }) => setSession(data.session));

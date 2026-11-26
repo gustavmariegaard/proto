@@ -1,13 +1,12 @@
 import { router } from 'expo-router';
 import { useEffect, useRef, useState } from 'react';
-import { KeyboardAvoidingView, Platform, Pressable, ScrollView, StyleSheet, TextInput, View } from 'react-native';
-import { SafeAreaView } from 'react-native-safe-area-context';
+import { Platform, Pressable, StyleSheet, TextInput, View } from 'react-native';
+import { AuthLink, AuthShell, authText } from '@/components/AuthShell';
 import { Button } from '@/components/Button';
 import { Icon } from '@/components/Icon';
-import { IconButton } from '@/components/IconButton';
 import { PasswordField } from '@/components/PasswordField';
 import { T } from '@/components/T';
-import { noOutline, TextField } from '@/components/TextField';
+import { darkField, noOutline, TextField } from '@/components/TextField';
 import { supabase } from '@/lib/supabase';
 import { cleanUsername, USERNAME } from '@/lib/validate';
 import { color, font, radius, TAP } from '@/theme/tokens';
@@ -104,105 +103,87 @@ export default function SignUp() {
 
   if (sentTo) return <CheckMail email={sentTo} />;
 
+  const titles = ['Hvem er du?', 'Hvornår er du født?', 'Din konto.'];
+
   return (
-    <SafeAreaView style={s.root}>
-      <KeyboardAvoidingView style={{ flex: 1 }} behavior={Platform.OS === 'ios' ? 'padding' : undefined}>
-        <View style={s.top}>
-          <IconButton icon="chevron-left" label="Tilbage" outline onPress={back} />
-          <View style={s.progress} accessibilityLabel={`Trin ${step} af ${STEPS}`}>
-            {Array.from({ length: STEPS }, (_, i) => (
-              <View key={i} style={[s.seg, i < step && s.segOn]} />
-            ))}
-          </View>
-        </View>
-
-        <ScrollView contentContainerStyle={s.body} keyboardShouldPersistTaps="handled">
-          <T v="caption" c={color.textSecondary}>
-            Trin {step} af {STEPS}
-          </T>
-
-          {step === 1 && (
-            <>
-              <T v="titleXl" style={s.title} accessibilityRole="header">
-                Hvem er du?
-              </T>
-              <TextField label="Navn" autoComplete="name" value={name} onChangeText={setName} autoFocus />
-              <View style={{ gap: 6 }}>
-                <TextField
-                  label="Brugernavn"
-                  autoCapitalize="none"
-                  autoCorrect={false}
-                  autoComplete="username-new"
-                  value={username}
-                  onChangeText={(t) => setUsername(t.toLowerCase().replace(/\s/g, ''))}
-                  error={username && !unameValid ? 'Brug 2–30 tegn: bogstaver, tal, punktum eller understreg.' : taken ? 'Brugernavnet er taget.' : undefined}
-                />
-                {unameValid && taken === false && (
-                  <View style={s.ok}>
-                    <Icon name="check" size={16} color={color.green700} />
-                    <T v="captionStrong" c={color.green700}>
-                      @{uname} er ledigt
-                    </T>
-                  </View>
-                )}
-              </View>
-            </>
-          )}
-
-          {step === 2 && (
-            <>
-              <T v="titleXl" style={s.title} accessibilityRole="header">
-                Hvornår er du født?
-              </T>
-              <View style={s.dateRow}>
-                <DatePart label="Dag" placeholder="DD" value={day} max={2} onChange={(v) => { setDay(v); if (v.length === 2) monthRef.current?.focus(); }} autoFocus />
-                <DatePart inputRef={monthRef} label="Måned" placeholder="MM" value={month} max={2} onChange={(v) => { setMonth(v); if (v.length === 2) yearRef.current?.focus(); }} />
-                <DatePart inputRef={yearRef} label="År" placeholder="ÅÅÅÅ" value={year} max={4} onChange={setYear} wide />
-              </View>
-              <T v="caption" c={birth.error ? color.danger : color.textSecondary}>
-                {birth.error ?? 'Vises ikke på din profil.'}
-              </T>
-            </>
-          )}
-
-          {step === 3 && (
-            <>
-              <T v="titleXl" style={s.title} accessibilityRole="header">
-                Din konto
-              </T>
-              <TextField label="E-mail" autoComplete="email" keyboardType="email-address" autoCapitalize="none" value={email} onChangeText={setEmail} autoFocus />
-              <PasswordField isNew value={password} onChangeText={setPassword} hint="Mindst 8 tegn" />
-              <Pressable accessibilityRole="checkbox" accessibilityState={{ checked: accepted }} onPress={() => setAccepted((v) => !v)} style={s.check}>
-                <View style={[s.box, accepted && s.boxOn]}>{accepted && <Icon name="check" size={16} color={color.white} />}</View>
-                <T v="bodyS" style={{ flex: 1 }}>
-                  Jeg har læst{' '}
-                  <T v="label" onPress={() => router.push('/privatliv')} style={{ textDecorationLine: 'underline' }}>
-                    privatlivserklæringen
-                  </T>
-                  .
+    <AuthShell
+      progress={[step, STEPS]}
+      onBack={back}
+      kicker={`Trin ${step} af ${STEPS}`}
+      title={titles[step - 1]}
+      footer={
+        <Button
+          title={step < STEPS ? 'Fortsæt' : 'Opret konto'}
+          variant="accent"
+          block
+          disabled={!canNext}
+          loading={busy}
+          onPress={() => (step < STEPS ? (setError(''), setStep(step + 1)) : submit())}
+        />
+      }
+    >
+      {step === 1 && (
+        <>
+          <TextField dark label="Navn" autoComplete="name" value={name} onChangeText={setName} autoFocus />
+          <View style={{ gap: 6 }}>
+            <TextField
+              dark
+              label="Brugernavn"
+              autoCapitalize="none"
+              autoCorrect={false}
+              autoComplete="username-new"
+              value={username}
+              onChangeText={(t) => setUsername(t.toLowerCase().replace(/\s/g, ''))}
+              error={username && !unameValid ? 'Brug 2–30 tegn: bogstaver, tal, punktum eller understreg.' : taken ? 'Brugernavnet er taget.' : undefined}
+            />
+            {unameValid && taken === false && (
+              <View style={s.ok}>
+                <Icon name="check" size={16} color={color.accent} />
+                <T v="captionStrong" c={color.accent}>
+                  @{uname} er ledigt
                 </T>
-              </Pressable>
-            </>
-          )}
+              </View>
+            )}
+          </View>
+        </>
+      )}
 
-          {!!error && (
-            <T v="bodyS" c={color.danger}>
-              {error}
+      {step === 2 && (
+        <>
+          <View style={s.dateRow}>
+            <DatePart label="Dag" placeholder="DD" value={day} max={2} onChange={(v) => { setDay(v); if (v.length === 2) monthRef.current?.focus(); }} autoFocus />
+            <DatePart inputRef={monthRef} label="Måned" placeholder="MM" value={month} max={2} onChange={(v) => { setMonth(v); if (v.length === 2) yearRef.current?.focus(); }} />
+            <DatePart inputRef={yearRef} label="År" placeholder="ÅÅÅÅ" value={year} max={4} onChange={setYear} wide />
+          </View>
+          <T v="caption" c={birth.error ? authText.error : authText.faint}>
+            {birth.error ?? 'Vises ikke på din profil.'}
+          </T>
+        </>
+      )}
+
+      {step === 3 && (
+        <>
+          <TextField dark label="E-mail" autoComplete="email" keyboardType="email-address" autoCapitalize="none" value={email} onChangeText={setEmail} autoFocus />
+          <PasswordField dark isNew value={password} onChangeText={setPassword} hint="Mindst 8 tegn" />
+          <Pressable accessibilityRole="checkbox" accessibilityState={{ checked: accepted }} onPress={() => setAccepted((v) => !v)} style={s.check}>
+            <View style={[s.box, accepted && s.boxOn]}>{accepted && <Icon name="check" size={16} color="#0a0a0a" />}</View>
+            <T v="bodyS" c={color.white} style={{ flex: 1 }}>
+              Jeg har læst{' '}
+              <T v="label" c={color.white} onPress={() => router.push('/privatliv')} style={{ textDecorationLine: 'underline' }}>
+                privatlivserklæringen
+              </T>
+              .
             </T>
-          )}
-        </ScrollView>
+          </Pressable>
+        </>
+      )}
 
-        <View style={s.footer}>
-          <Button
-            title={step < STEPS ? 'Fortsæt' : 'Opret konto'}
-            block
-            disabled={!canNext}
-            loading={busy}
-            onPress={() => (step < STEPS ? (setError(''), setStep(step + 1)) : submit())}
-          />
-        </View>
-      </KeyboardAvoidingView>
-    </SafeAreaView>
+      {!!error && (
+        <T v="bodyS" c={authText.error}>
+          {error}
+        </T>
+      )}
+    </AuthShell>
   );
 }
 
@@ -225,22 +206,25 @@ function DatePart({
   autoFocus?: boolean;
   inputRef?: React.RefObject<InputRef | null>;
 }) {
+  const [focus, setFocus] = useState(false);
   return (
     <View style={{ flex: wide ? 1.4 : 1, gap: 6 }}>
-      <T v="label" style={{ paddingLeft: 4 }}>
+      <T v="label" c={color.white} style={{ paddingLeft: 4 }}>
         {label}
       </T>
       <TextInput
         ref={inputRef}
         accessibilityLabel={label}
         placeholder={placeholder}
-        placeholderTextColor={color.actionOff}
+        placeholderTextColor="rgba(255,255,255,0.3)"
         keyboardType="number-pad"
         maxLength={max}
         value={value}
         autoFocus={autoFocus}
         onChangeText={(t) => onChange(t.replace(/\D/g, ''))}
-        style={[s.dateInput, noOutline]}
+        onFocus={() => setFocus(true)}
+        onBlur={() => setFocus(false)}
+        style={[s.dateInput, focus && { borderColor: color.accent, borderWidth: 1.5 }, noOutline]}
       />
     </View>
   );
@@ -256,61 +240,61 @@ function CheckMail({ email }: { email: string }) {
     return () => clearTimeout(t);
   }, [wait]);
   return (
-    <SafeAreaView style={[s.root, { padding: 24, justifyContent: 'center', gap: 16 }]}>
+    <AuthShell
+      onBack={false}
+      title="Tjek din mail."
+      footer={
+        <>
+          <Button
+            title={wait > 0 ? `Send igen om ${wait} s` : 'Send mailen igen'}
+            variant="outlineLight"
+            block
+            disabled={wait > 0}
+            onPress={async () => {
+              const { error } = await supabase.auth.resend({ type: 'signup', email, options: { emailRedirectTo: redirectTo() } });
+              setNote(error ? 'Mailen kunne ikke sendes. Prøv igen senere.' : 'Mailen er sendt igen.');
+              setWait(60);
+            }}
+          />
+          <AuthLink label="Til log ind" muted onPress={() => router.replace('/log-ind')} />
+        </>
+      }
+    >
       <View style={s.mailIcon}>
-        <Icon name="send" size={30} color={color.textPrimary} />
+        <Icon name="send" size={30} color="#0a0a0a" />
       </View>
-      <T v="titleXl" accessibilityRole="header">
-        Tjek din mail
+      <T v="body" c={authText.muted}>
+        Vi har sendt et link til{' '}
+        <T v="headingS" c={color.white}>
+          {email}
+        </T>
+        . Tryk på linket for at bekræfte din konto.
       </T>
-      <T v="body" c={color.textSecondary}>
-        Vi har sendt et link til <T v="headingS">{email}</T>. Tryk på linket for at bekræfte din konto.
-      </T>
-      <Button
-        title={wait > 0 ? `Send igen om ${wait} s` : 'Send mailen igen'}
-        variant="secondary"
-        block
-        disabled={wait > 0}
-        onPress={async () => {
-          const { error } = await supabase.auth.resend({ type: 'signup', email, options: { emailRedirectTo: redirectTo() } });
-          setNote(error ? 'Mailen kunne ikke sendes. Prøv igen senere.' : 'Mailen er sendt igen.');
-          setWait(60);
-        }}
-      />
-      <Button title="Til log ind" variant="ghost" block onPress={() => router.replace('/log-ind')} />
       {!!note && (
-        <T v="caption" c={color.textSecondary} style={{ textAlign: 'center' }}>
+        <T v="caption" c={authText.faint}>
           {note}
         </T>
       )}
-    </SafeAreaView>
+    </AuthShell>
   );
 }
 
 const s = StyleSheet.create({
-  root: { flex: 1, backgroundColor: color.bgApp },
-  top: { flexDirection: 'row', alignItems: 'center', gap: 12, paddingHorizontal: 16, paddingTop: 8 },
-  progress: { flex: 1, flexDirection: 'row', gap: 6, paddingRight: 8 },
-  seg: { flex: 1, height: 4, borderRadius: 2, backgroundColor: color.gray200 },
-  segOn: { backgroundColor: color.textPrimary },
-  body: { padding: 24, gap: 16 },
-  title: { fontSize: 32, lineHeight: 38, letterSpacing: -0.6, marginBottom: 4 },
   ok: { flexDirection: 'row', alignItems: 'center', gap: 6, paddingLeft: 4 },
   dateRow: { flexDirection: 'row', gap: 10 },
   dateInput: {
-    minHeight: 56,
+    minHeight: 58,
     borderRadius: radius.lg,
     borderWidth: 1,
-    borderColor: color.borderDefault,
-    backgroundColor: color.bgSurface,
+    borderColor: darkField.borderColor,
+    backgroundColor: darkField.backgroundColor,
     textAlign: 'center',
     fontFamily: font.bodySemi,
-    fontSize: 20,
-    color: color.textPrimary,
+    fontSize: 22,
+    color: color.white,
   },
   check: { flexDirection: 'row', alignItems: 'center', gap: 12, minHeight: TAP },
-  box: { width: 24, height: 24, borderRadius: 6, borderWidth: 1.5, borderColor: color.borderStrong, alignItems: 'center', justifyContent: 'center' },
-  boxOn: { backgroundColor: color.actionPrimary, borderColor: color.actionPrimary },
-  footer: { paddingHorizontal: 24, paddingBottom: 16, paddingTop: 8 },
-  mailIcon: { width: 64, height: 64, borderRadius: 32, backgroundColor: color.accentBg, alignItems: 'center', justifyContent: 'center' },
+  box: { width: 24, height: 24, borderRadius: 6, borderWidth: 1.5, borderColor: 'rgba(255,255,255,0.4)', alignItems: 'center', justifyContent: 'center' },
+  boxOn: { backgroundColor: color.accent, borderColor: color.accent },
+  mailIcon: { width: 64, height: 64, borderRadius: 32, backgroundColor: color.accent, alignItems: 'center', justifyContent: 'center' },
 });

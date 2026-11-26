@@ -1,22 +1,25 @@
 import { View } from 'react-native';
-import { Screen } from '@/components/Screen';
+import { AuthShell, authText } from '@/components/AuthShell';
 import { T } from '@/components/T';
 import { sections } from '@/lib/privacyText';
+import { color } from '@/theme/tokens';
 
-/** Kort privatlivserklæring for testfasen */
+/** Privatlivserklæringen for testen, før man er logget ind */
 export default function PublicPrivacy() {
   return (
-    <Screen title="Privatliv i testen">
+    <AuthShell title="Privatliv i testen">
       {sections.map((s) => (
         <View key={s.title} style={{ gap: 6 }}>
-          <T v="headingM">{s.title}</T>
+          <T v="headingM" c={color.white}>
+            {s.title}
+          </T>
           {s.items.map((i) => (
-            <T key={i} v="bodyS">
+            <T key={i} v="bodyS" c={authText.muted}>
               • {i}
             </T>
           ))}
         </View>
       ))}
-    </Screen>
+    </AuthShell>
   );
 }

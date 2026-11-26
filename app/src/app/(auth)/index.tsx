@@ -1,11 +1,11 @@
-import { router, useFocusEffect } from 'expo-router';
-import { useCallback } from 'react';
+import { router } from 'expo-router';
 import { StatusBar } from 'expo-status-bar';
-import { Platform, Pressable, StyleSheet, View } from 'react-native';
+import { Pressable, StyleSheet, View } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { Icon, type IconName } from '@/components/Icon';
 import { CircleBackdrop } from '@/components/CircleBackdrop';
 import { T } from '@/components/T';
+import { INK, useDarkChrome } from '@/lib/useDarkChrome';
 import { color, font, radius } from '@/theme/tokens';
 
 const points: { icon: IconName; title: string; text: string }[] = [
@@ -14,26 +14,10 @@ const points: { icon: IconName; title: string; text: string }[] = [
   { icon: 'circles', title: 'Fakta på bordet.', text: 'Fællesskabet tilføjer kontekst.' },
 ];
 
-const INK = '#0a0a0a';
 
 /** Landingsside: mørk, med et levende grønt netværk bag */
 export default function Landing() {
-  // Mobilbrowserens top og bund skal også være mørke på landingssiden
-  useFocusEffect(
-    useCallback(() => {
-      if (Platform.OS !== 'web') return;
-      const meta = document.querySelector('meta[name="theme-color"]') ?? Object.assign(document.head.appendChild(document.createElement('meta')), { name: 'theme-color' });
-      const prev = { meta: meta.getAttribute('content'), html: document.documentElement.style.backgroundColor, body: document.body.style.backgroundColor };
-      meta.setAttribute('content', INK);
-      document.documentElement.style.backgroundColor = INK;
-      document.body.style.backgroundColor = INK;
-      return () => {
-        meta.setAttribute('content', prev.meta ?? color.bgApp);
-        document.documentElement.style.backgroundColor = prev.html;
-        document.body.style.backgroundColor = prev.body;
-      };
-    }, []),
-  );
+  useDarkChrome();
   return (
     <View style={s.root}>
       <StatusBar style="light" />

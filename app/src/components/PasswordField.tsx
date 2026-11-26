@@ -2,20 +2,20 @@ import { useState } from 'react';
 import { Pressable, StyleSheet, TextInput, View, type TextInputProps } from 'react-native';
 import { color, font, radius, TAP } from '@/theme/tokens';
 import { T } from './T';
-import { noOutline } from './TextField';
+import { darkField, darkFocus, noOutline } from './TextField';
 
-type Props = TextInputProps & { label?: string; hint?: string; error?: string; isNew?: boolean };
+type Props = TextInputProps & { label?: string; hint?: string; error?: string; isNew?: boolean; dark?: boolean };
 
 /** Adgangskode med "Vis"/"Skjul" */
-export function PasswordField({ label = 'Adgangskode', hint, error, isNew, onFocus, onBlur, ...rest }: Props) {
+export function PasswordField({ label = 'Adgangskode', hint, error, isNew, dark, onFocus, onBlur, ...rest }: Props) {
   const [show, setShow] = useState(false);
   const [focus, setFocus] = useState(false);
   return (
     <View style={{ gap: 6, alignSelf: 'stretch' }}>
-      <T v="label" style={{ paddingLeft: 4 }}>
+      <T v="label" c={dark ? color.white : color.textPrimary} style={{ paddingLeft: 4 }}>
         {label}
       </T>
-      <View style={[s.wrap, focus && s.focus]}>
+      <View style={[s.wrap, dark && { backgroundColor: darkField.backgroundColor, borderColor: darkField.borderColor }, focus && (dark ? darkFocus : s.focus)]}>
         <TextInput
           accessibilityLabel={label}
           secureTextEntry={!show}
@@ -23,20 +23,20 @@ export function PasswordField({ label = 'Adgangskode', hint, error, isNew, onFoc
           autoCorrect={false}
           autoComplete={isNew ? 'new-password' : 'current-password'}
           textContentType={isNew ? 'newPassword' : 'password'}
-          placeholderTextColor={color.textSecondary}
+          placeholderTextColor={dark ? 'rgba(255,255,255,0.4)' : color.textSecondary}
           onFocus={(e) => (setFocus(true), onFocus?.(e))}
           onBlur={(e) => (setFocus(false), onBlur?.(e))}
-          style={[s.input, noOutline]}
+          style={[s.input, dark && { color: color.white }, noOutline]}
           {...rest}
         />
         <Pressable accessibilityRole="button" accessibilityLabel={show ? 'Skjul adgangskode' : 'Vis adgangskode'} onPress={() => setShow((v) => !v)} style={s.toggle}>
-          <T v="captionStrong" c={color.textSecondary}>
+          <T v="captionStrong" c={dark ? 'rgba(255,255,255,0.6)' : color.textSecondary}>
             {show ? 'Skjul' : 'Vis'}
           </T>
         </Pressable>
       </View>
       {(error || hint) && (
-        <T v="caption" c={error ? color.danger : color.textSecondary} style={{ paddingLeft: 4 }}>
+        <T v="caption" c={error ? (dark ? '#ff8a7a' : color.danger) : dark ? 'rgba(255,255,255,0.55)' : color.textSecondary} style={{ paddingLeft: 4 }}>
           {error || hint}
         </T>
       )}

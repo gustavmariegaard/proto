@@ -7,6 +7,9 @@ import { ActivityIndicator, Platform, View } from 'react-native';
 import { SafeAreaProvider } from 'react-native-safe-area-context';
 import { MobileOnly } from '@/components/MobileOnly';
 import { SessionProvider, useSession } from '@/lib/session';
+import { setupWebHead } from '@/lib/webHead';
+
+setupWebHead();
 import { color } from '@/theme/tokens';
 
 /** Hele appen: fonte, login og hvilke skærme man må se */

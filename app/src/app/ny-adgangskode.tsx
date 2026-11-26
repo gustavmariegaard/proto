@@ -1,7 +1,7 @@
 import { useState } from 'react';
+import { AuthShell } from '@/components/AuthShell';
 import { Button } from '@/components/Button';
 import { PasswordField } from '@/components/PasswordField';
-import { Screen } from '@/components/Screen';
 import { useSession } from '@/lib/session';
 import { supabase } from '@/lib/supabase';
 
@@ -22,9 +22,8 @@ export default function NewPassword() {
   };
 
   return (
-    <Screen title="Ny adgangskode" back={false}>
-      <PasswordField isNew label="Ny adgangskode" value={password} onChangeText={setPassword} hint="Mindst 8 tegn" error={error} autoFocus />
-      <Button title="Gem" block disabled={password.length < 8} loading={busy} onPress={save} />
-    </Screen>
+    <AuthShell title="Vælg en ny adgangskode." onBack={false} footer={<Button title="Gem" variant="accent" block disabled={password.length < 8} loading={busy} onPress={save} />}>
+      <PasswordField dark isNew label="Ny adgangskode" value={password} onChangeText={setPassword} hint="Mindst 8 tegn" error={error} autoFocus />
+    </AuthShell>
   );
 }

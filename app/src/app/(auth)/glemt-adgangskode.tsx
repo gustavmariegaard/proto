@@ -1,12 +1,11 @@
 import { useLocalSearchParams } from 'expo-router';
 import { useState } from 'react';
 import { Platform } from 'react-native';
+import { AuthShell, authText } from '@/components/AuthShell';
 import { Button } from '@/components/Button';
-import { Screen } from '@/components/Screen';
 import { T } from '@/components/T';
 import { TextField } from '@/components/TextField';
 import { supabase } from '@/lib/supabase';
-import { color } from '@/theme/tokens';
 
 /** Glemt adgangskode: vi sender et link, der logger ind og beder om en ny */
 export default function Forgot() {
@@ -29,18 +28,22 @@ export default function Forgot() {
   };
 
   return (
-    <Screen title="Glemt adgangskode">
+    <AuthShell
+      title={sent ? 'Tjek din mail.' : 'Glemt adgangskode?'}
+      footer={!sent && <Button title="Send link" variant="accent" block disabled={!ok} loading={busy} onPress={send} />}
+    >
       {sent ? (
-        <T v="body">Findes der en konto med {cleanEmail}, har vi sendt et link. Tryk på det for at vælge en ny adgangskode.</T>
+        <T v="body" c={authText.muted}>
+          Findes der en konto med {cleanEmail}, har vi sendt et link. Tryk på det for at vælge en ny adgangskode.
+        </T>
       ) : (
         <>
-          <TextField label="E-mail" autoComplete="email" keyboardType="email-address" autoCapitalize="none" value={email} onChangeText={setEmail} onSubmitEditing={() => ok && send()} error={error} autoFocus />
-          <Button title="Send link" block disabled={!ok} loading={busy} onPress={send} />
-          <T v="caption" c={color.textSecondary}>
-            Linket virker i en time.
+          <T v="body" c={authText.muted}>
+            Vi sender et link, så du kan vælge en ny.
           </T>
+          <TextField dark label="E-mail" autoComplete="email" keyboardType="email-address" autoCapitalize="none" value={email} onChangeText={setEmail} onSubmitEditing={() => ok && send()} error={error} autoFocus />
         </>
       )}
-    </Screen>
+    </AuthShell>
   );
 }

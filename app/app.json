@@ -19,7 +19,7 @@
     "android": {
       "package": "dk.ciircle.app",
       "adaptiveIcon": {
-        "backgroundColor": "#FFFFFF",
+        "backgroundColor": "#171717",
         "foregroundImage": "./assets/android-icon-foreground.png",
         "backgroundImage": "./assets/android-icon-background.png",
         "monochromeImage": "./assets/android-icon-monochrome.png"
@@ -28,7 +28,10 @@
     },
     "web": {
       "favicon": "./assets/favicon.png",
-      "output": "single"
+      "output": "single",
+      "name": "ciircle",
+      "themeColor": "#0a0a0a",
+      "backgroundColor": "#0a0a0a"
     },
     "plugins": [
       "expo-router",
@@ -38,7 +41,9 @@
       "expo-secure-store",
       [
         "expo-image-picker",
-        { "photosPermission": "ciircle bruger dine billeder, når du vælger et profilbillede eller deler et opslag." }
+        {
+          "photosPermission": "ciircle bruger dine billeder, når du vælger et profilbillede eller deler et opslag."
+        }
       ],
       "expo-notifications"
     ]
