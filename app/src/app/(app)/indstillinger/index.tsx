@@ -24,10 +24,32 @@ export default function Settings() {
 
   return (
     <Screen title="Indstillinger">
+      <T v="headingS" c={color.textSecondary}>
+        Generelt
+      </T>
       <View style={{ gap: 10 }}>
         <SettingsRow icon="lock" title="Privatliv" hint="Profil, følgeanmodninger, blokerede" onPress={() => router.push('/indstillinger/privatliv')} />
+        <SettingsRow icon="globe" title="Sprog og oversættelse" hint="Standardsprog og automatisk oversættelse" onPress={() => router.push('/indstillinger/sprog')} />
         <SettingsRow icon="compass" title="Interesser" hint="Det, du ser i Offentlig debat" onPress={() => router.push('/interesser')} />
         <SettingsRow icon="bookmark" title="Gemt" onPress={() => router.push('/gemt')} />
+      </View>
+
+      <T v="headingS" c={color.textSecondary}>
+        Profil
+      </T>
+      <View style={{ gap: 10 }}>
+        <SettingsRow icon="megaphone" title="Offentlig person" hint="Ansøg om globus ved dit navn" onPress={() => router.push('/indstillinger/offentlig-person')} />
+        <SettingsRow icon="star" title="Skaber" hint="Dit publikum i tal" onPress={() => router.push('/skaber')} />
+        <SettingsRow icon="user-plus" title="Udvid cirkel" hint="Forslag og anmodninger" onPress={() => router.push('/find-folk')} />
+        <SettingsRow icon="user" title="Forældrekontrol" hint="Tilknyt dine børn eller din forælder" onPress={() => router.push('/foraeldrekontrol')} />
+      </View>
+
+      <T v="headingS" c={color.textSecondary}>
+        Om og jura
+      </T>
+      <View style={{ gap: 10 }}>
+        <SettingsRow icon="info" title="Privatlivspolitik" hint="Hvilke data vi behandler, og dine rettigheder" onPress={() => router.push('/indstillinger/jura/privatlivspolitik')} />
+        <SettingsRow icon="info" title="Databehandleraftale" hint="For sider, grupper og virksomheder" onPress={() => router.push('/indstillinger/jura/databehandleraftale')} />
         <SettingsRow icon="info" title="Privatlivserklæring for testen" onPress={() => router.push('/indstillinger/privatlivserklaering')} />
       </View>
 
