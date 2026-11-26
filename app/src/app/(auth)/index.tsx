@@ -1,26 +1,43 @@
-import { router } from 'expo-router';
+import { router, useFocusEffect } from 'expo-router';
+import { useCallback } from 'react';
 import { StatusBar } from 'expo-status-bar';
-import { Pressable, StyleSheet, View } from 'react-native';
+import { Platform, Pressable, StyleSheet, View } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { Icon, type IconName } from '@/components/Icon';
-import { NetworkBackdrop } from '@/components/NetworkBackdrop';
+import { CircleBackdrop } from '@/components/CircleBackdrop';
 import { T } from '@/components/T';
 import { color, font, radius } from '@/theme/tokens';
 
-const points: { icon: IconName; text: string }[] = [
-  { icon: 'sliders', text: 'Du vælger, hvad dit feed bygger på' },
-  { icon: 'lock', text: 'Data gemmes i EU' },
-  { icon: 'circles', text: 'Fællesskabet tilføjer kontekst i debatten' },
+const points: { icon: IconName; title: string; text: string }[] = [
+  { icon: 'sliders', title: 'Dit feed. Dine regler.', text: 'Du bestemmer, hvad du ser.' },
+  { icon: 'lock', title: 'Dine data bliver i EU.', text: 'Gemt på servere i Europa.' },
+  { icon: 'circles', title: 'Fakta på bordet.', text: 'Fællesskabet tilføjer kontekst.' },
 ];
 
 const INK = '#0a0a0a';
 
 /** Landingsside: mørk, med et levende grønt netværk bag */
 export default function Landing() {
+  // Mobilbrowserens top og bund skal også være mørke på landingssiden
+  useFocusEffect(
+    useCallback(() => {
+      if (Platform.OS !== 'web') return;
+      const meta = document.querySelector('meta[name="theme-color"]') ?? Object.assign(document.head.appendChild(document.createElement('meta')), { name: 'theme-color' });
+      const prev = { meta: meta.getAttribute('content'), html: document.documentElement.style.backgroundColor, body: document.body.style.backgroundColor };
+      meta.setAttribute('content', INK);
+      document.documentElement.style.backgroundColor = INK;
+      document.body.style.backgroundColor = INK;
+      return () => {
+        meta.setAttribute('content', prev.meta ?? color.bgApp);
+        document.documentElement.style.backgroundColor = prev.html;
+        document.body.style.backgroundColor = prev.body;
+      };
+    }, []),
+  );
   return (
     <View style={s.root}>
       <StatusBar style="light" />
-      <NetworkBackdrop />
+      <CircleBackdrop />
       <SafeAreaView style={s.safe}>
         <T v="titleXl" c={color.white} style={s.logo} accessibilityRole="header">
           ciircle
@@ -39,9 +56,14 @@ export default function Landing() {
                 <View style={s.tile}>
                   <Icon name={p.icon} size={18} color={color.accent} />
                 </View>
-                <T v="label" c={color.white} style={{ flex: 1 }}>
-                  {p.text}
-                </T>
+                <View style={{ flex: 1 }}>
+                  <T v="headingS" c={color.white} style={{ fontSize: 16 }}>
+                    {p.title}
+                  </T>
+                  <T v="caption" c="rgba(255,255,255,0.6)">
+                    {p.text}
+                  </T>
+                </View>
               </View>
             ))}
           </View>
@@ -85,11 +107,11 @@ const s = StyleSheet.create({
   logo: { fontSize: 34, lineHeight: 40, marginTop: 12 },
   hero: { flex: 1, justifyContent: 'center', gap: 14 },
   headline: { fontSize: 40, lineHeight: 44, letterSpacing: -1, fontFamily: font.title },
-  points: { gap: 12, marginTop: 14 },
+  points: { gap: 16, marginTop: 18 },
   point: { flexDirection: 'row', alignItems: 'center', gap: 12 },
   tile: {
-    width: 36,
-    height: 36,
+    width: 40,
+    height: 40,
     borderRadius: 12,
     alignItems: 'center',
     justifyContent: 'center',
