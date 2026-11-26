@@ -1,7 +1,7 @@
 import { Image } from 'expo-image';
 import { router } from 'expo-router';
 import { useState } from 'react';
-import { Pressable, Share, StyleSheet, View } from 'react-native';
+import { Pressable, StyleSheet, View } from 'react-native';
 import { imageSource } from '@/lib/media';
 import { deletePost, hidePost, muteInDebate, setLike, setSaved } from '@/lib/posts';
 import { useMe } from '@/lib/session';
@@ -159,7 +159,7 @@ export function PostCard({ post, onRemoved, onComments }: Props) {
           <ActionPill
             icon="send"
             label="Del"
-            onPress={() => Share.share({ message: `${post.author_name} på ciircle: ${post.text}`.slice(0, 300) })}
+            onPress={() => router.push(`/opslag/${post.id}/del`)}
           />
         )}
         <ActionPill

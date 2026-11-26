@@ -4,6 +4,7 @@ import { RefreshControl, ScrollView, StyleSheet, View } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { Button } from '@/components/Button';
 import { IconButton } from '@/components/IconButton';
+import { HighlightsRow } from '@/components/HighlightsRow';
 import { ProfileHeader } from '@/components/ProfileHeader';
 import { ProfilePosts } from '@/components/ProfilePosts';
 import { postsBy, profileView, type ProfileView } from '@/lib/profiles';
@@ -54,6 +55,7 @@ export default function MyProfile() {
         <ProfileHeader p={{ ...header, posts: posts.filter((x) => x.kind === 'feed').length }}>
           <Button title="Rediger profil" variant="secondary" block onPress={() => router.push('/rediger-profil')} />
         </ProfileHeader>
+        <HighlightsRow userId={me.id} own />
         <ProfilePosts posts={posts} onChanged={load} />
       </ScrollView>
     </SafeAreaView>

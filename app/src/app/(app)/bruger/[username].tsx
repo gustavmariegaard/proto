@@ -5,6 +5,7 @@ import { Button } from '@/components/Button';
 import { Chip } from '@/components/Chip';
 import { IconButton } from '@/components/IconButton';
 import { MenuItem } from '@/components/MenuItem';
+import { HighlightsRow } from '@/components/HighlightsRow';
 import { ProfileHeader } from '@/components/ProfileHeader';
 import { ProfilePosts } from '@/components/ProfilePosts';
 import { Screen } from '@/components/Screen';
@@ -129,6 +130,7 @@ export default function UserProfile() {
               <Button title="Besked" variant="secondary" style={{ flex: 1 }} onPress={message} />
             </View>
           </ProfileHeader>
+          {p.can_see && <HighlightsRow userId={p.id} />}
           <ProfilePosts posts={posts} locked={!p.can_see} onChanged={load} />
         </>
       )}
