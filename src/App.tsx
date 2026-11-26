@@ -22,6 +22,7 @@ import { UserCollection } from './screens/user/UserCollection';
 import { ParentalControl } from './screens/parental/ParentalControl';
 import { ChildSettingsScreen } from './screens/parental/ChildSettings';
 import { Report } from './screens/share/Report';
+import { Notes } from './screens/share/Notes';
 import { Messages } from './screens/messages/Messages';
 import { Conversation } from './screens/messages/Conversation';
 import { NewMessage } from './screens/messages/NewMessage';
@@ -123,6 +124,7 @@ export default function App() {
             <Route path="opslag/:id/del" element={<Share />} />
             <Route path="opslag/:id/del/moment" element={<ShareMoment />} />
             <Route path="opslag/:id/rapporter" element={<Report />} />
+            <Route path="opslag/:id/noter" element={<Notes />} />
             <Route path="flicks" element={<Flicks />} />
             <Route path="flicks/ny" element={<NewFlick />} />
             <Route path="beskeder" element={<Messages />} />

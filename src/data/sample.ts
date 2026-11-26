@@ -354,6 +354,10 @@ export const comments: Comment[] = [
     isReply: true,
     isAuthor: true,
   },
+  /* Ekstra eksempelindhold (ikke fra Figma), så sorteringen kan ses */
+  { id: 'c5', author: 'Karen Bech', avatarSrc: img('person-b.jpg'), tone: 'sage', time: '3 t.', text: 'Smukt. Det må vi gøre igen næste år.', likes: 9 },
+  { id: 'c6', author: 'Peter Holm', avatarSrc: img('peter.jpg'), tone: 'sand', time: '2 t.', text: 'Jeg er med!', likes: 1, isReply: true },
+  { id: 'c7', author: 'Anna Nørgaard', tone: 'rose', time: '1 t.', text: 'Også mig. Skal vi lave en gruppe?', likes: 3, isReply: true },
   { id: 'c3', author: 'Elin Andersson', tone: 'rose', time: '1 t.', text: 'Hvor fint!', likes: 0, translatedFrom: 'svensk' },
   { id: 'c4', author: 'Søren Vang', tone: 'sand', time: '40 min.', text: 'Skal vi mødes i weekenden?', likes: 1 },
 ];

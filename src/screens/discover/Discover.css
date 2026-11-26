@@ -114,21 +114,21 @@
   padding: 0 16px 16px;
 }
 
-/* Skjult af fællesskabet */
-.discover__buried {
+/* Besked, når en afsender er skjult i debatten */
+.discover__muted {
   display: flex;
-  flex-direction: column;
-  align-items: flex-start;
-  gap: 8px;
-  padding: 14px;
-  border: 1px dashed var(--color-border-strong);
+  align-items: center;
+  gap: 12px;
+  padding: 6px 6px 6px 16px;
+  border: 1px solid var(--color-border-default);
   border-radius: var(--radius-lg);
+  background: var(--color-bg-surface);
 }
 
-.discover__buried-toggle {
+.discover__muted p { flex: 1; }
+
+.discover__undo {
   min-height: 44px;
-  padding: 0 4px;
+  padding: 0 12px;
   text-decoration: underline;
 }
-
-.discover__posts--buried { width: 100%; opacity: 0.75; }

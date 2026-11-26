@@ -1,6 +1,7 @@
 import { useRef, useState } from 'react';
 import { Link } from 'react-router-dom';
 import { Avatar, initials } from '../../components/Avatar';
+import { CommentSort, sortThreads, type CommentOrder } from '../../components/CommentSort';
 import { Icon } from '../../components/Icon';
 import { Sheet } from '../../components/Sheet';
 import { handleOf } from '../../data/handles';
@@ -16,6 +17,7 @@ export function CommentsSheet({ open, onClose }: Props) {
   const [list, setList] = useState<Comment[]>(sampleComments);
   const [liked, setLiked] = useState<string[]>([]);
   const [text, setText] = useState('');
+  const [order, setOrder] = useState<CommentOrder>('populaere');
   const inputRef = useRef<HTMLInputElement>(null);
   const me = profile.name || 'Du';
   const myHandle = profile.username.trim().replace(/^@/, '') || handleOf(profile.name) || 'dit.navn';
@@ -26,6 +28,18 @@ export function CommentsSheet({ open, onClose }: Props) {
     setList((l) => [...l, { id: `c${Date.now()}`, author: me, tone: 'blue', time: 'nu', text: t, likes: 0 }]);
     setText('');
   };
+
+  // Tråde: en kommentar og svarene lige under den
+  const threads: { head: Comment; replies: Comment[]; index: number }[] = [];
+  list.forEach((c, index) => {
+    if (c.isReply && threads.length) threads[threads.length - 1].replies.push(c);
+    else threads.push({ head: c, replies: [], index });
+  });
+  const sorted = sortThreads(
+    threads,
+    (t) => ({ likes: t.head.likes + (liked.includes(t.head.id) ? 1 : 0), time: t.head.time, replies: t.replies.length, index: t.index }),
+    order,
+  ).flatMap((t) => [t.head, ...t.replies]);
 
   const reply = (name: string) => {
     setText(`@${name.split(' ')[0]} `);
@@ -64,8 +78,9 @@ export function CommentsSheet({ open, onClose }: Props) {
         </form>
       }
     >
+      <CommentSort value={order} onChange={setOrder} />
       <ul className="comments">
-        {list.map((c) => {
+        {sorted.map((c) => {
           const isLiked = liked.includes(c.id);
           const count = c.likes + (isLiked ? 1 : 0);
           return (

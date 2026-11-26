@@ -11,6 +11,8 @@ import { TextField } from '../../components/TextField';
 import { europeanLanguages, languageByCode, translationExample as ex, translationToggles } from '../../data/settings';
 import { keep, save } from '../../state/keep';
 import { useSession } from '../../state/session';
+import { unblock, unmuteDebate, useRelations } from '../../state/blocks';
+import { findAccount } from '../../data/directory';
 import { ToggleList } from '../create/parts';
 import { useChildren } from '../parental/store';
 import { usePublicFigure } from './publicFigure';
@@ -152,6 +154,7 @@ export function PrivacySettings() {
   };
   const visibilityChanged = d.draft.private !== Boolean(profile.private);
   const [deleting, setDeleting] = useState(false);
+  const relations = useRelations();
 
   return (
     <div className="acc-screen">
@@ -175,11 +178,21 @@ export function PrivacySettings() {
         />
 
         <h2 className="t-heading-m">Blokerede</h2>
-        <div className="acc-panel">
-          <p className="t-body-s acc-muted">
-            Du har ikke blokeret nogen. Du blokerer en profil ved at trykke på ⋯ inde på selve profilen.
-          </p>
-        </div>
+        <PeopleList
+          handles={relations.blocked}
+          action="Fjern blokering"
+          onAction={unblock}
+          empty="Du har ikke blokeret nogen. Du blokerer en profil via ⋯ på profilen."
+        />
+
+        {/* Ikke en blokering: de kan stadig se dig, og du ser dem i dit feed */}
+        <h2 className="t-heading-m">Skjult i Offentlig debat</h2>
+        <PeopleList
+          handles={relations.mutedDebate}
+          action="Vis igen"
+          onAction={unmuteDebate}
+          empty="Ingen. Du skjuler en afsender via ⋯ på et opslag i debatten."
+        />
 
         <div className="age-note">
           <p className="t-heading-s">Verificeret med MitID</p>
@@ -218,6 +231,39 @@ export function PrivacySettings() {
       />
       <SavedToast show={d.toast} />
     </div>
+  );
+}
+
+/** Profiler i en liste med én knap pr. række (blokerede og skjulte i debatten) */
+function PeopleList({ handles, action, onAction, empty }: { handles: string[]; action: string; onAction: (h: string) => void; empty: string }) {
+  if (handles.length === 0) {
+    return (
+      <div className="acc-panel">
+        <p className="t-body-s acc-muted">{empty}</p>
+      </div>
+    );
+  }
+  return (
+    <ul className="acc-list set-people">
+      {handles.map((h) => {
+        const a = findAccount(h);
+        const name = a?.name ?? h;
+        return (
+          <li key={h} className="acc-card set-person">
+            <Link to={`/bruger/${h}`} className="set-person__who">
+              <Avatar name={name} tone={a?.tone} src={a?.avatarSrc} />
+              <span className="acc-card__text">
+                <span className="t-heading-s">{name}</span>
+                <span className="t-caption acc-muted">@{h}</span>
+              </span>
+            </Link>
+            <button type="button" className="t-label set-person__btn" onClick={() => onAction(h)}>
+              {action}
+            </button>
+          </li>
+        );
+      })}
+    </ul>
   );
 }
 

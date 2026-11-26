@@ -2,12 +2,17 @@ import { useSyncExternalStore } from 'react';
 import { keep, save } from './keep';
 
 /*
- * Profiler, du har blokeret, og følgere, du har fjernet (efter brugernavn).
- * Huskes i denne fane.
+ * Profiler, du har blokeret, følgere, du har fjernet, og afsendere,
+ * du har skjult i Offentlig debat (efter brugernavn). Huskes i denne fane.
+ *
+ * Blokering: personen kan ikke se din profil eller skrive til dig – overalt.
+ * Skjult i debatten: du ser bare ikke deres opslag i Offentlig debat.
+ * De kan stadig se dig, og du ser dem stadig i dit eget feed.
  */
-type Relations = { blocked: string[]; removedFollowers: string[] };
+type Relations = { blocked: string[]; removedFollowers: string[]; mutedDebate: string[] };
 
-let state: Relations = keep('relations', { blocked: [], removedFollowers: [] });
+const stored = keep<Partial<Relations>>('relations', {});
+let state: Relations = { blocked: [], removedFollowers: [], mutedDebate: [], ...stored };
 const listeners = new Set<() => void>();
 
 function set(next: Relations) {
@@ -28,13 +33,14 @@ export function useRelations() {
   return useSyncExternalStore(subscribe, get, get);
 }
 
-export const block = (handle: string) =>
-  set({ ...state, blocked: state.blocked.includes(handle) ? state.blocked : [...state.blocked, handle] });
+const add = (list: string[], h: string) => (list.includes(h) ? list : [...list, h]);
+
+export const block = (handle: string) => set({ ...state, blocked: add(state.blocked, handle) });
 
 export const unblock = (handle: string) => set({ ...state, blocked: state.blocked.filter((h) => h !== handle) });
 
-export const removeFollower = (handle: string) =>
-  set({
-    ...state,
-    removedFollowers: state.removedFollowers.includes(handle) ? state.removedFollowers : [...state.removedFollowers, handle],
-  });
+export const removeFollower = (handle: string) => set({ ...state, removedFollowers: add(state.removedFollowers, handle) });
+
+export const muteDebate = (handle: string) => set({ ...state, mutedDebate: add(state.mutedDebate, handle) });
+
+export const unmuteDebate = (handle: string) => set({ ...state, mutedDebate: state.mutedDebate.filter((h) => h !== handle) });

@@ -1,0 +1,47 @@
+.stance {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+
+/* Grøn = enige, grå = uenige. Skillet flytter sig med stemmerne. */
+.stance__bar {
+  flex: 1;
+  display: flex;
+  height: 44px;
+  overflow: hidden;
+  border: 1px solid var(--color-border-default);
+  border-radius: var(--radius-pill);
+  background: linear-gradient(
+    90deg,
+    var(--color-accent-verified-bg) 0 var(--pct),
+    var(--gray-150) var(--pct) 100%
+  );
+  transition: background 0.3s;
+}
+
+.stance__btn {
+  flex: 1;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
+  min-width: 0;
+  color: var(--color-text-primary);
+}
+
+.stance__btn + .stance__btn { border-left: 1px solid rgb(0 0 0 / 0.06); }
+
+.stance__pct { color: var(--color-text-secondary); }
+.stance__btn--on .stance__pct { color: var(--color-text-primary); font-weight: 600; }
+
+.stance__btn:focus-visible {
+  outline: 2px solid var(--color-accent-highlight);
+  outline-offset: -2px;
+  border-radius: var(--radius-pill);
+}
+
+.stance__total {
+  flex-shrink: 0;
+  color: var(--color-text-secondary);
+}

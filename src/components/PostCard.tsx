@@ -1,14 +1,20 @@
 import { useState } from 'react';
-import { Link } from 'react-router-dom';
+import { Link, useNavigate } from 'react-router-dom';
 import { Avatar, type AvatarTone } from './Avatar';
 import { Icon, type IconName } from './Icon';
 import { PostMenu } from './PostMenu';
 import { setHidden, useHidden } from '../state/posts';
 import { VoteControl } from './VoteControl';
+import { StanceBar } from './StanceBar';
+import { shownNote, useNotes } from '../state/notes';
 import { groups } from '../data/more';
 import { initialEvents } from '../data/events';
 import { publicKind, publicLabel, type PublicKind } from '../data/publicProfiles';
 import { handleOf } from '../data/handles';
+import { discoverPosts } from '../data/discover';
+
+/** Opslag, der hører til Offentlig debat – også når de vises andre steder */
+const debateIds = new Set(discoverPosts.map((p) => p.id));
 import './PostCard.css';
 
 export type Post = {
@@ -56,10 +62,16 @@ type PostCardProps = {
   onComment?: () => void;
   onShare?: () => void;
   onReport?: () => void;
+  /** Offentlig debat: skjul afsenderen i debatten */
+  onMute?: () => void;
 };
 
 /** Opslag i feedet. Handlinger: kan lide, kommentér, del, rapportér og gem. */
-export function PostCard({ post, onComment, onShare, onReport }: PostCardProps) {
+export function PostCard({ post, onComment, onShare, onReport, onMute }: PostCardProps) {
+  const navigate = useNavigate();
+  // Offentlig debat: enig/uenig og fællesskabsnoter
+  const debate = post.score !== undefined || debateIds.has(post.id);
+  const note = shownNote(useNotes(), post.id);
   const [saved, setSaved] = useState(false);
   const [stats] = useState(() => post.stats ?? sampleStats(post.id));
   const kind = post.group ? null : publicKind(post.author);
@@ -162,13 +174,22 @@ export function PostCard({ post, onComment, onShare, onReport }: PostCardProps) 
         </ul>
       )}
 
+      {note && (
+        <aside className="post-note" aria-label="Fællesskabsnote">
+          <p className="t-caption-strong post-note__title">Fællesskabsnote</p>
+          <p className="t-body-s">{note.text}</p>
+          {note.source && <p className="t-caption post-note__source">Kilde: {note.source}</p>}
+          <Link to={`/opslag/${post.id}/noter`} className="t-caption-strong post-note__rate">
+            Vurder noten
+          </Link>
+        </aside>
+      )}
+
+      {debate && <StanceBar id={post.id} />}
+
       <footer className="post__actions">
-        {/* Debat og offentlige profiler: op og ned. Almindelige brugere: kun op. */}
-        <VoteControl
-          id={post.id}
-          base={post.score ?? stats.likes}
-          allowDown={post.score !== undefined || isPublic}
-        />
+        {/* Offentlige profiler: op og ned. Almindelige brugere: kun op. Debat: enig/uenig ovenfor. */}
+        {!debate && <VoteControl id={post.id} base={stats.likes} allowDown={isPublic} />}
         <Action icon="chat" label="Kommentarer" count={stats.comments} onClick={onComment} />
         <Action icon="send" label="Delinger" count={stats.shares} onClick={onShare} />
         <Action
@@ -190,6 +211,9 @@ export function PostCard({ post, onComment, onShare, onReport }: PostCardProps) 
         mine={mine}
         onHide={() => setHidden(post.id, true)}
         onReport={onReport}
+        onNotes={debate ? () => navigate(`/opslag/${post.id}/noter`) : undefined}
+        onMute={debate ? onMute : undefined}
+        muteName={post.author.split(' ')[0]}
       />
     </article>
   );

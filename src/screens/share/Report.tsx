@@ -25,6 +25,14 @@ export function Report() {
   const [sent, setSent] = useState(false);
 
   if (!post) return <Navigate to="/" replace />;
+  // Opslag med tags (Offentlig debat, flicks): man kan også melde forkert kategori
+  const tags = 'tags' in post ? (post.tags as string[] | undefined) : undefined;
+  const reasons = tags?.length
+    ? [
+        { id: 'kategori', title: 'Forkert kategoriseret', hint: `Passer ikke til ${tags.map((t) => `#${t}`).join(' ')}` },
+        ...reportReasons,
+      ]
+    : reportReasons;
   const { object } = pronouns(post.author);
   const needsText = reason === 'andet';
   const canSend = reason !== null && (!needsText || other.trim().length > 2);
@@ -55,7 +63,7 @@ export function Report() {
           Opslag fra {post.author}. Din rapport er anonym for {object}.
         </p>
         <div className="choice-list" role="radiogroup" aria-labelledby="report-q">
-          {reportReasons.map((r) => {
+          {reasons.map((r) => {
             const on = reason === r.id;
             return (
               <div key={r.id}>

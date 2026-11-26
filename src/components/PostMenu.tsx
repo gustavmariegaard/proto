@@ -12,12 +12,17 @@ type Props = {
   mine?: boolean;
   onHide: () => void;
   onReport?: () => void;
+  /** Offentlig debat: fællesskabsnoter for opslaget */
+  onNotes?: () => void;
+  /** Offentlig debat: skjul alle opslag fra afsenderen i debatten (fornavn i teksten) */
+  onMute?: () => void;
+  muteName?: string;
   /** Opslag eller flick (bruges i teksterne) */
   noun?: 'opslag' | 'flick';
 };
 
 /** Menuen bag ⋯ på opslag og flicks: Hvorfor ser jeg dette?, Ikke interesseret og Rapportér. */
-export function PostMenu({ open, onClose, why, mine = false, onHide, onReport, noun = 'opslag' }: Props) {
+export function PostMenu({ open, onClose, why, mine = false, onHide, onReport, onNotes, onMute, muteName, noun = 'opslag' }: Props) {
   const [step, setStep] = useState<'menu' | 'why'>('menu');
   const close = () => {
     setStep('menu');
@@ -65,6 +70,36 @@ export function PostMenu({ open, onClose, why, mine = false, onHide, onReport, n
               </button>
             </li>
           )}
+          {onNotes && (
+            <li>
+              <button
+                type="button"
+                className="post-menu__item"
+                onClick={() => {
+                  close();
+                  onNotes();
+                }}
+              >
+                <NoteIcon />
+                Fællesskabsnoter
+              </button>
+            </li>
+          )}
+          {!mine && onMute && (
+            <li>
+              <button
+                type="button"
+                className="post-menu__item"
+                onClick={() => {
+                  close();
+                  onMute();
+                }}
+              >
+                <MuteIcon />
+                {`Skjul ${muteName ?? 'afsender'} i debatten`}
+              </button>
+            </li>
+          )}
           {!mine && onReport && (
             <li>
               <button
@@ -85,3 +120,18 @@ export function PostMenu({ open, onClose, why, mine = false, onHide, onReport, n
     </Sheet>
   );
 }
+
+/* Ikoner, som ikke findes i ikon-sættet */
+const S = { fill: 'none', stroke: 'currentColor', strokeWidth: 2, strokeLinecap: 'round', strokeLinejoin: 'round' } as const;
+const NoteIcon = () => (
+  <svg width="24" height="24" viewBox="0 0 24 24" aria-hidden="true">
+    <path d="M5 4H19V15L14 20H5V4Z" {...S} />
+    <path d="M14 20V15H19M8.5 9H15.5M8.5 12.5H12.5" {...S} />
+  </svg>
+);
+const MuteIcon = () => (
+  <svg width="24" height="24" viewBox="0 0 24 24" aria-hidden="true">
+    <circle cx="10" cy="8" r="4" {...S} />
+    <path d="M3 20C3 16.7 6.1 14 10 14C11 14 12 14.2 12.9 14.5M16 16L21 21M21 16L16 21" {...S} />
+  </svg>
+);

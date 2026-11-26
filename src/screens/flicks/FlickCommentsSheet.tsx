@@ -1,6 +1,7 @@
 import { useRef, useState } from 'react';
 import { Link } from 'react-router-dom';
 import { Avatar, initials } from '../../components/Avatar';
+import { CommentSort, sortThreads, type CommentOrder } from '../../components/CommentSort';
 import { Icon } from '../../components/Icon';
 import { Sheet } from '../../components/Sheet';
 import { flickComments, type FlickComment } from '../../data/flicks';
@@ -20,6 +21,7 @@ export function FlickCommentsSheet({ open, onClose }: Props) {
   const [liked, setLiked] = useState<string[]>([]);
   const [expanded, setExpanded] = useState<string[]>([]);
   const [text, setText] = useState('');
+  const [order, setOrder] = useState<CommentOrder>('populaere');
   const inputRef = useRef<HTMLInputElement>(null);
   const me = profile.name || 'Du';
   const myHandle = profile.username.trim().replace(/^@/, '') || handleOf(profile.name) || 'dit.navn';
@@ -116,7 +118,14 @@ export function FlickCommentsSheet({ open, onClose }: Props) {
         </form>
       }
     >
-      <ul className="fcomments">{list.map((c) => renderComment(c))}</ul>
+      <CommentSort value={order} onChange={setOrder} />
+      <ul className="fcomments">
+        {sortThreads(
+          list.map((c, index) => ({ c, index })),
+          ({ c, index }) => ({ likes: c.likes + (liked.includes(c.id) ? 1 : 0), time: c.time, replies: c.replies?.length ?? 0, index }),
+          order,
+        ).map(({ c }) => renderComment(c))}
+      </ul>
     </Sheet>
   );
 }

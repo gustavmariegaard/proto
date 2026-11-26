@@ -1,0 +1,15 @@
+/* Sortering øverst i kommentarerne. Ruller sidelæns, hvis der ikke er plads. */
+.comment-sort {
+  display: flex;
+  gap: 8px;
+  padding: 4px 20px 0;
+  overflow-x: auto;
+  scrollbar-width: none;
+}
+
+.comment-sort::-webkit-scrollbar { display: none; }
+
+.comment-sort .chip {
+  padding: 0 14px;
+  font-size: 13px;
+}

@@ -6,7 +6,8 @@ import { PostCard } from '../../components/PostCard';
 import { discoverPosts } from '../../data/discover';
 import { usePosts } from '../../state/posts';
 import { inTopics, useTopics } from '../../state/topics';
-import { HIDE_AT, isBuried, scoreWith, useVotes } from '../../state/votes';
+import { muteDebate, unmuteDebate, useRelations } from '../../state/blocks';
+import { handleOf } from '../../data/handles';
 import { TopicsSheet } from './TopicsSheet';
 import './Discover.css';
 
@@ -21,17 +22,22 @@ export function Discover() {
   const [editing, setEditing] = useState(false);
   const rowRef = useRef<HTMLUListElement>(null);
 
-  const votes = useVotes();
-  const [showBuried, setShowBuried] = useState(false);
+  // Afsendere, du har skjult i debatten eller blokeret, vises ikke
+  const { mutedDebate, blocked } = useRelations();
+  const [justMuted, setJustMuted] = useState<{ handle: string; name: string } | null>(null);
 
   // Dine egne debatopslag (fra Opret) står øverst, uanset emne
   const mine = usePosts().filter((p) => p.feed === 'debat' && p.id.startsWith('mit-'));
-  const all = [...mine, ...discoverPosts.filter((p) => inTopics(p.tags, active))];
+  const shown = [...mine, ...discoverPosts.filter((p) => inTopics(p.tags, active))].filter((p) => {
+    const h = p.username || handleOf(p.author);
+    return !mutedDebate.includes(h) && !blocked.includes(h);
+  });
 
-  // Opslag med for mange nedstemmer forsvinder fra emnerne
-  const score = (p: { id: string; score?: number }) => scoreWith(p.score ?? 0, votes[p.id]);
-  const shown = all.filter((p) => !isBuried(score(p)));
-  const buried = all.filter((p) => isBuried(score(p)));
+  const mute = (p: { author: string; username?: string }) => {
+    const handle = p.username || handleOf(p.author);
+    muteDebate(handle);
+    setJustMuted({ handle, name: p.author });
+  };
 
   return (
     <div className="discover">
@@ -63,6 +69,15 @@ export function Discover() {
         })}
       </ul>
 
+      {justMuted && mutedDebate.includes(justMuted.handle) && (
+        <div className="discover__muted" role="status">
+          <p className="t-body-s">Du ser ikke længere opslag fra {justMuted.name} i debatten.</p>
+          <button type="button" className="t-caption-strong discover__undo" onClick={() => unmuteDebate(justMuted.handle)}>
+            Fortryd
+          </button>
+        </div>
+      )}
+
       <div className="discover__posts">
         {shown.map((p) => (
           <PostCard
@@ -71,37 +86,13 @@ export function Discover() {
             onComment={() => navigate(`/opslag/${p.id}?kommentarer`)}
             onShare={() => navigate(`/opslag/${p.id}/del`)}
             onReport={() => navigate(`/opslag/${p.id}/rapporter`)}
+            onMute={() => mute(p)}
           />
         ))}
         {shown.length === 0 && (
           <p className="t-body-s discover__intro">Ingen opslag om dine interesser lige nu. Prøv at følge flere.</p>
         )}
       </div>
-
-      {buried.length > 0 && (
-        <section className="discover__buried" aria-label="Skjult af fællesskabet">
-          <p className="t-caption discover__intro">
-            {buried.length === 1 ? '1 opslag er skjult' : `${buried.length} opslag er skjult`} af fællesskabet, fordi det har
-            fået for mange nedstemmer (score {HIDE_AT} eller lavere).
-          </p>
-          <button type="button" className="t-caption-strong discover__buried-toggle" onClick={() => setShowBuried((v) => !v)}>
-            {showBuried ? 'Skjul igen' : 'Vis alligevel'}
-          </button>
-          {showBuried && (
-            <div className="discover__posts discover__posts--buried">
-              {buried.map((p) => (
-                <PostCard
-                  key={p.id}
-                  post={p}
-                  onComment={() => navigate(`/opslag/${p.id}?kommentarer`)}
-                  onShare={() => navigate(`/opslag/${p.id}/del`)}
-                  onReport={() => navigate(`/opslag/${p.id}/rapporter`)}
-                />
-              ))}
-            </div>
-          )}
-        </section>
-      )}
 
       <TopicsSheet open={editing} onClose={() => setEditing(false)} />
     </div>
