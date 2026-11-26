@@ -11,6 +11,7 @@ import { conversationTitle, markRead, myConversations, type ConversationRow } fr
 import { useMe } from '@/lib/session';
 import { supabase } from '@/lib/supabase';
 import type { Message } from '@/lib/types';
+import { ListingContext } from '@/components/ListingContext';
 import { color, font, radius, TAP } from '@/theme/tokens';
 
 const GAP = 15 * 60 * 1000;
@@ -101,6 +102,8 @@ export default function Conversation() {
   const title = conv ? conversationTitle(conv) : '';
   const byId = new Map(members.map((m) => [m.id, m]));
   const pending = !!conv?.is_request && messages.some((m) => m.sender_id !== me.id);
+  // Torvet: seneste annonce, samtalen handler om (vises øverst)
+  const listingId = (messages.find((m) => (m as Message & { listing_id?: string | null }).listing_id) as (Message & { listing_id?: string | null }) | undefined)?.listing_id;
 
   return (
     <SafeAreaView style={s.root} edges={['top', 'bottom']}>
@@ -135,6 +138,7 @@ export default function Conversation() {
         </View>
       ) : (
         <KeyboardAvoidingView style={{ flex: 1 }} behavior={Platform.OS === 'ios' ? 'padding' : undefined}>
+          {listingId && <ListingContext listingId={listingId} />}
           <FlatList
             inverted
             data={messages}
@@ -167,6 +171,9 @@ export default function Conversation() {
                     </T>
                   )}
                   <View style={[s.bubble, mine ? s.mine : s.theirs]}>
+                    {(m as Message & { listing_id?: string | null }).listing_id && (
+                      <ListingContext listingId={(m as Message & { listing_id: string }).listing_id} inBubble mine={mine} />
+                    )}
                     <T v="body" c={mine ? color.textOnAction : color.textPrimary}>
                       {m.body}
                     </T>
