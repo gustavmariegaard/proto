@@ -33,7 +33,10 @@ export default defineConfig({
       },
       workbox: {
         navigateFallback: `${base}index.html`,
+        // Den rigtige app ligger under /app/ og skal ikke fanges eller gemmes af prototypen
+        navigateFallbackDenylist: [new RegExp(`^${base}app(/|$)`)],
         globPatterns: ['**/*.{js,css,html,svg,png,woff2}'],
+        globIgnores: ['app/**'],
       },
     }),
   ],
