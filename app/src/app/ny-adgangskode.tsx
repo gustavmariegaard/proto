@@ -28,7 +28,8 @@ export default function NewPassword() {
       <PasswordField
         dark
         isNew
-        label="Gentag adgangskode"
+        typeOnly
+            label="Gentag adgangskode"
         value={password2}
         onChangeText={setPassword2}
         error={error || (password2.length >= password.length && password2 && password2 !== password ? 'Adgangskoderne er ikke ens.' : undefined)}

@@ -1,15 +1,38 @@
-import { useState } from 'react';
-import { Pressable, StyleSheet, TextInput, View, type TextInputProps } from 'react-native';
+import { useEffect, useRef, useState } from 'react';
+import { Platform, Pressable, StyleSheet, TextInput, View, type TextInputProps } from 'react-native';
 import { color, font, radius, TAP } from '@/theme/tokens';
 import { T } from './T';
 import { darkField, darkFocus, noOutline } from './TextField';
 
-type Props = TextInputProps & { label?: string; hint?: string; error?: string; isNew?: boolean; dark?: boolean };
+type Props = TextInputProps & {
+  label?: string;
+  hint?: string;
+  error?: string;
+  isNew?: boolean;
+  dark?: boolean;
+  /** Bekræftelsesfelt: må ikke udfyldes ved at indsætte, trække tekst ind eller autoudfylde */
+  typeOnly?: boolean;
+};
 
 /** Adgangskode med "Vis"/"Skjul" */
-export function PasswordField({ label = 'Adgangskode', hint, error, isNew, dark, onFocus, onBlur, ...rest }: Props) {
+export function PasswordField({ label = 'Adgangskode', hint, error, isNew, dark, typeOnly, onFocus, onBlur, ...rest }: Props) {
   const [show, setShow] = useState(false);
   const [focus, setFocus] = useState(false);
+  const ref = useRef<React.ComponentRef<typeof TextInput>>(null);
+
+  // Web: bloker indsæt og træk-og-slip i bekræftelsesfeltet
+  useEffect(() => {
+    if (!typeOnly || Platform.OS !== 'web') return;
+    const el = ref.current as unknown as HTMLElement | null;
+    if (!el?.addEventListener) return;
+    const stop = (e: Event) => e.preventDefault();
+    el.addEventListener('paste', stop);
+    el.addEventListener('drop', stop);
+    return () => {
+      el.removeEventListener('paste', stop);
+      el.removeEventListener('drop', stop);
+    };
+  }, [typeOnly]);
   return (
     <View style={{ gap: 6, alignSelf: 'stretch' }}>
       <T v="label" c={dark ? color.white : color.textPrimary} style={{ paddingLeft: 4 }}>
@@ -21,8 +44,11 @@ export function PasswordField({ label = 'Adgangskode', hint, error, isNew, dark,
           secureTextEntry={!show}
           autoCapitalize="none"
           autoCorrect={false}
-          autoComplete={isNew ? 'new-password' : 'current-password'}
-          textContentType={isNew ? 'newPassword' : 'password'}
+          ref={ref}
+          autoComplete={typeOnly ? 'off' : isNew ? 'new-password' : 'current-password'}
+          textContentType={typeOnly ? 'none' : isNew ? 'newPassword' : 'password'}
+          // Telefon: ingen "Indsæt"-menu i bekræftelsesfeltet
+          contextMenuHidden={typeOnly}
           placeholderTextColor={dark ? 'rgba(255,255,255,0.4)' : color.textSecondary}
           onFocus={(e) => (setFocus(true), onFocus?.(e))}
           onBlur={(e) => (setFocus(false), onBlur?.(e))}

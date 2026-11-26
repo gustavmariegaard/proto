@@ -170,6 +170,7 @@ export default function SignUp() {
           <PasswordField
             dark
             isNew
+            typeOnly
             label="Gentag adgangskode"
             value={password2}
             onChangeText={setPassword2}
