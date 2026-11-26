@@ -1,5 +1,4 @@
-import QRCode from 'qrcode';
-import { useEffect, useMemo, useState, type ReactNode } from 'react';
+import { useEffect, useState, type ReactNode } from 'react';
 import { Platform, StyleSheet, View } from 'react-native';
 import Svg, { Rect } from 'react-native-svg';
 import { CircleBackdrop } from './CircleBackdrop';
@@ -34,8 +33,12 @@ export function MobileOnly({ children }: { children: ReactNode }) {
 
 function DesktopNotice() {
   const url = typeof window !== 'undefined' ? window.location.origin + window.location.pathname.replace(/[^/]*$/, '') : '';
-  const qr = useMemo(() => QRCode.create(url, { errorCorrectionLevel: 'M' }).modules, [url]);
-  const n = qr.size;
+  // QR-biblioteket hentes kun her (computer/tablet), så telefoner ikke skal hente det
+  const [qr, setQr] = useState<{ size: number; get: (x: number, y: number) => number | boolean } | null>(null);
+  useEffect(() => {
+    import('qrcode').then((m) => setQr(m.default.create(url, { errorCorrectionLevel: 'M' }).modules));
+  }, [url]);
+  const n = qr?.size ?? 29;
   const cell = 6;
 
   useEffect(() => {
@@ -58,7 +61,7 @@ function DesktopNotice() {
         </T>
         <View style={s.qr} accessibilityLabel={`QR-kode til ${url}`}>
           <Svg width={n * cell} height={n * cell}>
-            {Array.from({ length: n * n }, (_, i) =>
+            {qr && Array.from({ length: n * n }, (_, i) =>
               qr.get(i % n, Math.floor(i / n)) ? <Rect key={i} x={(i % n) * cell} y={Math.floor(i / n) * cell} width={cell} height={cell} fill={INK} /> : null,
             )}
           </Svg>

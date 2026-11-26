@@ -30,11 +30,16 @@
       "favicon": "./assets/favicon.png",
       "output": "single",
       "name": "ciircle",
-      "themeColor": "#0a0a0a",
-      "backgroundColor": "#0a0a0a"
+      "themeColor": "#fafaf9",
+      "backgroundColor": "#fafaf9"
     },
     "plugins": [
-      "expo-router",
+      [
+        "expo-router",
+        {
+          "asyncRoutes": false
+        }
+      ],
       "expo-status-bar",
       "expo-font",
       "expo-image",
