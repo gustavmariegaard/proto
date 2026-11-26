@@ -6,6 +6,7 @@ import { SafeAreaView } from 'react-native-safe-area-context';
 import { Button } from '@/components/Button';
 import { Chip } from '@/components/Chip';
 import { Icon } from '@/components/Icon';
+import { SharedPost } from '@/components/SharedPost';
 import { IconButton } from '@/components/IconButton';
 import { T } from '@/components/T';
 import { Toggle } from '@/components/Toggle';
@@ -23,7 +24,9 @@ const MAX_TEXT = 2200;
 export default function Create() {
   const me = useMe();
   // Opslag i en gruppe, en begivenhed eller som en side (?gruppe= | ?begivenhed= | ?side=)
-  const params = useLocalSearchParams<{ gruppe?: string; begivenhed?: string; side?: string }>();
+  // ?deler=<opslag-id>: del et andet opslag som et nyt opslag (med egen tekst ovenpå)
+  const params = useLocalSearchParams<{ gruppe?: string; begivenhed?: string; side?: string; deler?: string }>();
+  const sharing = params.deler ?? null;
   const where = params.gruppe ? { col: 'group_id', id: params.gruppe } : params.begivenhed ? { col: 'event_id', id: params.begivenhed } : params.side ? { col: 'page_id', id: params.side } : null;
   const [placeName, setPlaceName] = useState<string | null>(null);
   useEffect(() => {
@@ -46,7 +49,7 @@ export default function Create() {
   const [error, setError] = useState('');
 
   const close = () => (router.canGoBack() ? router.back() : router.replace('/'));
-  const hasContent = text.trim().length > 0 || images.length > 0;
+  const hasContent = text.trim().length > 0 || images.length > 0 || !!sharing;
   const canPost = hasContent && (!debate || tags.length > 0) && !busy;
 
   const addTag = (raw: string) => {
@@ -75,6 +78,7 @@ export default function Create() {
         tags: debate ? tags : [],
         allow_share: share,
         ...(where ? { [where.col]: where.id } : {}),
+        ...(sharing ? { shared_post_id: sharing } : {}),
       });
       if (error) throw error;
       close();
@@ -106,6 +110,7 @@ export default function Create() {
               </T>
             </View>
           )}
+          {sharing && <SharedPost id={sharing} />}
           <View style={s.writer}>
             <TextInput
               style={s.text}

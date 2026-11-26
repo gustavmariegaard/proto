@@ -16,7 +16,9 @@ Prototypen (web) ligger stadig i roden af repoet og på branchen `prototype`.
 - **Profil:** egen og andres, gitter/liste, rediger profil, følg, bloker, anmeld, fjern følger, privat profil.
 - **Indstillinger:** privat profil, følgeanmodninger, blokerede, skjult i debatten, interesser, gemt, privatlivserklæring, log ud, slet konto.
 
-Ikke med endnu (trin 2–3): Flicks, moments, Torvet, begivenheder, grupper, MitID, forældrekontrol og ægte end-to-end-kryptering af beskeder.
+**Trin 2 (med):** moments og highlights, Hjem med Brugere/Interesser, Del (besked, opslag, moment), Flicks med video, Torvet (annoncer, afstand, Til dig, skriv til sælger), begivenheder, grupper, sider, Udvid cirkel, Skaber, sprog og oversættelse (indstilling), ansøgning om offentlig person, forældrekontrol (kode), privatlivspolitik og databehandleraftale.
+
+Ikke med endnu: MitID, ægte oversættelse af indhold, håndhævelse af skærmtid m.m. i forældrekontrol, og ægte end-to-end-kryptering af beskeder.
 Beskeder er beskyttet af databasens regler og krypteret på serveren, men **ikke** end-to-end. Appen skriver derfor ikke "End-to-end-krypteret".
 
 ## Mapper
@@ -40,7 +42,7 @@ npm install
 cp .env.example .env
 npx supabase start          # lokal database, login og billeder
 npx supabase db reset       # lægger databasen ind
-npm run db:test             # 33 tests af privatlivsreglerne
+for t in supabase/tests/*.test.mjs; do node $t; done   # 146 tests af reglerne
 npx expo start --web        # åbner appen i browseren
 ```
 

@@ -163,6 +163,21 @@ check('Inviteret kan se den', r.data.length === 1);
 const { error: rsvpErr } = await lars2.c.from('event_rsvps').upsert({ event_id: ev.id, user_id: lars2.id, status: 'deltager' });
 check('Inviteret kan svare "Deltager"', !rsvpErr, rsvpErr?.message);
 
+// Del som opslag: kun hvis originalen tillader deling
+const { data: open1 } = await lars2.c.from('posts').insert({ author_id: lars2.id, text: 'Må gerne deles', allow_share: true }).select().single();
+const { data: closed1 } = await lars2.c.from('posts').insert({ author_id: lars2.id, text: 'Må ikke deles', allow_share: false }).select().single();
+await anna.c.from('follows').insert({ follower_id: anna.id, followee_id: lars2.id });
+const { error: shareOk } = await anna.c.from('posts').insert({ author_id: anna.id, text: '', shared_post_id: open1.id });
+check('Man kan dele et opslag som opslag', !shareOk, shareOk?.message);
+const { error: shareNo } = await anna.c.from('posts').insert({ author_id: anna.id, text: 'Se her', shared_post_id: closed1.id });
+check('… men ikke, hvis deling er slået fra', !!shareNo);
+
+// Notifikationer peger på den rigtige begivenhed og gruppe
+r = await lars2.c.from('notifications').select('type, event_id, group_id').eq('type', 'event_invite');
+check('Invitation til begivenhed har link til begivenheden', r.data?.[0]?.event_id === ev.id, JSON.stringify(r.data));
+r = await anna.c.from('notifications').select('type, group_id').eq('type', 'group_request');
+check('Gruppeanmodning har link til gruppen', r.data?.[0]?.group_id === grp.id, JSON.stringify(r.data));
+
 // Slet konto
 const del = await emil.c.rpc('delete_my_account');
 r = await admin.from('profiles').select('id').eq('id', emil.id);

@@ -23,7 +23,7 @@ export default function Share() {
   const me = useMe();
   const { id } = useLocalSearchParams<{ id: string }>();
   const [post, setPost] = useState<PostCard | null | undefined>(undefined);
-  const [mode, setMode] = useState<'besked' | 'moment'>('besked');
+  const [mode, setMode] = useState<'besked' | 'opslag' | 'moment'>('besked');
   const [message, setMessage] = useState('');
   const [query, setQuery] = useState('');
   const [people, setPeople] = useState<Person[]>([]);
@@ -140,6 +140,8 @@ export default function Share() {
         <View style={s.footer}>
           {mode === 'besked' ? (
             <Button title={chosen.length ? `Send (${chosen.length})` : 'Send'} block disabled={!chosen.length} loading={busy} onPress={send} />
+          ) : mode === 'opslag' ? (
+            <Button title="Del som opslag" block onPress={() => router.replace({ pathname: '/opret', params: { deler: post.id } })} />
           ) : (
             <Button title="Del som moment" block onPress={() => router.replace({ pathname: '/ny-moment', params: { opslag: post.id } })} />
           )}
@@ -152,6 +154,7 @@ export default function Share() {
         onChange={setMode}
         options={[
           { value: 'besked', label: 'Besked' },
+          { value: 'opslag', label: 'Opslag' },
           { value: 'moment', label: 'Moment' },
         ]}
       />

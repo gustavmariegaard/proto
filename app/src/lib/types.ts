@@ -44,6 +44,7 @@ export type PostCard = {
   liked: boolean;
   saved: boolean;
   my_stance: Stance | null;
+  shared_post_id: string | null;
 };
 
 export type Comment = {
@@ -77,8 +78,10 @@ export type Message = { id: string; conversation_id: string; sender_id: string; 
 
 export type NotificationRow = {
   id: string;
-  type: 'follow' | 'follow_request' | 'like' | 'comment' | 'note' | 'message';
+  type: 'follow' | 'follow_request' | 'like' | 'comment' | 'note' | 'message' | 'group_request' | 'event_invite';
   post_id: string | null;
+  group_id?: string | null;
+  event_id?: string | null;
   created_at: string;
   read_at: string | null;
   actor: Pick<Profile, 'id' | 'username' | 'name' | 'avatar_path'> | null;

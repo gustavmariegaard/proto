@@ -15,7 +15,9 @@ import { IconButton } from './IconButton';
 import { MenuItem } from './MenuItem';
 import { NoteBox } from './NoteBox';
 import { Sheet } from './Sheet';
+import { SharedPost } from './SharedPost';
 import { StanceBar } from './StanceBar';
+import { VideoView } from './VideoView';
 import { T } from './T';
 
 type Props = {
@@ -120,7 +122,9 @@ export function PostCard({ post, onRemoved, onComments }: Props) {
         <IconButton icon="dots" label="Flere muligheder" onPress={() => setMenu('menu')} />
       </View>
 
-      {post.image_paths[0] && (
+      {post.image_paths[0] && post.media_type === 'video' && <VideoView path={post.image_paths[0]} active style={s.video} contentFit="cover" />}
+
+      {post.image_paths[0] && post.media_type !== 'video' && (
         <Pressable onPress={open} accessibilityLabel="Åbn opslaget">
           <Image
             source={imageSource(post.image_paths[0])}
@@ -137,6 +141,8 @@ export function PostCard({ post, onRemoved, onComments }: Props) {
           <T v="body">{post.text}</T>
         </Pressable>
       )}
+
+      {post.shared_post_id && <SharedPost id={post.shared_post_id} />}
 
       {post.tags.length > 0 && (
         <View style={s.tags}>
@@ -273,6 +279,7 @@ const s = StyleSheet.create({
   ctxIcon: { width: 40, height: 40, borderRadius: 12, backgroundColor: color.bgSubtle, alignItems: 'center', justifyContent: 'center' },
   ctxAuthor: { position: 'absolute', right: 0, bottom: -2, borderRadius: 14, borderWidth: 2, borderColor: color.bgSurface },
   image: { width: '100%', borderRadius: radius.md, backgroundColor: color.bgSubtle },
+  video: { width: '100%', aspectRatio: 9 / 16, maxHeight: 520, borderRadius: radius.md, overflow: 'hidden', backgroundColor: '#000' },
   tags: { flexDirection: 'row', flexWrap: 'wrap', gap: 6 },
   tag: { paddingHorizontal: 10, paddingVertical: 4, borderRadius: radius.pill, backgroundColor: color.bgSubtle },
   actions: { flexDirection: 'row', gap: 8, flexWrap: 'wrap' },

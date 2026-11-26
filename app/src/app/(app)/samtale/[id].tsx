@@ -12,6 +12,7 @@ import { useMe } from '@/lib/session';
 import { supabase } from '@/lib/supabase';
 import type { Message } from '@/lib/types';
 import { ListingContext } from '@/components/ListingContext';
+import { SharedPost } from '@/components/SharedPost';
 import { color, font, radius, TAP } from '@/theme/tokens';
 
 const GAP = 15 * 60 * 1000;
@@ -174,9 +175,14 @@ export default function Conversation() {
                     {(m as Message & { listing_id?: string | null }).listing_id && (
                       <ListingContext listingId={(m as Message & { listing_id: string }).listing_id} inBubble mine={mine} />
                     )}
-                    <T v="body" c={mine ? color.textOnAction : color.textPrimary}>
-                      {m.body}
-                    </T>
+                    {(m as Message & { post_id?: string | null }).post_id && (
+                      <SharedPost id={(m as Message & { post_id: string }).post_id} compact onDark={mine} />
+                    )}
+                    {!!m.body && (
+                      <T v="body" c={mine ? color.textOnAction : color.textPrimary}>
+                        {m.body}
+                      </T>
+                    )}
                   </View>
                 </View>
               );

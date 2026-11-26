@@ -19,6 +19,8 @@ const text: Record<NotificationRow['type'], string> = {
   comment: 'kommenterede dit opslag',
   note: 'Læsere har tilføjet kontekst til dit opslag',
   message: 'sendte dig en besked',
+  group_request: 'vil være med i din gruppe',
+  event_invite: 'inviterede dig til en begivenhed',
 };
 
 /** Notifikationer: følgere, hjerter, kommentarer og noter. Følgeanmodninger godkendes her. */
@@ -32,7 +34,7 @@ export default function Notifications() {
     const [{ data }, { data: req }] = await Promise.all([
       supabase
         .from('notifications')
-        .select('id, type, post_id, created_at, read_at, actor:profiles!notifications_actor_id_fkey(id, username, name, avatar_path)')
+        .select('id, type, post_id, group_id, event_id, created_at, read_at, actor:profiles!notifications_actor_id_fkey(id, username, name, avatar_path)')
         .neq('type', 'message')
         .order('created_at', { ascending: false })
         .limit(100),
@@ -86,7 +88,9 @@ export default function Notifications() {
         renderItem={({ item: n }) => {
           const unread = !n.read_at;
           const go = () => {
-            if (n.post_id) router.push(`/opslag/${n.post_id}`);
+            if (n.type === 'group_request' && n.group_id) router.push(`/grupper/${n.group_id}/medlemmer`);
+            else if (n.type === 'event_invite' && n.event_id) router.push(`/begivenheder/${n.event_id}`);
+            else if (n.post_id) router.push(`/opslag/${n.post_id}`);
             else if (n.actor) router.push(`/bruger/${n.actor.username}`);
           };
           const isRequest = n.type === 'follow_request' && n.actor && pending.has(n.actor.id);
