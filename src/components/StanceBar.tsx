@@ -52,6 +52,12 @@ export function StanceBar({ id }: { id: string }) {
       <div className="stance__labels" role="group" aria-label="Er du enig?">
         {side('enig', 'Enig', t.pct)}
         {side('uenig', 'Uenig', 100 - t.pct)}
+        {/* Kun når man har kigget uden at stemme: tilbage til knapperne */}
+        {!mine && (
+          <button type="button" className="t-caption-strong stance__peek" onClick={() => setPeek(false)}>
+            Skjul stemmer
+          </button>
+        )}
       </div>
       <div className="stance__bar" aria-hidden="true">
         <span className="stance__fill" style={{ width: `${t.pct}%` }} />
