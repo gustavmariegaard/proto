@@ -1,8 +1,9 @@
 import { BricolageGrotesque_700Bold } from '@expo-google-fonts/bricolage-grotesque';
 import { Figtree_400Regular, Figtree_500Medium, Figtree_600SemiBold, Figtree_700Bold, useFonts } from '@expo-google-fonts/figtree';
-import { Stack } from 'expo-router';
+import { router, Stack } from 'expo-router';
+import { useEffect } from 'react';
 import { StatusBar } from 'expo-status-bar';
-import { ActivityIndicator, View } from 'react-native';
+import { ActivityIndicator, Platform, View } from 'react-native';
 import { SafeAreaProvider } from 'react-native-safe-area-context';
 import { SessionProvider, useSession } from '@/lib/session';
 import { color } from '@/theme/tokens';
@@ -31,6 +32,15 @@ function Loading() {
 /** Ikke logget ind → velkomst. Logget ind uden profil → opret profil. Ellers appen. */
 function Gate() {
   const { session, profile } = useSession();
+  // Web på GitHub Pages: en genindlæst underside sendes hertil som #!/sti (se 404.html)
+  useEffect(() => {
+    if (Platform.OS !== 'web' || !session || !profile) return;
+    const h = window.location.hash;
+    if (h.startsWith('#!/')) {
+      window.history.replaceState(null, '', window.location.pathname);
+      router.replace(h.slice(2) as never);
+    }
+  }, [session, profile]);
   if (session === undefined || (session && profile === undefined)) return <Loading />;
   const loggedIn = !!session;
   const hasProfile = !!profile;

@@ -14,7 +14,10 @@ const sections: { title: string; items: string[] }[] = [
   },
   {
     title: 'Hvor',
-    items: ['Hos Supabase på servere i EU. Data krypteres, når de sendes og gemmes.'],
+    items: [
+      'Hos Supabase på servere i Frankfurt (EU). Data krypteres, når de sendes og gemmes.',
+      'Supabase er et amerikansk firma. Inden appen åbnes for alle, flyttes data til en europæisk server.',
+    ],
   },
   {
     title: 'Hvem ser hvad',
@@ -22,7 +25,7 @@ const sections: { title: string; items: string[] }[] = [
       'Offentlig profil: alle med en profil kan se dine opslag.',
       'Privat profil: kun dine følgere. Debatopslag er altid offentlige.',
       'Hvem der stemte enig eller uenig, og hvem der skrev en note, vises ikke.',
-      'Beskeder ser kun dem i samtalen. Testholdet kan i særlige tilfælde, fx ved en rapport, se indhold.',
+      'Beskeder ser kun dem i samtalen. Testholdet kan teknisk set se indholdet, fordi beskeder endnu ikke er end-to-end-krypterede.',
     ],
   },
   {
