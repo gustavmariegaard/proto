@@ -68,8 +68,9 @@ export default function SignUp() {
     setTaken(null);
     if (!unameValid) return;
     const t = setTimeout(async () => {
-      const { data } = await supabase.rpc('username_available', { u: uname });
-      setTaken(data === false);
+      const { data, error } = await supabase.rpc('username_available', { u: uname });
+      // Kan det ikke tjekkes, lader vi databasen afvise et optaget navn ved oprettelsen
+      setTaken(error ? false : data === false);
     }, 350);
     return () => clearTimeout(t);
   }, [uname, unameValid]);

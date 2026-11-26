@@ -56,6 +56,8 @@ function Gate() {
   if (session === undefined || (session && profile === undefined)) return <Loading />;
   const loggedIn = !!session;
   const hasProfile = !!profile;
+  // Første gang efter tilmelding: velkomst med profilbillede (vises én gang)
+  const onboarded = !!session?.user.user_metadata?.onboarded || !!profile?.avatar_path;
   return (
     <Stack screenOptions={{ headerShown: false, contentStyle: { backgroundColor: color.bgApp } }}>
       <Stack.Protected guard={!loggedIn}>
@@ -67,7 +69,10 @@ function Gate() {
       <Stack.Protected guard={loggedIn && !recovering && !hasProfile}>
         <Stack.Screen name="opret-profil" />
       </Stack.Protected>
-      <Stack.Protected guard={loggedIn && !recovering && hasProfile}>
+      <Stack.Protected guard={loggedIn && !recovering && hasProfile && !onboarded}>
+        <Stack.Screen name="velkommen" />
+      </Stack.Protected>
+      <Stack.Protected guard={loggedIn && !recovering && hasProfile && onboarded}>
         <Stack.Screen name="(app)" />
       </Stack.Protected>
     </Stack>

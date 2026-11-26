@@ -38,7 +38,14 @@ export function SessionProvider({ children }: { children: ReactNode }) {
       setProfile(session === null ? null : undefined);
       return;
     }
-    const { data } = await supabase.from('profiles').select('*').eq('id', userId).maybeSingle();
+    let { data } = await supabase.from('profiles').select('*').eq('id', userId).maybeSingle();
+    // Navn og brugernavn fra tilmeldingen: opret profilen, hvis databasen ikke selv nåede det
+    const meta = session?.user.user_metadata ?? {};
+    if (!data && typeof meta.username === 'string' && typeof meta.name === 'string') {
+      await supabase.from('profiles').insert({ id: userId, username: meta.username, name: meta.name });
+      if (meta.birthdate) await supabase.from('profile_private').insert({ id: userId, birthdate: meta.birthdate });
+      ({ data } = await supabase.from('profiles').select('*').eq('id', userId).maybeSingle());
+    }
     setProfile((data as Profile | null) ?? null);
   }, [userId, session]);
 
