@@ -6,7 +6,8 @@ import { Button } from '@/components/Button';
 import { Screen } from '@/components/Screen';
 import { T } from '@/components/T';
 import { TextField } from '@/components/TextField';
-import { pickImage, uploadImage } from '@/lib/media';
+import { uploadImage } from '@/lib/media';
+import { useAvatarPicker } from '@/components/AvatarCropper';
 import { useMe, useSession } from '@/lib/session';
 import { supabase } from '@/lib/supabase';
 import { cleanUsername, USERNAME } from '@/lib/validate';
@@ -27,10 +28,7 @@ export default function EditProfile() {
   const clean = cleanUsername(username);
   const ok = name.trim().length > 0 && USERNAME.test(clean);
 
-  const choose = async () => {
-    const a = await pickImage(true);
-    if (a) setPhoto({ uri: a.uri, mime: a.mimeType ?? 'image/jpeg' });
-  };
+  const { choose, cropper } = useAvatarPicker((uri) => setPhoto({ uri, mime: 'image/jpeg' }));
 
   const save = async () => {
     setBusy(true);
@@ -52,8 +50,11 @@ export default function EditProfile() {
     <Screen title="Rediger profil" right={<Button title="Gem" variant="ghost" disabled={!ok} onPress={save} />}>
       <Pressable accessibilityRole="button" accessibilityLabel="Skift profilbillede" onPress={choose} style={s.photo}>
         {photo ? <Avatar name={name || me.name} uri={photo.uri} size="XL" /> : <Avatar name={name || me.name} path={me.avatar_path} size="XL" />}
-        <T v="label">Skift profilbillede</T>
       </Pressable>
+      <View style={{ alignItems: 'center' }}>
+        <Button title="Skift billede" variant="secondary" icon="image" onPress={choose} style={{ minHeight: 44, paddingHorizontal: 20 }} />
+      </View>
+      {cropper}
       <TextField label="Navn" autoComplete="name" value={name} onChangeText={setName} />
       <TextField
         label="Brugernavn"

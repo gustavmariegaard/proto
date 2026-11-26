@@ -2,9 +2,10 @@ import { useState } from 'react';
 import { Pressable, StyleSheet, View } from 'react-native';
 import { AuthLink, AuthShell, authText } from '@/components/AuthShell';
 import { Avatar } from '@/components/Avatar';
+import { useAvatarPicker } from '@/components/AvatarCropper';
 import { Button } from '@/components/Button';
 import { T } from '@/components/T';
-import { pickImage, uploadImage } from '@/lib/media';
+import { uploadImage } from '@/lib/media';
 import { useSession } from '@/lib/session';
 import { supabase } from '@/lib/supabase';
 import { color } from '@/theme/tokens';
@@ -36,10 +37,7 @@ export default function Welcome() {
     }
   };
 
-  const choose = async () => {
-    const a = await pickImage(true);
-    if (a) setPhoto(a.uri);
-  };
+  const { choose, cropper } = useAvatarPicker(setPhoto);
 
   return (
     <AuthShell
@@ -49,7 +47,7 @@ export default function Welcome() {
       footer={
         <>
           <Button title={photo ? 'Gem og fortsæt' : 'Vælg profilbillede'} variant="accent" block loading={busy} onPress={() => (photo ? finish(true) : choose())} />
-          <AuthLink label="Spring over" muted onPress={() => finish(false)} />
+          {!photo && <AuthLink label="Spring over" muted onPress={() => finish(false)} />}
         </>
       }
     >
@@ -67,6 +65,12 @@ export default function Welcome() {
           @{profile?.username}
         </T>
       </Pressable>
+      {photo && (
+        <View style={{ alignItems: 'center' }}>
+          <Button title="Skift billede" variant="outlineLight" icon="image" onPress={choose} style={{ minHeight: 44, paddingHorizontal: 20 }} />
+        </View>
+      )}
+      {cropper}
       {!!error && (
         <T v="bodyS" c={authText.error}>
           {error}

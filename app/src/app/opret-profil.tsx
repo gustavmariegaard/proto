@@ -2,10 +2,11 @@ import { useState } from 'react';
 import { Pressable, StyleSheet, View } from 'react-native';
 import { AuthLink, AuthShell, authText } from '@/components/AuthShell';
 import { Avatar } from '@/components/Avatar';
+import { useAvatarPicker } from '@/components/AvatarCropper';
 import { Button } from '@/components/Button';
 import { T } from '@/components/T';
 import { TextField } from '@/components/TextField';
-import { pickImage, uploadImage } from '@/lib/media';
+import { uploadImage } from '@/lib/media';
 import { useSession } from '@/lib/session';
 import { supabase } from '@/lib/supabase';
 import { cleanUsername, USERNAME } from '@/lib/validate';
@@ -25,6 +26,7 @@ export default function CreateProfile() {
   const [error, setError] = useState('');
   const clean = cleanUsername(username);
   const ok = name.trim().length > 0 && USERNAME.test(clean);
+  const { choose, cropper } = useAvatarPicker(setPhoto);
 
   const save = async () => {
     if (!session) return;
@@ -57,18 +59,16 @@ export default function CreateProfile() {
         accessibilityRole="button"
         accessibilityLabel="Vælg profilbillede"
         style={s.photo}
-        onPress={async () => {
-          const a = await pickImage(true);
-          if (a) setPhoto(a.uri);
-        }}
+        onPress={choose}
       >
         <View style={s.ring}>
           <Avatar name={name || '?'} uri={photo ?? undefined} size="XL" />
         </View>
-        <T v="label" c={color.white}>
-          Vælg profilbillede
-        </T>
       </Pressable>
+      <View style={{ alignItems: 'center' }}>
+        <Button title={photo ? 'Skift billede' : 'Vælg profilbillede'} variant="outlineLight" icon="image" onPress={choose} style={{ minHeight: 44, paddingHorizontal: 20 }} />
+      </View>
+      {cropper}
       <TextField dark label="Navn" autoComplete="name" value={name} onChangeText={setName} />
       <TextField
         dark
