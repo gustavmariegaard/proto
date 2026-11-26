@@ -5,6 +5,7 @@ import { useEffect } from 'react';
 import { StatusBar } from 'expo-status-bar';
 import { ActivityIndicator, Platform, View } from 'react-native';
 import { SafeAreaProvider } from 'react-native-safe-area-context';
+import { MobileOnly } from '@/components/MobileOnly';
 import { SessionProvider, useSession } from '@/lib/session';
 import { color } from '@/theme/tokens';
 
@@ -13,10 +14,16 @@ export default function RootLayout() {
   const [fontsLoaded] = useFonts({ BricolageGrotesque_700Bold, Figtree_400Regular, Figtree_500Medium, Figtree_600SemiBold, Figtree_700Bold });
   return (
     <SafeAreaProvider>
-      <SessionProvider>
-        <StatusBar style="dark" />
-        {fontsLoaded ? <Gate /> : <Loading />}
-      </SessionProvider>
+      {fontsLoaded ? (
+        <MobileOnly>
+          <SessionProvider>
+            <StatusBar style="dark" />
+            <Gate />
+          </SessionProvider>
+        </MobileOnly>
+      ) : (
+        <Loading />
+      )}
     </SafeAreaProvider>
   );
 }
