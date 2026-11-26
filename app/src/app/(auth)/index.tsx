@@ -20,31 +20,31 @@ export default function Landing() {
   useDarkChrome();
   return (
     <View style={s.root}>
-      <StatusBar style="light" />
+      <StatusBar style="dark" />
       <CircleBackdrop />
       <SafeAreaView style={s.safe}>
-        <T v="titleXl" c={color.white} style={s.logo} accessibilityRole="header">
+        <T v="titleXl" c={color.textPrimary} style={s.logo} accessibilityRole="header">
           ciircle
         </T>
 
         <View style={s.hero}>
-          <T v="titleXl" c={color.white} style={s.headline}>
+          <T v="titleXl" c={color.textPrimary} style={s.headline}>
             Det sociale netværk for dem, du kender.
           </T>
-          <T v="body" c="rgba(255,255,255,0.72)">
+          <T v="body" c={color.textSecondary}>
             Et netværk for rigtige mennesker i Europa.
           </T>
           <View style={s.points}>
             {points.map((p) => (
               <View key={p.text} style={s.point}>
                 <View style={s.tile}>
-                  <Icon name={p.icon} size={18} color={color.accent} />
+                  <Icon name={p.icon} size={18} color={color.green700} />
                 </View>
                 <View style={{ flex: 1 }}>
-                  <T v="headingS" c={color.white} style={{ fontSize: 16 }}>
+                  <T v="headingS" c={color.textPrimary} style={{ fontSize: 16 }}>
                     {p.title}
                   </T>
-                  <T v="caption" c="rgba(255,255,255,0.6)">
+                  <T v="caption" c={color.textSecondary}>
                     {p.text}
                   </T>
                 </View>
@@ -59,7 +59,7 @@ export default function Landing() {
             onPress={() => router.push('/opret-konto')}
             style={({ pressed }) => [s.primary, pressed && { opacity: 0.85, transform: [{ scale: 0.99 }] }]}
           >
-            <T v="label" c={INK} style={s.btnText}>
+            <T v="label" c={color.textPrimary} style={s.btnText}>
               Opret konto
             </T>
           </Pressable>
@@ -68,13 +68,13 @@ export default function Landing() {
             onPress={() => router.push('/log-ind')}
             style={({ pressed }) => [s.secondary, pressed && { opacity: 0.7 }]}
           >
-            <T v="label" c={color.white} style={s.btnText}>
+            <T v="label" c={color.textPrimary} style={s.btnText}>
               Log ind
             </T>
           </Pressable>
-          <T v="caption" c="rgba(255,255,255,0.55)" style={{ textAlign: 'center' }}>
+          <T v="caption" c={color.textSecondary} style={{ textAlign: 'center' }}>
             Når du fortsætter, accepterer du{' '}
-            <T v="captionStrong" c={color.white} onPress={() => router.push('/privatliv')} style={{ textDecorationLine: 'underline' }}>
+            <T v="captionStrong" c={color.textPrimary} onPress={() => router.push('/privatliv')} style={{ textDecorationLine: 'underline' }}>
               privatlivserklæringen
             </T>
             .
@@ -99,9 +99,9 @@ const s = StyleSheet.create({
     borderRadius: 12,
     alignItems: 'center',
     justifyContent: 'center',
-    backgroundColor: 'rgba(33,241,168,0.12)',
+    backgroundColor: color.noteBg,
     borderWidth: 1,
-    borderColor: 'rgba(33,241,168,0.35)',
+    borderColor: color.accentBg,
   },
   actions: { gap: 12 },
   primary: { height: 54, borderRadius: radius.pill, backgroundColor: color.accent, alignItems: 'center', justifyContent: 'center' },
@@ -109,7 +109,8 @@ const s = StyleSheet.create({
     height: 54,
     borderRadius: radius.pill,
     borderWidth: 1.5,
-    borderColor: 'rgba(255,255,255,0.5)',
+    borderColor: color.borderStrong,
+    backgroundColor: color.bgSurface,
     alignItems: 'center',
     justifyContent: 'center',
   },

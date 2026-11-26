@@ -35,7 +35,7 @@ export function PasswordField({ label = 'Adgangskode', hint, error, isNew, dark,
   }, [typeOnly]);
   return (
     <View style={{ gap: 6, alignSelf: 'stretch' }}>
-      <T v="label" c={dark ? color.white : color.textPrimary} style={{ paddingLeft: 4 }}>
+      <T v="label" c={color.textPrimary} style={{ paddingLeft: 4 }}>
         {label}
       </T>
       <View style={[s.wrap, dark && { backgroundColor: darkField.backgroundColor, borderColor: darkField.borderColor }, focus && (dark ? darkFocus : s.focus)]}>
@@ -49,20 +49,20 @@ export function PasswordField({ label = 'Adgangskode', hint, error, isNew, dark,
           textContentType={typeOnly ? 'none' : isNew ? 'newPassword' : 'password'}
           // Telefon: ingen "Indsæt"-menu i bekræftelsesfeltet
           contextMenuHidden={typeOnly}
-          placeholderTextColor={dark ? 'rgba(255,255,255,0.4)' : color.textSecondary}
+          placeholderTextColor={color.textSecondary}
           onFocus={(e) => (setFocus(true), onFocus?.(e))}
           onBlur={(e) => (setFocus(false), onBlur?.(e))}
-          style={[s.input, dark && { color: color.white }, noOutline]}
+          style={[s.input, noOutline]}
           {...rest}
         />
         <Pressable accessibilityRole="button" accessibilityLabel={show ? 'Skjul adgangskode' : 'Vis adgangskode'} onPress={() => setShow((v) => !v)} style={s.toggle}>
-          <T v="captionStrong" c={dark ? 'rgba(255,255,255,0.6)' : color.textSecondary}>
+          <T v="captionStrong" c={color.textSecondary}>
             {show ? 'Skjul' : 'Vis'}
           </T>
         </Pressable>
       </View>
       {(error || hint) && (
-        <T v="caption" c={error ? (dark ? '#ff8a7a' : color.danger) : dark ? 'rgba(255,255,255,0.55)' : color.textSecondary} style={{ paddingLeft: 4 }}>
+        <T v="caption" c={error ? color.danger : color.textSecondary} style={{ paddingLeft: 4 }}>
           {error || hint}
         </T>
       )}

@@ -5,7 +5,7 @@ import { CircleBackdrop } from './CircleBackdrop';
 import { T } from './T';
 import { color } from '@/theme/tokens';
 
-const INK = '#0a0a0a';
+const INK = '#fafaf9';
 
 /** Er vi på en telefon? (berøringsskærm og smal skærm). Kun relevant på web. */
 function isPhone() {
@@ -50,23 +50,23 @@ function DesktopNotice() {
     <View style={s.root}>
       <CircleBackdrop />
       <View style={s.card}>
-        <T v="titleXl" c={color.white} style={s.logo}>
+        <T v="titleXl" c={color.textPrimary} style={s.logo}>
           ciircle
         </T>
-        <T v="titleXl" c={color.white} style={s.title} accessibilityRole="header">
+        <T v="titleXl" c={color.textPrimary} style={s.title} accessibilityRole="header">
           Lavet til din mobil.
         </T>
-        <T v="body" c="rgba(255,255,255,0.7)" style={{ textAlign: 'center' }}>
+        <T v="body" c={color.textSecondary} style={{ textAlign: 'center' }}>
           Scan koden med kameraet på din telefon.
         </T>
         <View style={s.qr} accessibilityLabel={`QR-kode til ${url}`}>
           <Svg width={n * cell} height={n * cell}>
             {qr && Array.from({ length: n * n }, (_, i) =>
-              qr.get(i % n, Math.floor(i / n)) ? <Rect key={i} x={(i % n) * cell} y={Math.floor(i / n) * cell} width={cell} height={cell} fill={INK} /> : null,
+              qr.get(i % n, Math.floor(i / n)) ? <Rect key={i} x={(i % n) * cell} y={Math.floor(i / n) * cell} width={cell} height={cell} fill="#171717" /> : null,
             )}
           </Svg>
         </View>
-        <T v="caption" c="rgba(255,255,255,0.55)" selectable>
+        <T v="caption" c={color.textSecondary} selectable>
           {url.replace(/^https?:\/\//, '')}
         </T>
       </View>
@@ -79,5 +79,5 @@ const s = StyleSheet.create({
   card: { alignItems: 'center', gap: 16, maxWidth: 420 },
   logo: { fontSize: 34, lineHeight: 40, marginBottom: 12 },
   title: { fontSize: 36, lineHeight: 42, letterSpacing: -0.8, textAlign: 'center' },
-  qr: { padding: 18, borderRadius: 24, backgroundColor: color.white, marginTop: 8 },
+  qr: { padding: 18, borderRadius: 24, backgroundColor: color.white, marginTop: 8, borderWidth: 1, borderColor: color.borderDefault },
 });

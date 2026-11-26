@@ -15,7 +15,7 @@ type Props = Omit<PressableProps, 'children' | 'style'> & {
 /** Knap: primary = sort, secondary = hvid med kant, ghost = kun tekst */
 export function Button({ title, variant = 'primary', icon, loading, block, disabled, style, ...rest }: Props) {
   const fg =
-    variant === 'primary' || variant === 'outlineLight' || variant === 'ghostLight'
+    variant === 'primary'
       ? color.textOnAction
       : variant === 'danger'
         ? color.danger
@@ -64,7 +64,7 @@ const s = StyleSheet.create({
   ghost: { backgroundColor: 'transparent', paddingHorizontal: 12 },
   danger: { backgroundColor: 'transparent' },
   accent: { backgroundColor: color.accent, minHeight: 54 },
-  outlineLight: { backgroundColor: 'transparent', borderWidth: 1.5, borderColor: 'rgba(255,255,255,0.5)', minHeight: 54 },
+  outlineLight: { backgroundColor: color.bgSurface, borderWidth: 1.5, borderColor: color.borderStrong, minHeight: 54 },
   ghostLight: { backgroundColor: 'transparent', paddingHorizontal: 12 },
   block: { alignSelf: 'stretch' },
   disabled: { opacity: 0.4 },

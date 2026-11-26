@@ -11,13 +11,13 @@ export function TextField({ label, showLabel = true, hint, error, multiline, dar
   return (
     <View style={s.group}>
       {showLabel && (
-        <T v="label" c={dark ? color.white : color.textPrimary} style={s.label}>
+        <T v="label" c={color.textPrimary} style={s.label}>
           {label}
         </T>
       )}
       <TextInput
         accessibilityLabel={label}
-        placeholderTextColor={dark ? 'rgba(255,255,255,0.4)' : color.textSecondary}
+        placeholderTextColor={color.textSecondary}
         multiline={multiline}
         onFocus={(e) => (setFocus(true), onFocus?.(e))}
         onBlur={(e) => (setFocus(false), onBlur?.(e))}
@@ -25,11 +25,11 @@ export function TextField({ label, showLabel = true, hint, error, multiline, dar
         {...rest}
       />
       {error ? (
-        <T v="caption" c={dark ? '#ff8a7a' : color.danger} style={s.label}>
+        <T v="caption" c={color.danger} style={s.label}>
           {error}
         </T>
       ) : hint ? (
-        <T v="caption" c={dark ? 'rgba(255,255,255,0.55)' : color.textSecondary} style={s.label}>
+        <T v="caption" c={color.textSecondary} style={s.label}>
           {hint}
         </T>
       ) : null}
@@ -40,8 +40,8 @@ export function TextField({ label, showLabel = true, hint, error, multiline, dar
 /** Browserens egen fokusramme passer ikke til de runde felter; vi viser en mørk kant i stedet */
 export const noOutline = Platform.OS === 'web' ? ({ outlineStyle: 'none' } as object) : null;
 
-/** Mørke felter til login-skærmene */
-export const darkField = { backgroundColor: 'rgba(255,255,255,0.06)', borderColor: 'rgba(255,255,255,0.18)', color: color.white };
+/** Felter på login-skærmene: hvide med grøn kant ved fokus */
+export const darkField = { backgroundColor: color.bgSurface, borderColor: color.borderDefault, color: color.textPrimary };
 export const darkFocus = { borderColor: color.accent, borderWidth: 1.5 };
 
 const s = StyleSheet.create({

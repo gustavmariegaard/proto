@@ -39,7 +39,7 @@ export function CircleBackdrop() {
   }, [ripple, spin]);
 
   // Faste ringe: tættere ved midten, tyndere og svagere udad
-  const rings = [0.16, 0.27, 0.4, 0.55, 0.72, 0.9].map((f, i) => ({ r: max * f, o: 0.34 - i * 0.045 }));
+  const rings = [0.16, 0.27, 0.4, 0.55, 0.72, 0.9].map((f, i) => ({ r: max * f, o: 0.3 - i * 0.04 }));
   // Prikker, der kredser: radius, størrelse, startvinkel og retning
   const dots = [
     // Vinkel 0 = vandret til venstre for midten (inde på skærmen); negativ = nedad
@@ -55,13 +55,13 @@ export function CircleBackdrop() {
       <Svg width={width} height={height} style={StyleSheet.absoluteFill}>
         <Defs>
           <RadialGradient id="core" cx={cx} cy={cy} r={max * 0.5} gradientUnits="userSpaceOnUse">
-            <Stop offset="0" stopColor={color.accent} stopOpacity="0.35" />
+            <Stop offset="0" stopColor={color.accent} stopOpacity="0.45" />
             <Stop offset="1" stopColor={color.accent} stopOpacity="0" />
           </RadialGradient>
         </Defs>
         <Circle cx={cx} cy={cy} r={max * 0.5} fill="url(#core)" />
         {rings.map((g, i) => (
-          <Circle key={i} cx={cx} cy={cy} r={g.r} stroke={color.accent} strokeOpacity={g.o} strokeWidth={1.2} fill="none" />
+          <Circle key={i} cx={cx} cy={cy} r={g.r} stroke={color.green700} strokeOpacity={g.o} strokeWidth={1.2} fill="none" />
         ))}
         <Circle cx={cx} cy={cy} r={7} fill={color.accent} />
       </Svg>
@@ -113,6 +113,6 @@ export function CircleBackdrop() {
 }
 
 const s = StyleSheet.create({
-  ripple: { position: 'absolute', borderWidth: 1.5, borderColor: color.accent },
+  ripple: { position: 'absolute', borderWidth: 1.5, borderColor: color.green700 },
   dot: { position: 'absolute', backgroundColor: color.accent, shadowColor: color.accent, shadowOpacity: 0.9, shadowRadius: 8 },
 });

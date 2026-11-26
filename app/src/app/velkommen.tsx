@@ -58,7 +58,7 @@ export default function Welcome() {
         <View style={s.ring}>
           <Avatar name={profile?.name ?? '?'} uri={photo ?? undefined} size="XL" />
         </View>
-        <T v="headingS" c={color.white}>
+        <T v="headingS" c={color.textPrimary}>
           {profile?.name}
         </T>
         <T v="caption" c={authText.faint}>

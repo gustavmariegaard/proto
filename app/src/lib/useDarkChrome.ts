@@ -3,9 +3,10 @@ import { useCallback } from 'react';
 import { Platform } from 'react-native';
 import { color } from '@/theme/tokens';
 
-export const INK = '#0a0a0a';
+/** Baggrund på login-skærmene: samme lyse grå som resten af appen */
+export const INK = '#fafaf9';
 
-/** Mobilbrowserens top og bund bliver mørke, mens skærmen er åben (kun web) */
+/** Mobilbrowserens top og bund følger login-skærmenes baggrund (kun web) */
 export function useDarkChrome() {
   useFocusEffect(
     useCallback(() => {

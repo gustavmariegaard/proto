@@ -26,8 +26,8 @@ export function AuthShell({ title, kicker, progress, onBack, children, footer }:
   const back = onBack === false ? null : onBack ?? (() => (router.canGoBack() ? router.back() : router.replace('/')));
   return (
     <View style={s.root}>
-      <StatusBar style="light" />
-      <View style={[StyleSheet.absoluteFill, { opacity: 0.55 }]}>
+      <StatusBar style="dark" />
+      <View style={[StyleSheet.absoluteFill, { opacity: 0.7 }]}>
         <CircleBackdrop />
       </View>
       <SafeAreaView style={{ flex: 1 }}>
@@ -35,7 +35,7 @@ export function AuthShell({ title, kicker, progress, onBack, children, footer }:
           <View style={s.top}>
             {back && (
               <Pressable accessibilityRole="button" accessibilityLabel="Tilbage" onPress={back} style={({ pressed }) => [s.back, pressed && { opacity: 0.6 }]}>
-                <Icon name="chevron-left" color={color.white} />
+                <Icon name="chevron-left" color={color.textPrimary} />
               </Pressable>
             )}
             {progress && (
@@ -48,12 +48,12 @@ export function AuthShell({ title, kicker, progress, onBack, children, footer }:
           </View>
           <ScrollView contentContainerStyle={s.body} keyboardShouldPersistTaps="handled">
             {kicker && (
-              <T v="captionStrong" c={color.accent}>
+              <T v="captionStrong" c={color.green700}>
                 {kicker}
               </T>
             )}
             {title && (
-              <T v="titleXl" c={color.white} style={s.title} accessibilityRole="header">
+              <T v="titleXl" c={color.textPrimary} style={s.title} accessibilityRole="header">
                 {title}
               </T>
             )}
@@ -70,14 +70,14 @@ export function AuthShell({ title, kicker, progress, onBack, children, footer }:
 export function AuthLink({ label, onPress, muted }: { label: string; onPress: () => void; muted?: boolean }) {
   return (
     <Pressable accessibilityRole="link" onPress={onPress} style={{ minHeight: TAP, justifyContent: 'center', alignSelf: 'center' }}>
-      <T v="label" c={muted ? 'rgba(255,255,255,0.65)' : color.white} style={muted ? undefined : { textDecorationLine: 'underline' }}>
+      <T v="label" c={muted ? color.textSecondary : color.textPrimary} style={muted ? undefined : { textDecorationLine: 'underline' }}>
         {label}
       </T>
     </Pressable>
   );
 }
 
-export const authText = { muted: 'rgba(255,255,255,0.7)', faint: 'rgba(255,255,255,0.55)', error: '#ff8a7a' };
+export const authText = { muted: color.textSecondary, faint: color.textSecondary, error: color.danger };
 
 const s = StyleSheet.create({
   // overflow: ringene må ikke gøre siden bredere end skærmen (ellers ruller Safari sidelæns ved fokus)
@@ -88,13 +88,13 @@ const s = StyleSheet.create({
     height: TAP,
     borderRadius: TAP / 2,
     borderWidth: 1,
-    borderColor: 'rgba(255,255,255,0.25)',
-    backgroundColor: 'rgba(255,255,255,0.06)',
+    borderColor: color.borderDefault,
+    backgroundColor: color.bgSurface,
     alignItems: 'center',
     justifyContent: 'center',
   },
   progress: { flex: 1, flexDirection: 'row', gap: 6, paddingRight: 8 },
-  seg: { flex: 1, height: 4, borderRadius: 2, backgroundColor: 'rgba(255,255,255,0.15)' },
+  seg: { flex: 1, height: 4, borderRadius: 2, backgroundColor: color.gray200 },
   segOn: { backgroundColor: color.accent },
   body: { padding: 24, paddingTop: 20, gap: 18 },
   title: { fontSize: 34, lineHeight: 40, letterSpacing: -0.8, marginBottom: 6 },

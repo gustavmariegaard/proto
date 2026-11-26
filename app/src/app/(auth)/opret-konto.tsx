@@ -143,8 +143,8 @@ export default function SignUp() {
             />
             {unameValid && taken === false && (
               <View style={s.ok}>
-                <Icon name="check" size={16} color={color.accent} />
-                <T v="captionStrong" c={color.accent}>
+                <Icon name="check" size={16} color={color.green700} />
+                <T v="captionStrong" c={color.green700}>
                   @{uname} er ledigt
                 </T>
               </View>
@@ -181,9 +181,9 @@ export default function SignUp() {
           />
           <Pressable accessibilityRole="checkbox" accessibilityState={{ checked: accepted }} onPress={() => setAccepted((v) => !v)} style={s.check}>
             <View style={[s.box, accepted && s.boxOn]}>{accepted && <Icon name="check" size={16} color="#0a0a0a" />}</View>
-            <T v="bodyS" c={color.white} style={{ flex: 1 }}>
+            <T v="bodyS" c={color.textPrimary} style={{ flex: 1 }}>
               Jeg har læst{' '}
-              <T v="label" c={color.white} onPress={() => router.push('/privatliv')} style={{ textDecorationLine: 'underline' }}>
+              <T v="label" c={color.textPrimary} onPress={() => router.push('/privatliv')} style={{ textDecorationLine: 'underline' }}>
                 privatlivserklæringen
               </T>
               .
@@ -223,14 +223,14 @@ function DatePart({
   const [focus, setFocus] = useState(false);
   return (
     <View style={{ flex: wide ? 1.4 : 1, gap: 6 }}>
-      <T v="label" c={color.white} style={{ paddingLeft: 4 }}>
+      <T v="label" c={color.textPrimary} style={{ paddingLeft: 4 }}>
         {label}
       </T>
       <TextInput
         ref={inputRef}
         accessibilityLabel={label}
         placeholder={placeholder}
-        placeholderTextColor="rgba(255,255,255,0.3)"
+        placeholderTextColor={color.actionOff}
         keyboardType="number-pad"
         maxLength={max}
         value={value}
@@ -279,7 +279,7 @@ function CheckMail({ email }: { email: string }) {
       </View>
       <T v="body" c={authText.muted}>
         Vi har sendt et link til{' '}
-        <T v="headingS" c={color.white}>
+        <T v="headingS" c={color.textPrimary}>
           {email}
         </T>
         . Tryk på linket for at bekræfte din konto.
@@ -305,10 +305,10 @@ const s = StyleSheet.create({
     textAlign: 'center',
     fontFamily: font.bodySemi,
     fontSize: 22,
-    color: color.white,
+    color: color.textPrimary,
   },
   check: { flexDirection: 'row', alignItems: 'center', gap: 12, minHeight: TAP },
-  box: { width: 24, height: 24, borderRadius: 6, borderWidth: 1.5, borderColor: 'rgba(255,255,255,0.4)', alignItems: 'center', justifyContent: 'center' },
+  box: { width: 24, height: 24, borderRadius: 6, borderWidth: 1.5, borderColor: color.borderStrong, alignItems: 'center', justifyContent: 'center' },
   boxOn: { backgroundColor: color.accent, borderColor: color.accent },
   mailIcon: { width: 64, height: 64, borderRadius: 32, backgroundColor: color.accent, alignItems: 'center', justifyContent: 'center' },
 });

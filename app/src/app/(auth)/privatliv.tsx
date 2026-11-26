@@ -10,7 +10,7 @@ export default function PublicPrivacy() {
     <AuthShell title="Privatliv i testen">
       {sections.map((s) => (
         <View key={s.title} style={{ gap: 6 }}>
-          <T v="headingM" c={color.white}>
+          <T v="headingM" c={color.textPrimary}>
             {s.title}
           </T>
           {s.items.map((i) => (
