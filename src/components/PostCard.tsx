@@ -7,6 +7,7 @@ import { setHidden, useHidden } from '../state/posts';
 import { LikeButton } from './LikeButton';
 import { StanceBar } from './StanceBar';
 import { shownNote, useNotes } from '../state/notes';
+import { NoteSources } from './NoteSources';
 import { groups } from '../data/more';
 import { initialEvents } from '../data/events';
 import { publicKind, publicLabel, type PublicKind } from '../data/publicProfiles';
@@ -181,7 +182,7 @@ export function PostCard({ post, onComment, onShare, onReport, onMute }: PostCar
             Læsere har tilføjet kontekst
           </p>
           <p className="t-body-s">{note.text}</p>
-          {note.source && <p className="t-caption post-note__source">{note.source}</p>}
+          <NoteSources sources={note.sources} />
           <div className="post-note__foot">
             <span className="t-caption post-note__muted">Er noten hjælpsom?</span>
             <Link to={`/opslag/${post.id}/noter`} className="t-caption-strong post-note__rate">

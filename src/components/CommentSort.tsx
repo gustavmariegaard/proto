@@ -6,10 +6,10 @@ import './CommentSort.css';
 export type CommentOrder = 'relevante' | 'nyeste' | 'omdiskuterede' | 'aeldste';
 
 const options: { id: CommentOrder; label: string }[] = [
-  { id: 'relevante', label: 'Mest relevante' },
-  { id: 'nyeste', label: 'Nyeste først' },
-  { id: 'omdiskuterede', label: 'Mest omdiskuterede' },
-  { id: 'aeldste', label: 'Ældste først' },
+  { id: 'relevante', label: 'Relevante' },
+  { id: 'omdiskuterede', label: 'Omdiskuterede' },
+  { id: 'nyeste', label: 'Nyeste' },
+  { id: 'aeldste', label: 'Ældste' },
 ];
 
 /** Én lille knap øverst i kommentarerne, der åbner en kort liste */

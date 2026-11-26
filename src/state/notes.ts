@@ -15,7 +15,8 @@ export type Note = {
   id: string;
   postId: string;
   text: string;
-  source?: string;
+  /** Så mange kilder, man vil */
+  sources: string[];
   status: NoteStatus;
   /** Antal vurderinger fra andre indtil videre */
   ratings: number;
@@ -39,7 +40,7 @@ const sample: Note[] = [
     id: 'n-lars',
     postId: 'd-lars',
     text: 'Kommunens tællinger på Vestergade viser omkring 3.800 cyklister i døgnet i januar mod 5.200 i juni.',
-    source: 'aarhus.dk/cykeltaelling',
+    sources: ['aarhus.dk/cykeltaelling', 'vejdirektoratet.dk/trafiktal', 'cyklistforbundet.dk/vintercykling', 'dst.dk/transportvaner'],
     status: 'vist',
     ratings: 226,
   },
@@ -47,7 +48,7 @@ const sample: Note[] = [
     id: 'n-lars-2',
     postId: 'd-lars',
     text: 'Parkeringspladserne på Vestergade er i forvejen kun halvt fyldt om dagen.',
-    source: 'aarhus.dk/parkering',
+    sources: ['aarhus.dk/parkering'],
     status: 'forslag',
     ratings: 20,
   },
@@ -55,6 +56,7 @@ const sample: Note[] = [
     id: 'n-lars-3',
     postId: 'd-lars',
     text: 'Cykelstier er spild af penge, alle ved det.',
+    sources: [],
     status: 'ikke',
     ratings: 64,
   },
@@ -62,7 +64,7 @@ const sample: Note[] = [
     id: 'n-ahmed',
     postId: 'd-ahmed',
     text: 'Skolevalget handler om elevrådet, ikke om klassestørrelser eller timetal.',
-    source: 'skolevalg.dk',
+    sources: ['skolevalg.dk'],
     status: 'forslag',
     ratings: 24,
   },
@@ -71,7 +73,7 @@ const sample: Note[] = [
 export type MyRating = { r: Rating; reasons: string[] };
 type State = { notes: Note[]; ratings: Record<string, MyRating> };
 
-let state: State = keep('notes2', { notes: sample, ratings: {} });
+let state: State = keep('notes3', { notes: sample, ratings: {} });
 const listeners = new Set<() => void>();
 const get = () => state;
 const subscribe = (l: () => void) => {
@@ -83,22 +85,34 @@ const subscribe = (l: () => void) => {
 
 function set(next: State) {
   state = next;
-  save('notes2', next);
+  save('notes3', next);
   listeners.forEach((l) => l());
 }
 
 export const useNotes = () => useSyncExternalStore(subscribe, get, get);
 
 export const notesFor = (s: State, postId: string) => s.notes.filter((n) => n.postId === postId);
-export const shownNote = (s: State, postId: string) => s.notes.find((n) => n.postId === postId && n.status === 'vist');
+/** Noten på opslaget: den nyeste viste. Slettes den, kommer den forrige tilbage. */
+export const shownNote = (s: State, postId: string) =>
+  [...s.notes].reverse().find((n) => n.postId === postId && n.status === 'vist');
 
-export function addNote(postId: string, text: string, source?: string) {
-  const note: Note = { id: `n-${Date.now()}`, postId, text, source, status: 'forslag', ratings: 0, mine: true };
+/** Status, som den ser ud nu: kun én note ad gangen vises på opslaget */
+export function statusOf(s: State, n: Note): NoteStatus {
+  if (n.status !== 'vist') return n.status;
+  return shownNote(s, n.postId)?.id === n.id ? 'vist' : 'forslag';
+}
+
+/*
+ * I prototypen vises en ny note med det samme på opslaget, så man kan se,
+ * hvordan det kommer til at se ud. I den rigtige app skal den først vurderes.
+ */
+export function addNote(postId: string, text: string, sources: string[]) {
+  const note: Note = { id: `n-${Date.now()}`, postId, text, sources, status: 'vist', ratings: 0, mine: true };
   set({ ...state, notes: [...state.notes, note] });
 }
 
-export function editNote(id: string, text: string, source?: string) {
-  set({ ...state, notes: state.notes.map((n) => (n.id === id ? { ...n, text, source } : n)) });
+export function editNote(id: string, text: string, sources: string[]) {
+  set({ ...state, notes: state.notes.map((n) => (n.id === id ? { ...n, text, sources } : n)) });
 }
 
 export function deleteNote(id: string) {

@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import { Navigate, useParams } from 'react-router-dom';
+import { Navigate, useNavigate, useParams } from 'react-router-dom';
 import { Button } from '../../components/Button';
 import { Chip } from '../../components/Chip';
 import { Icon } from '../../components/Icon';
@@ -13,6 +13,7 @@ import {
   rateNote,
   reasons,
   statusLabel,
+  statusOf,
   toggleReason,
   useNotes,
   type Note,
@@ -20,6 +21,7 @@ import {
   type Rating,
 } from '../../state/notes';
 import { usePost } from '../../state/posts';
+import { NoteSources } from '../../components/NoteSources';
 import '../profile/Screens.css';
 import '../profile/EditProfile.css';
 import './Notes.css';
@@ -39,23 +41,32 @@ export function Notes() {
   // null = ingen formular, 'ny' = ny note, ellers id på din note, der rettes
   const [form, setForm] = useState<string | null>(null);
   const [text, setText] = useState('');
-  const [source, setSource] = useState('');
+  // Så mange kilder, man vil. Altid mindst ét felt.
+  const [sources, setSources] = useState<string[]>(['']);
+  const navigate = useNavigate();
   const [deleting, setDeleting] = useState<string | null>(null);
   if (!post || !id) return <Navigate to="/opdag" replace />;
 
   const notes = notesFor(state, id);
-  const canSend = text.trim().length >= 10 && source.trim().length >= 4;
+  const cleanSources = sources.map((x) => x.trim()).filter((x) => x.length >= 4);
+  const canSend = text.trim().length >= 10 && cleanSources.length > 0;
 
   const open = (n?: Note) => {
     setForm(n ? n.id : 'ny');
     setText(n?.text ?? '');
-    setSource(n?.source ?? '');
+    setSources(n?.sources.length ? n.sources : ['']);
   };
 
   const send = () => {
     if (!canSend) return;
-    if (form === 'ny') addNote(id, text.trim(), source.trim());
-    else if (form) editNote(form, text.trim(), source.trim());
+    if (form === 'ny') {
+      addNote(id, text.trim(), cleanSources);
+      // Prototype: noten vises med det samme – gå tilbage og se den på opslaget
+      if (window.history.length > 1) navigate(-1);
+      else navigate(`/opslag/${id}`, { replace: true });
+      return;
+    }
+    if (form) editNote(form, text.trim(), cleanSources);
     setForm(null);
   };
 
@@ -80,7 +91,33 @@ export function Notes() {
       <span className="t-caption edit-profile__count">
         {text.length}/{MAX}
       </span>
-      <TextField label="Kilde (link)" inputMode="url" autoCapitalize="none" value={source} onChange={(e) => setSource(e.target.value)} />
+      <div className="note__sources">
+        {sources.map((src, i) => (
+          <div key={i} className="note__source-row">
+            <TextField
+              label={sources.length > 1 ? `Kilde ${i + 1} (link)` : 'Kilde (link)'}
+              inputMode="url"
+              autoCapitalize="none"
+              value={src}
+              onChange={(e) => setSources((l) => l.map((x, j) => (j === i ? e.target.value : x)))}
+            />
+            {sources.length > 1 && (
+              <button
+                type="button"
+                className="note__remove"
+                aria-label={`Fjern kilde ${i + 1}`}
+                onClick={() => setSources((l) => l.filter((_, j) => j !== i))}
+              >
+                <Icon name="close" size={18} />
+              </button>
+            )}
+          </div>
+        ))}
+        <button type="button" className="t-label note__add" onClick={() => setSources((l) => [...l, ''])}>
+          Tilføj kilde
+          <Icon name="plus" size={18} />
+        </button>
+      </div>
       <div className="note__row">
         <Button variant="secondary" onClick={() => setForm(null)}>
           Annuller
@@ -96,13 +133,14 @@ export function Notes() {
     if (form === n.id) return <li key={n.id}>{noteForm}</li>;
     const mine = state.ratings[n.id];
     const count = n.ratings + (mine ? 1 : 0);
+    const status = statusOf(state, n);
     return (
-      <li key={n.id} className={['note', n.status === 'ikke' && 'note--faded'].filter(Boolean).join(' ')}>
-        <p className={`t-caption-strong note__status note__status--${n.status}`}>
-          {n.mine ? `Din note · ${statusLabel[n.status]}` : statusLabel[n.status]}
+      <li key={n.id} className={['note', status === 'ikke' && 'note--faded'].filter(Boolean).join(' ')}>
+        <p className={`t-caption-strong note__status note__status--${status}`}>
+          {n.mine ? `Din note · ${statusLabel[status]}` : statusLabel[status]}
         </p>
         <p className="t-body-s">{n.text}</p>
-        {n.source && <p className="t-caption note__muted note__source">Kilde: {n.source}</p>}
+        <NoteSources sources={n.sources} />
 
         {n.mine ? (
           deleting === n.id ? (
@@ -180,7 +218,7 @@ export function Notes() {
         )}
 
         {order.map((st) => {
-          const list = notes.filter((n) => n.status === st);
+          const list = notes.filter((n) => statusOf(state, n) === st);
           return list.length > 0 ? (
             <ul key={st} className="notes__list" aria-label={statusLabel[st]}>
               {list.map(card)}
