@@ -34,16 +34,17 @@
   gap: 4px;
 }
 
+/* Knapperne bliver stående ved siden af hinanden, også efter man har stemt */
 .stance__labels {
   display: flex;
-  justify-content: space-between;
+  gap: 8px;
 }
 
 .stance__side {
   display: inline-flex;
   align-items: center;
   gap: 6px;
-  min-height: 40px;
+  min-height: 44px;
   padding: 0 14px;
   border: 1px solid var(--color-border-strong);
   border-radius: var(--radius-pill);
