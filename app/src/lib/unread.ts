@@ -23,7 +23,8 @@ export function useUnread(): Unread {
     };
     load();
     const ch = supabase
-      .channel(`unread-${uid}`)
+      // Unikt navn pr. brug: hooken bruges flere steder på samme tid (bundmenu og Hjem)
+      .channel(`unread-${uid}-${Math.random().toString(36).slice(2)}`)
       .on('postgres_changes', { event: 'INSERT', schema: 'public', table: 'messages' }, load)
       .on('postgres_changes', { event: '*', schema: 'public', table: 'notifications', filter: `user_id=eq.${uid}` }, load)
       .subscribe();

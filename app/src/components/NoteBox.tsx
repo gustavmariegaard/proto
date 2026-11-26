@@ -1,5 +1,5 @@
-import { router } from 'expo-router';
-import { useEffect, useState } from 'react';
+import { router, useFocusEffect } from 'expo-router';
+import { useCallback, useState } from 'react';
 import { Pressable, StyleSheet, View } from 'react-native';
 import { notesFor } from '@/lib/notes';
 import type { Note } from '@/lib/types';
@@ -11,9 +11,12 @@ import { T } from './T';
 /** "Læsere har tilføjet kontekst" nederst på et debatopslag (som Community Notes på X) */
 export function NoteBox({ postId, refreshKey }: { postId: string; refreshKey?: number }) {
   const [note, setNote] = useState<Note | null>(null);
-  useEffect(() => {
-    notesFor(postId).then((ns) => setNote(ns.find((n) => n.status === 'vist') ?? null));
-  }, [postId, refreshKey]);
+  // Hentes igen, når skærmen får fokus (fx efter man har skrevet en note)
+  useFocusEffect(
+    useCallback(() => {
+      notesFor(postId).then((ns) => setNote(ns.find((n) => n.status === 'vist') ?? null));
+    }, [postId, refreshKey]),
+  );
   if (!note) return null;
   return (
     <View style={s.box} accessibilityLabel="Fællesskabsnote">
