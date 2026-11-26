@@ -9,6 +9,7 @@ import { supabase } from '@/lib/supabase';
 export default function NewPassword() {
   const { doneRecovering } = useSession();
   const [password, setPassword] = useState('');
+  const [password2, setPassword2] = useState('');
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState('');
 
@@ -22,8 +23,16 @@ export default function NewPassword() {
   };
 
   return (
-    <AuthShell title="Vælg en ny adgangskode." onBack={false} footer={<Button title="Gem" variant="accent" block disabled={password.length < 8} loading={busy} onPress={save} />}>
-      <PasswordField dark isNew label="Ny adgangskode" value={password} onChangeText={setPassword} hint="Mindst 8 tegn" error={error} autoFocus />
+    <AuthShell title="Vælg en ny adgangskode." onBack={false} footer={<Button title="Gem" variant="accent" block disabled={password.length < 8 || password2 !== password} loading={busy} onPress={save} />}>
+      <PasswordField dark isNew label="Ny adgangskode" value={password} onChangeText={setPassword} hint="Mindst 8 tegn" autoFocus />
+      <PasswordField
+        dark
+        isNew
+        label="Gentag adgangskode"
+        value={password2}
+        onChangeText={setPassword2}
+        error={error || (password2.length >= password.length && password2 && password2 !== password ? 'Adgangskoderne er ikke ens.' : undefined)}
+      />
     </AuthShell>
   );
 }

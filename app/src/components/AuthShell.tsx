@@ -80,7 +80,8 @@ export function AuthLink({ label, onPress, muted }: { label: string; onPress: ()
 export const authText = { muted: 'rgba(255,255,255,0.7)', faint: 'rgba(255,255,255,0.55)', error: '#ff8a7a' };
 
 const s = StyleSheet.create({
-  root: { flex: 1, backgroundColor: INK },
+  // overflow: ringene må ikke gøre siden bredere end skærmen (ellers ruller Safari sidelæns ved fokus)
+  root: { flex: 1, backgroundColor: INK, overflow: 'hidden' },
   top: { flexDirection: 'row', alignItems: 'center', gap: 12, paddingHorizontal: 16, paddingTop: 8, minHeight: TAP + 8 },
   back: {
     width: TAP,

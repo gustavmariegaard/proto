@@ -72,7 +72,7 @@ function DesktopNotice() {
 }
 
 const s = StyleSheet.create({
-  root: { flex: 1, backgroundColor: INK, alignItems: 'center', justifyContent: 'center', padding: 24 },
+  root: { flex: 1, backgroundColor: INK, overflow: 'hidden', alignItems: 'center', justifyContent: 'center', padding: 24 },
   card: { alignItems: 'center', gap: 16, maxWidth: 420 },
   logo: { fontSize: 34, lineHeight: 40, marginBottom: 12 },
   title: { fontSize: 36, lineHeight: 42, letterSpacing: -0.8, textAlign: 'center' },

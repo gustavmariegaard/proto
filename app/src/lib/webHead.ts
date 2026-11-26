@@ -23,4 +23,9 @@ export function setupWebHead() {
   set('meta[name="apple-mobile-web-app-capable"]', meta, { name: 'apple-mobile-web-app-capable', content: 'yes' });
   set('meta[name="mobile-web-app-capable"]', meta, { name: 'mobile-web-app-capable', content: 'yes' });
   document.title = 'ciircle';
+  // Siden må aldrig kunne rulle sidelæns eller zoome ind på felter
+  const style = document.createElement('style');
+  style.textContent = 'html,body{overflow-x:hidden;overscroll-behavior:none}';
+  document.head.appendChild(style);
+  set('meta[name="viewport"]', meta, { name: 'viewport', content: 'width=device-width, initial-scale=1, maximum-scale=1, viewport-fit=cover' });
 }

@@ -49,6 +49,7 @@ export default function SignUp() {
   const [year, setYear] = useState('');
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
+  const [password2, setPassword2] = useState('');
   const [accepted, setAccepted] = useState(false);
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState('');
@@ -74,7 +75,7 @@ export default function SignUp() {
   }, [uname, unameValid]);
 
   const canNext =
-    step === 1 ? name.trim().length > 0 && unameValid && taken === false : step === 2 ? !!birth.iso : emailOk && password.length >= 8 && accepted;
+    step === 1 ? name.trim().length > 0 && unameValid && taken === false : step === 2 ? !!birth.iso : emailOk && password.length >= 8 && password2 === password && accepted;
 
   const back = () => (step > 1 ? setStep(step - 1) : router.canGoBack() ? router.back() : router.replace('/'));
 
@@ -165,6 +166,14 @@ export default function SignUp() {
         <>
           <TextField dark label="E-mail" autoComplete="email" keyboardType="email-address" autoCapitalize="none" value={email} onChangeText={setEmail} autoFocus />
           <PasswordField dark isNew value={password} onChangeText={setPassword} hint="Mindst 8 tegn" />
+          <PasswordField
+            dark
+            isNew
+            label="Gentag adgangskode"
+            value={password2}
+            onChangeText={setPassword2}
+            error={password2.length >= password.length && password2 && password2 !== password ? 'Adgangskoderne er ikke ens.' : undefined}
+          />
           <Pressable accessibilityRole="checkbox" accessibilityState={{ checked: accepted }} onPress={() => setAccepted((v) => !v)} style={s.check}>
             <View style={[s.box, accepted && s.boxOn]}>{accepted && <Icon name="check" size={16} color="#0a0a0a" />}</View>
             <T v="bodyS" c={color.white} style={{ flex: 1 }}>

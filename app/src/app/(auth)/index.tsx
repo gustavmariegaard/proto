@@ -86,7 +86,7 @@ export default function Landing() {
 }
 
 const s = StyleSheet.create({
-  root: { flex: 1, backgroundColor: INK },
+  root: { flex: 1, backgroundColor: INK, overflow: 'hidden' },
   safe: { flex: 1, paddingHorizontal: 24, paddingBottom: 16 },
   logo: { fontSize: 34, lineHeight: 40, marginTop: 12 },
   hero: { flex: 1, justifyContent: 'center', gap: 14 },
