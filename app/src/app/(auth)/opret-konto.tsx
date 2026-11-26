@@ -41,7 +41,9 @@ function parseBirthdate(d: string, m: string, y: string): { iso?: string; error?
 /** Opret konto i tre trin: hvem du er, fødselsdato, e-mail og adgangskode */
 export default function SignUp() {
   const [step, setStep] = useState(1);
-  const [name, setName] = useState('');
+  const [first, setFirst] = useState('');
+  const [last, setLast] = useState('');
+  const name = `${first.trim()} ${last.trim()}`.trim();
   const [username, setUsername] = useState('');
   const [taken, setTaken] = useState<boolean | null>(null);
   const [day, setDay] = useState('');
@@ -76,7 +78,7 @@ export default function SignUp() {
   }, [uname, unameValid]);
 
   const canNext =
-    step === 1 ? name.trim().length > 0 && unameValid && taken === false : step === 2 ? !!birth.iso : emailOk && password.length >= 8 && password2 === password && accepted;
+    step === 1 ? first.trim().length > 0 && last.trim().length > 0 && unameValid && taken === false : step === 2 ? !!birth.iso : emailOk && password.length >= 8 && password2 === password && accepted;
 
   const back = () => (step > 1 ? setStep(step - 1) : router.canGoBack() ? router.back() : router.replace('/'));
 
@@ -86,7 +88,7 @@ export default function SignUp() {
     const { data, error } = await supabase.auth.signUp({
       email: cleanEmail,
       password,
-      options: { emailRedirectTo: redirectTo(), data: { name: name.trim(), username: uname, birthdate: birth.iso } },
+      options: { emailRedirectTo: redirectTo(), data: { name, first_name: first.trim(), last_name: last.trim(), username: uname, birthdate: birth.iso } },
     });
     setBusy(false);
     if (error) {
@@ -126,7 +128,8 @@ export default function SignUp() {
     >
       {step === 1 && (
         <>
-          <TextField dark label="Navn" autoComplete="name" value={name} onChangeText={setName} autoFocus />
+          <TextField dark label="Fornavn" autoComplete="given-name" textContentType="givenName" value={first} onChangeText={setFirst} autoFocus />
+          <TextField dark label="Efternavn" autoComplete="family-name" textContentType="familyName" value={last} onChangeText={setLast} />
           <View style={{ gap: 6 }}>
             <TextField
               dark

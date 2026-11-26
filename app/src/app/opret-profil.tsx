@@ -9,7 +9,7 @@ import { TextField } from '@/components/TextField';
 import { uploadImage } from '@/lib/media';
 import { useSession } from '@/lib/session';
 import { supabase } from '@/lib/supabase';
-import { cleanUsername, USERNAME } from '@/lib/validate';
+import { cleanUsername, splitName, USERNAME } from '@/lib/validate';
 import { color } from '@/theme/tokens';
 
 /**
@@ -19,13 +19,15 @@ import { color } from '@/theme/tokens';
 export default function CreateProfile() {
   const { session, refreshProfile, signOut } = useSession();
   const meta = session?.user.user_metadata ?? {};
-  const [name, setName] = useState<string>(meta.name ?? '');
+  const [first, setFirst] = useState<string>(meta.first_name ?? splitName(meta.name ?? '').first);
+  const [last, setLast] = useState<string>(meta.last_name ?? splitName(meta.name ?? '').last);
+  const name = `${first.trim()} ${last.trim()}`.trim();
   const [username, setUsername] = useState<string>(meta.username ?? '');
   const [photo, setPhoto] = useState<string | null>(null);
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState('');
   const clean = cleanUsername(username);
-  const ok = name.trim().length > 0 && USERNAME.test(clean);
+  const ok = first.trim().length > 0 && last.trim().length > 0 && USERNAME.test(clean);
   const { choose, cropper } = useAvatarPicker(setPhoto);
 
   const save = async () => {
@@ -69,7 +71,8 @@ export default function CreateProfile() {
         <Button title={photo ? 'Skift billede' : 'Vælg profilbillede'} variant="outlineLight" icon="image" onPress={choose} style={{ minHeight: 44, paddingHorizontal: 20 }} />
       </View>
       {cropper}
-      <TextField dark label="Navn" autoComplete="name" value={name} onChangeText={setName} />
+      <TextField dark label="Fornavn" autoComplete="given-name" value={first} onChangeText={setFirst} />
+      <TextField dark label="Efternavn" autoComplete="family-name" value={last} onChangeText={setLast} />
       <TextField
         dark
         label="Brugernavn"

@@ -10,7 +10,7 @@ import { uploadImage } from '@/lib/media';
 import { useAvatarPicker } from '@/components/AvatarCropper';
 import { useMe, useSession } from '@/lib/session';
 import { supabase } from '@/lib/supabase';
-import { cleanUsername, USERNAME } from '@/lib/validate';
+import { cleanUsername, USERNAME, splitName } from '@/lib/validate';
 import { color } from '@/theme/tokens';
 
 const BIO_MAX = 150;
@@ -19,14 +19,16 @@ const BIO_MAX = 150;
 export default function EditProfile() {
   const me = useMe();
   const { refreshProfile } = useSession();
-  const [name, setName] = useState(me.name);
+  const [first, setFirst] = useState(splitName(me.name).first);
+  const [last, setLast] = useState(splitName(me.name).last);
+  const name = `${first.trim()} ${last.trim()}`.trim();
   const [username, setUsername] = useState(me.username);
   const [bio, setBio] = useState(me.bio);
   const [photo, setPhoto] = useState<{ uri: string; mime: string } | null>(null);
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState('');
   const clean = cleanUsername(username);
-  const ok = name.trim().length > 0 && USERNAME.test(clean);
+  const ok = first.trim().length > 0 && last.trim().length > 0 && USERNAME.test(clean);
 
   const { choose, cropper } = useAvatarPicker((uri) => setPhoto({ uri, mime: 'image/jpeg' }));
 
@@ -55,7 +57,8 @@ export default function EditProfile() {
         <Button title="Skift billede" variant="secondary" icon="image" onPress={choose} style={{ minHeight: 44, paddingHorizontal: 20 }} />
       </View>
       {cropper}
-      <TextField label="Navn" autoComplete="name" value={name} onChangeText={setName} />
+      <TextField label="Fornavn" autoComplete="given-name" value={first} onChangeText={setFirst} />
+      <TextField label="Efternavn" autoComplete="family-name" value={last} onChangeText={setLast} />
       <TextField
         label="Brugernavn"
         autoCapitalize="none"
