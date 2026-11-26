@@ -6,12 +6,13 @@ import { Icon, type IconName } from './Icon';
 import { IconButton } from './IconButton';
 import { PostCard } from './PostCard';
 import { PostGrid } from './PostGrid';
+import { FlickGrid } from './FlickGrid';
 import { T } from './T';
 
-type Tab = 'opslag' | 'debat';
+type Tab = 'opslag' | 'debat' | 'flicks';
 
 /**
- * Faner under profilen: Opslag og Debat.
+ * Faner under profilen: Opslag, Debat og Flicks.
  * På Opslag kan man skifte mellem gitter og liste med knappen i samme række.
  * locked = privat profil, man ikke følger: kun Debat kan ses.
  */
@@ -20,18 +21,20 @@ export function ProfilePosts({ posts, locked = false, onChanged }: { posts: Post
   const [view, setView] = useState<'gitter' | 'liste'>('gitter');
   const feed = posts.filter((p) => p.kind === 'feed');
   const debate = posts.filter((p) => p.kind === 'debat');
+  const flicks = posts.filter((p) => p.kind === 'flick');
   const tabs: { id: Tab; label: string; icon: IconName; count: number }[] = [
     { id: 'opslag', label: 'Opslag', icon: 'layout-list', count: feed.length },
     { id: 'debat', label: 'Debat', icon: 'compass', count: debate.length },
+    { id: 'flicks', label: 'Flicks', icon: 'clip', count: flicks.length },
   ];
-  const shown = tab === 'opslag' ? feed : debate;
+  const shown = tab === 'opslag' ? feed : tab === 'flicks' ? flicks : debate;
 
   return (
     <View style={{ gap: 12, alignSelf: 'stretch' }}>
       <View style={s.tabs} accessibilityRole="tablist">
         {tabs.map((t) => {
           const on = tab === t.id;
-          const lockedTab = locked && t.id === 'opslag';
+          const lockedTab = locked && t.id !== 'debat';
           return (
             <Pressable
               key={t.id}
@@ -63,15 +66,17 @@ export function ProfilePosts({ posts, locked = false, onChanged }: { posts: Post
         )}
       </View>
 
-      {tab === 'opslag' && locked ? (
+      {tab !== 'debat' && locked ? (
         <View style={s.locked}>
           <Icon name="lock" size={22} />
           <T v="headingS">Profilen er privat</T>
         </View>
       ) : shown.length === 0 ? (
         <T v="bodyS" c={color.textSecondary} style={{ textAlign: 'center', paddingVertical: 24 }}>
-          {tab === 'opslag' ? 'Ingen opslag endnu' : 'Ingen debatopslag endnu'}
+          {tab === 'opslag' ? 'Ingen opslag endnu' : tab === 'flicks' ? 'Ingen flicks endnu' : 'Ingen debatopslag endnu'}
         </T>
+      ) : tab === 'flicks' ? (
+        <FlickGrid flicks={shown} />
       ) : tab === 'opslag' && view === 'gitter' ? (
         <PostGrid posts={shown} />
       ) : (
