@@ -174,24 +174,6 @@ export function PostCard({ post, onComment, onShare, onReport, onMute }: PostCar
         </ul>
       )}
 
-      {/* Som Community Notes på X: overskrift, note, kilde og "Bedøm" */}
-      {note && (
-        <aside className="post-note" aria-label="Fællesskabsnote">
-          <p className="t-caption-strong post-note__title">
-            <Icon name="circles" size={18} />
-            Læsere har tilføjet kontekst
-          </p>
-          <p className="t-body-s">{note.text}</p>
-          <NoteSources sources={note.sources} />
-          <div className="post-note__foot">
-            <span className="t-caption post-note__muted">Er noten hjælpsom?</span>
-            <Link to={`/opslag/${post.id}/noter`} className="t-caption-strong post-note__rate">
-              Bedøm
-            </Link>
-          </div>
-        </aside>
-      )}
-
       {debate && <StanceBar id={post.id} />}
 
       <footer className="post__actions">
@@ -210,6 +192,25 @@ export function PostCard({ post, onComment, onShare, onReport, onMute }: PostCar
         />
 
       </footer>
+
+      {/* Under stemmer og knapper, så noten står for sig selv. Som Community Notes på X: overskrift, note, kilde og "Bedøm" */}
+      {note && (
+        <aside className="post-note" aria-label="Fællesskabsnote">
+          <p className="t-caption-strong post-note__title">
+            <Icon name="circles" size={18} />
+            Læsere har tilføjet kontekst
+          </p>
+          <p className="t-body-s">{note.text}</p>
+          <NoteSources sources={note.sources} />
+          <div className="post-note__foot">
+            <span className="t-caption post-note__muted">Er noten hjælpsom?</span>
+            <Link to={`/opslag/${post.id}/noter`} className="t-caption-strong post-note__rate">
+              Bedøm
+            </Link>
+          </div>
+        </aside>
+      )}
+
 
       <PostMenu
         open={menu !== 'closed'}
