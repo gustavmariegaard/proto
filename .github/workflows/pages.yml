@@ -43,6 +43,9 @@ jobs:
           # Offentlige værdier (må ligge i appen). Databasens regler beskytter data.
           EXPO_PUBLIC_SUPABASE_URL: https://pgxpcrynivyvfivxalxr.supabase.co
           EXPO_PUBLIC_SUPABASE_KEY: sb_publishable_kBta1LMLbJAvmBQWsXji5A_DJWrjCVu
+      # Skrifttyper hentes samtidig med koden, og en startskærm vises med det samme
+      - run: node scripts/postexport.mjs ../../dist/app
+        working-directory: app-src/app
       # GitHub Pages kender ikke appernes egne adresser (fx /proto/log-ind),
       # så vi viser prototypen i stedet for en fejlside. Under /proto/app/
       # sendes man til appen med stien bagefter (#!/sti), som appen selv åbner.
