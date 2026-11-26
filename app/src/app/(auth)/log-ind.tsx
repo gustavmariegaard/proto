@@ -1,35 +1,44 @@
-import { router } from 'expo-router';
 import { useState } from 'react';
-import { KeyboardAvoidingView, Platform } from 'react-native';
+import { KeyboardAvoidingView, Platform, Pressable } from 'react-native';
 import { Button } from '@/components/Button';
 import { Screen } from '@/components/Screen';
 import { T } from '@/components/T';
 import { TextField } from '@/components/TextField';
 import { supabase } from '@/lib/supabase';
-import { color } from '@/theme/tokens';
+import { color, TAP } from '@/theme/tokens';
 
-/** Log ind eller opret: skriv din e-mail, så sender vi en kode */
+/*
+ * Log ind eller opret konto med e-mail og adgangskode.
+ * Testfase: e-mailen bekræftes ikke (slået fra i Supabase), så der sendes ingen mails.
+ * Før offentlig lancering: slå bekræftelse til igen (eller brug koden i kode.tsx).
+ */
 export default function LogIn() {
+  const [mode, setMode] = useState<'login' | 'opret'>('login');
   const [email, setEmail] = useState('');
+  const [password, setPassword] = useState('');
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState('');
-  const ok = /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email.trim());
+  const cleanEmail = email.trim().toLowerCase();
+  const ok = /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(cleanEmail) && password.length >= 8;
 
-  const send = async () => {
+  const submit = async () => {
+    if (!ok) return;
     setBusy(true);
     setError('');
-    const { error } = await supabase.auth.signInWithOtp({ email: email.trim().toLowerCase(), options: { shouldCreateUser: true } });
+    if (mode === 'opret') {
+      const { data, error } = await supabase.auth.signUp({ email: cleanEmail, password });
+      if (error) setError(error.message.includes('registered') ? 'Der findes allerede en konto med den e-mail.' : 'Kontoen kunne ikke oprettes. Prøv igen.');
+      else if (!data.session) setError('Kontoen er oprettet, men e-mailen skal bekræftes først.');
+    } else {
+      const { error } = await supabase.auth.signInWithPassword({ email: cleanEmail, password });
+      if (error) setError('Forkert e-mail eller adgangskode.');
+    }
     setBusy(false);
-    if (error) setError('Koden kunne ikke sendes. Prøv igen om lidt.');
-    else router.push({ pathname: '/kode', params: { email: email.trim().toLowerCase() } });
   };
 
   return (
     <KeyboardAvoidingView style={{ flex: 1 }} behavior={Platform.OS === 'ios' ? 'padding' : undefined}>
-      <Screen title="Log ind">
-        <T v="body" c={color.textSecondary}>
-          Vi sender en kode til din e-mail. Har du ikke en profil, opretter vi den.
-        </T>
+      <Screen title={mode === 'login' ? 'Log ind' : 'Opret konto'}>
         <TextField
           label="E-mail"
           autoComplete="email"
@@ -37,11 +46,32 @@ export default function LogIn() {
           autoCapitalize="none"
           value={email}
           onChangeText={setEmail}
-          onSubmitEditing={() => ok && send()}
-          error={error}
           autoFocus
         />
-        <Button title="Send kode" block disabled={!ok} loading={busy} onPress={send} />
+        <TextField
+          label="Adgangskode"
+          secureTextEntry
+          autoComplete={mode === 'login' ? 'current-password' : 'new-password'}
+          textContentType={mode === 'login' ? 'password' : 'newPassword'}
+          value={password}
+          onChangeText={setPassword}
+          onSubmitEditing={submit}
+          hint={mode === 'opret' ? 'Mindst 8 tegn' : undefined}
+          error={error}
+        />
+        <Button title={mode === 'login' ? 'Log ind' : 'Opret konto'} block disabled={!ok} loading={busy} onPress={submit} />
+        <Pressable
+          accessibilityRole="button"
+          onPress={() => {
+            setMode(mode === 'login' ? 'opret' : 'login');
+            setError('');
+          }}
+          style={{ minHeight: TAP, alignItems: 'center', justifyContent: 'center' }}
+        >
+          <T v="label" c={color.textSecondary}>
+            {mode === 'login' ? 'Ny her? Opret konto' : 'Har du en konto? Log ind'}
+          </T>
+        </Pressable>
       </Screen>
     </KeyboardAvoidingView>
   );
