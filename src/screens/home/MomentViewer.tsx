@@ -3,9 +3,7 @@ import { Link, Navigate, useNavigate, useParams } from 'react-router-dom';
 import { Avatar } from '../../components/Avatar';
 import { Icon } from '../../components/Icon';
 import { SideProgress } from '../../components/SideProgress';
-import { VoteControl } from '../../components/VoteControl';
-import { isBuried, scoreWith, useVotes } from '../../state/votes';
-import { publicKind } from '../../data/publicProfiles';
+import { LikeButton } from '../../components/LikeButton';
 import { at, handleOf } from '../../data/handles';
 import { moments, pageAccounts, people } from '../../data/sample';
 import { useMoments } from '../../state/moments';
@@ -37,11 +35,7 @@ function Viewer({ personId }: { personId: string }) {
   const accounts = isPage ? pageAccounts : people;
   const personIds = Object.keys(accounts);
   const person = accounts[personId];
-  // Moments fra offentlige profiler med score -5 eller lavere forsvinder, som i Offentlig debat
-  const votes = useVotes();
-  const own = moments.filter(
-    (m) => m.personId === personId && !(person && publicKind(person.fullName) && isBuried(scoreWith(momentScore(m.id), votes[m.id]))),
-  );
+  const own = moments.filter((m) => m.personId === personId);
   const current = own[index];
 
   const close = useCallback(
@@ -199,8 +193,7 @@ function Viewer({ personId }: { personId: string }) {
           onBlur={() => setTyping(false)}
           enterKeyHint="send"
         />
-        {/* Som opslag: almindelige brugere kun op, offentlige personer og sider op og ned */}
-        <VoteControl id={current.id} base={momentScore(current.id)} allowDown={publicKind(person.fullName) !== null} variant="row" />
+        <LikeButton id={current.id} base={momentScore(current.id)} variant="row" />
         {/* Del eller send momentet videre, præcis som et opslag */}
         <button
           type="button"

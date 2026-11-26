@@ -4,7 +4,7 @@ import { Avatar, type AvatarTone } from './Avatar';
 import { Icon, type IconName } from './Icon';
 import { PostMenu } from './PostMenu';
 import { setHidden, useHidden } from '../state/posts';
-import { VoteControl } from './VoteControl';
+import { LikeButton } from './LikeButton';
 import { StanceBar } from './StanceBar';
 import { shownNote, useNotes } from '../state/notes';
 import { groups } from '../data/more';
@@ -75,7 +75,6 @@ export function PostCard({ post, onComment, onShare, onReport, onMute }: PostCar
   const [saved, setSaved] = useState(false);
   const [stats] = useState(() => post.stats ?? sampleStats(post.id));
   const kind = post.group ? null : publicKind(post.author);
-  const isPublic = kind !== null;
   // Gruppe- og begivenhedsopslag: navnet og billedet fører til gruppen eller begivenheden
   const groupHref = post.group
     ? post.group.kind === 'begivenhed'
@@ -195,8 +194,8 @@ export function PostCard({ post, onComment, onShare, onReport, onMute }: PostCar
       {debate && <StanceBar id={post.id} />}
 
       <footer className="post__actions">
-        {/* Offentlige profiler: op og ned. Almindelige brugere: kun op. Debat: enig/uenig ovenfor. */}
-        {!debate && <VoteControl id={post.id} base={stats.likes} allowDown={isPublic} />}
+        {/* Hjerter overalt. Kun Offentlig debat har enig/uenig (ovenfor). */}
+        {!debate && <LikeButton id={post.id} base={stats.likes} />}
         <Action icon="chat" label="Kommentarer" count={stats.comments} onClick={onComment} />
         <Action icon="send" label="Delinger" count={stats.shares} onClick={onShare} />
         <Action

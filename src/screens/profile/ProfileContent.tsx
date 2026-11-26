@@ -111,7 +111,7 @@ export function ProfileContent({ highlights, posts, debate, flicks, own = false,
             aria-label={view === 'gitter' ? 'Vis som liste' : 'Vis som gitter'}
             onClick={() => setView(view === 'gitter' ? 'liste' : 'gitter')}
           >
-            <Icon name={view === 'gitter' ? 'layout-list' : 'layout-grid'} size={20} />
+            <Icon name={view === 'gitter' ? 'layout-rows' : 'layout-grid'} size={20} />
           </button>
         )}
       </div>

@@ -1,13 +1,11 @@
 import { useCallback, useEffect, useRef, useState } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import { PostMenu } from '../../components/PostMenu';
-import { VoteControl } from '../../components/VoteControl';
-import { publicKind } from '../../data/publicProfiles';
+import { LikeButton } from '../../components/LikeButton';
 import { setHidden, useHidden } from '../../state/posts';
 import { Icon } from '../../components/Icon';
 import { TabBar } from '../../components/TabBar';
 import { flicks as allFlicks, type Flick, type FlickSource } from '../../data/flicks';
-import { isBuried, scoreWith, useVotes } from '../../state/votes';
 import { FlickCommentsSheet } from './FlickCommentsSheet';
 import { TopicsSheet } from '../discover/TopicsSheet';
 import { inTopics, useTopics } from '../../state/topics';
@@ -39,9 +37,7 @@ export function Flicks() {
   const [commentsFor, setCommentsFor] = useState<string | null>(null);
   const [editing, setEditing] = useState(false);
   const { topics, active } = useTopics();
-  // Flicks fra offentlige profiler med score -5 eller lavere forsvinder, som i Offentlig debat
-  const votes = useVotes();
-  const visible = allFlicks.filter((f) => !(publicKind(f.author) && isBuried(scoreWith(flickCounts(f.id).likes, votes[f.id]))));
+  const visible = allFlicks;
   // Dine emner: kun flicks, der handler om de emner, der er slået til
   const mine = visible.filter((f) => f.source === 'tildig' && inTopics(f.tags, active));
   const items: Item[] =
@@ -218,8 +214,7 @@ function FlickView({ flick, position, total, why, saved, onSave, onComments, onS
 
       <div className="flick__bottom">
         <div className="flick__actions">
-          {/* Som opslag: almindelige brugere kun op, offentlige personer og sider op og ned */}
-          <VoteControl id={flick.id} base={counts.likes} allowDown={publicKind(flick.author) !== null} variant="stack" />
+          <LikeButton id={flick.id} base={counts.likes} variant="stack" />
           <FlickAction icon="chat" label="Kommentarer" count={counts.comments} onClick={onComments} />
           <FlickAction icon="send" label="Delinger" count={counts.shares} onClick={onShare} />
           <FlickAction icon="bookmark" label="Gem" pressed={saved} className={saved ? 'flick__saved' : undefined} onClick={onSave} />

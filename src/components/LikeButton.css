@@ -1,0 +1,28 @@
+/* Flicks: lodret, hvidt ikon med antal under */
+.like--stack {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 2px;
+  min-width: 48px;
+  min-height: 44px;
+  color: #fff;
+  filter: drop-shadow(0 1px 3px rgb(0 0 0 / 0.55));
+}
+
+/* Moments: vandret, hvidt */
+.like--row {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 4px;
+  flex-shrink: 0;
+  min-width: 44px;
+  height: 44px;
+  padding: 0 6px;
+  color: #fff;
+  font-variant-numeric: tabular-nums;
+}
+
+.like--stack:focus-visible,
+.like--row:focus-visible { outline: none; box-shadow: 0 0 0 2px var(--color-accent-highlight); border-radius: 12px; }

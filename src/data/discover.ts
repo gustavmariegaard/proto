@@ -13,7 +13,7 @@ export type DiscoverPost = FeedPost & {
   linkable: boolean;
   /** Tags, opslaget er sat i (emnet og de aktuelle emner) */
   tags: string[];
-  /** Op- minus nedstemmer fra andre (din egen stemme lægges til) */
+  /** Gammel score (bruges kun til at kende debatopslag fra andre) */
   score: number;
 };
 
@@ -102,7 +102,7 @@ export const discoverPosts: DiscoverPost[] = [
   fromSample('p-madlavning', 'Madlavning', []),
   fromSample('p-fotografi', 'Fotografi', []),
   fromSample('p-loeb', 'Løb', ['Sport']),
-  /* Et omdiskuteret opslag lige over grænsen: én nedstemme mere, og det forsvinder fra emnet */
+  /* Et omdiskuteret opslag, som har fået en fællesskabsnote */
   { ...extra(
     'd-lars',
     'Lars Møller',

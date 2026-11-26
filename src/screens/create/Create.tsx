@@ -19,7 +19,6 @@ import { useEvents } from '../events/store';
 import { img } from '../../data/sample';
 import { handleOf } from '../../data/handles';
 import { addPost } from '../../state/posts';
-import { vote } from '../../state/votes';
 import { TagInput } from '../../components/TagInput';
 import { useSession } from '../../state/session';
 import { CloseHeader, ToggleList, useClose } from './parts';
@@ -96,12 +95,12 @@ export function Create() {
     const debat = !placeKind && audience === 'debat';
     setBusy(true);
     const image = media?.type === 'image' ? await shrink(media.url) : undefined;
-    const id = addPost({
+    addPost({
       feed: debat ? 'debat' : 'venner',
       topic: debat ? tags[0] : undefined,
       // Tags kun i Offentlig debat
       tags: debat && tags.length ? tags : undefined,
-      // Som på Reddit: dit eget opslag starter med din egen opstemme
+      // score markerer opslaget som debat (enig/uenig i stedet for hjerter)
       score: debat ? 0 : undefined,
       author: profile.name || 'Dig',
       username: profile.username.trim().replace(/^@/, '') || handleOf(profile.name) || 'dit.navn',
@@ -115,7 +114,6 @@ export function Create() {
         : undefined,
     });
     if (debat) {
-      vote(id, 1);
       navigate('/opdag', { replace: true });
     } else if (place && placeKind) navigate(placeKind === 'gruppe' ? `/grupper/${place.id}` : `/begivenheder/${place.id}`, { replace: true });
     else navigate('/', { replace: true });
