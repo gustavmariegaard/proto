@@ -1,6 +1,6 @@
 import { useEffect, useRef } from 'react';
 import { Animated, Easing, Platform, StyleSheet, useWindowDimensions, View } from 'react-native';
-import Svg, { Circle, Defs, RadialGradient, Stop } from 'react-native-svg';
+import Svg, { Circle, Defs, LinearGradient, RadialGradient, Rect, Stop } from 'react-native-svg';
 import { color } from '@/theme/tokens';
 
 const reduceMotion = () => Platform.OS === 'web' && typeof window !== 'undefined' && !!window.matchMedia?.('(prefers-reduced-motion: reduce)').matches;
@@ -9,7 +9,10 @@ const reduceMotion = () => Platform.OS === 'web' && typeof window !== 'undefined
  * Baggrund til landingssiden: koncentriske ringe ("din cirkel") øverst til højre.
  * Ringe breder sig langsomt som i vand, og få prikker kredser hver i sin bane.
  */
-export function CircleBackdrop() {
+/** Højden på den bløde overgang øverst */
+const TOP_FADE = 120;
+
+export function CircleBackdrop({ fadeTo = color.bgApp }: { fadeTo?: string }) {
   const { width, height } = useWindowDimensions();
   const cx = width * 0.92;
   const cy = height * 0.14;
@@ -108,6 +111,16 @@ export function CircleBackdrop() {
           <View style={[s.dot, { width: d.size, height: d.size, borderRadius: d.size / 2, left: -d.size / 2, top: d.r - d.size / 2 }]} />
         </Animated.View>
       ))}
+      {/* Blød overgang øverst til baggrundsfarven, så browserens bjælke ikke skærer en hård kant */}
+      <Svg width={width} height={TOP_FADE} style={{ position: 'absolute', top: 0, left: 0 }}>
+        <Defs>
+          <LinearGradient id="topfade" x1="0" y1="0" x2="0" y2="1">
+            <Stop offset="0" stopColor={fadeTo} stopOpacity="1" />
+            <Stop offset="1" stopColor={fadeTo} stopOpacity="0" />
+          </LinearGradient>
+        </Defs>
+        <Rect x={0} y={0} width={width} height={TOP_FADE} fill="url(#topfade)" />
+      </Svg>
     </View>
   );
 }
