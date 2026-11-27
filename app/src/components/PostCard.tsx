@@ -28,10 +28,12 @@ type Props = {
   onRemoved?: (reason: 'hidden' | 'deleted' | 'muted') => void;
   /** Kommentar-knappen. Uden: kommentarerne åbner som ark (som i prototypen). */
   onComments?: () => void;
+  /** Hjem: intet tal ved 0 likes. Andre steder (profiler, opslaget selv) vises 0. */
+  hideZeroLikes?: boolean;
 };
 
 /** Opslag i feedet (prototypens PostCard). Debat: enig/uenig og fællesskabsnote. Ellers hjerter. */
-export function PostCard({ post, onRemoved, onComments }: Props) {
+export function PostCard({ post, onRemoved, onComments, hideZeroLikes = false }: Props) {
   const me = useMe();
   // Analytics: opslaget er vist
   useEffect(() => trackView(post.id, post.author_id, me.id), [post.id, post.author_id, me.id]);
@@ -193,7 +195,7 @@ export function PostCard({ post, onRemoved, onComments }: Props) {
 
       <View style={s.actions}>
         {/* Hjerter overalt. Kun Offentlig debat har enig/uenig (ovenfor). */}
-        {!debate && <ActionPill icon={liked ? 'heart-filled' : 'heart'} label="Synes godt om" count={likes} on={liked} tint={liked ? color.ink700 : undefined} onPress={toggleLike} />}
+        {!debate && <ActionPill showZero={!hideZeroLikes} icon={liked ? 'heart-filled' : 'heart'} label="Synes godt om" count={likes} on={liked} tint={liked ? color.ink700 : undefined} onPress={toggleLike} />}
         <ActionPill icon="chat" label="Kommentarer" count={comments} onPress={onComments ?? (() => setSheet(true))} />
         <ActionPill icon="send" label="Del" onPress={() => router.push(`/opslag/${post.id}/del`)} />
         <ActionPill

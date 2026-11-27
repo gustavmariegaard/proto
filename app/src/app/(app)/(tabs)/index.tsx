@@ -163,7 +163,7 @@ export default function Home() {
         <FlatList
           data={posts ?? []}
           keyExtractor={(p) => p.id}
-          renderItem={({ item }) => <PostCard post={item} onRemoved={() => setPosts((l) => l?.filter((x) => x.id !== item.id) ?? null)} />}
+          renderItem={({ item }) => <PostCard post={item} hideZeroLikes onRemoved={() => setPosts((l) => l?.filter((x) => x.id !== item.id) ?? null)} />}
           ListHeaderComponent={header}
           ListHeaderComponentStyle={{ marginBottom: 14 }}
           contentContainerStyle={s.list}
