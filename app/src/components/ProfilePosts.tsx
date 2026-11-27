@@ -1,10 +1,8 @@
-import { Image } from 'expo-image';
 import { router, useLocalSearchParams, type Href } from 'expo-router';
-import { useState } from 'react';
 import { Pressable, StyleSheet, View } from 'react-native';
-import { imageSource } from '@/lib/media';
 import type { PostCard as Post } from '@/lib/types';
 import { color, font, radius, TAP } from '@/theme/tokens';
+import { FlickGrid } from './FlickGrid';
 import { HighlightsRow } from './HighlightsRow';
 import { Icon, type IconName } from './Icon';
 import { PostCard } from './PostCard';
@@ -114,35 +112,10 @@ export function ProfilePosts({ userId, posts, own = false, name, locked = false,
           (flicks.length === 0 ? (
             <Empty text={own ? 'Du har ikke lavet nogen flicks endnu.' : `${name} har ingen flicks endnu.`} action={own ? { label: 'Lav en flick', to: '/flicks/ny' } : undefined} />
           ) : (
-            <FlickTiles flicks={flicks} />
+            <FlickGrid flicks={flicks} />
           ))}
       </View>
     </>
-  );
-}
-
-/** Flicks: tre kolonner i 9:16 som afrundede fliser med luft imellem */
-function FlickTiles({ flicks }: { flicks: Post[] }) {
-  const [w, setW] = useState(0);
-  const cellW = w ? Math.floor(((w - 12) / 3) * 100) / 100 : 0;
-  return (
-    <View style={s.flicks} onLayout={(e) => setW(e.nativeEvent.layout.width)}>
-      {flicks.map((f) => (
-        <Pressable
-          key={f.id}
-          accessibilityRole="link"
-          accessibilityLabel="Afspil flick"
-          onPress={() => router.push(`/flicks?vis=${f.id}`)}
-          style={[s.flick, cellW ? { width: cellW } : { width: '32.6%' }]}
-        >
-          {f.media_type === 'image' && f.image_paths[0] ? <Image source={imageSource(f.image_paths[0])} style={StyleSheet.absoluteFill} contentFit="cover" /> : null}
-          {/* Antal visninger findes ikke i databasen: kun ikonet */}
-          <View style={s.flickViews}>
-            <Icon name="clip" size={14} color={color.white} />
-          </View>
-        </Pressable>
-      ))}
-    </View>
   );
 }
 
@@ -170,9 +143,6 @@ const s = StyleSheet.create({
   tab: { flex: 1, minWidth: 0, flexDirection: 'row', alignItems: 'center', justifyContent: 'center', gap: 5, minHeight: 40, borderRadius: radius.pill },
   tabOn: { backgroundColor: color.bgSurface, shadowColor: '#000', shadowOpacity: 0.08, shadowRadius: 6, shadowOffset: { width: 0, height: 1 } },
   panel: { gap: 14 },
-  flicks: { flexDirection: 'row', flexWrap: 'wrap', gap: 6 },
-  flick: { aspectRatio: 9 / 16, overflow: 'hidden', borderRadius: radius.md, backgroundColor: color.ink900 },
-  flickViews: { position: 'absolute', left: 6, bottom: 6, flexDirection: 'row', alignItems: 'center', gap: 3 },
   empty: {
     alignItems: 'center',
     gap: 10,

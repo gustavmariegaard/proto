@@ -9,12 +9,20 @@ import type { PostCard } from '@/lib/types';
 import { Icon } from './Icon';
 import { T } from './T';
 
-/** Flicks på en profil: høje fliser i 3 kolonner. Tryk åbner flicken i Flicks. */
+/** Flicks som høje, afrundede fliser i 3 kolonner med antal hjerter. Tryk åbner flicken i Flicks. */
 export function FlickGrid({ flicks }: { flicks: PostCard[] }) {
+  const [w, setW] = useState(0);
+  const cellW = w ? Math.floor(((w - 12) / 3) * 100) / 100 : 0;
   return (
-    <View style={s.grid}>
+    <View style={s.grid} onLayout={(e) => setW(e.nativeEvent.layout.width)}>
       {flicks.map((f) => (
-        <Pressable key={f.id} accessibilityRole="link" accessibilityLabel={`Flick: ${f.text || 'uden tekst'}`} onPress={() => router.push(`/flicks?vis=${f.id}`)} style={s.cell}>
+        <Pressable
+          key={f.id}
+          accessibilityRole="link"
+          accessibilityLabel={`Flick: ${f.text || 'uden tekst'}. ${f.likes} synes godt om`}
+          onPress={() => router.push(`/flicks?vis=${f.id}`)}
+          style={[s.cell, cellW ? { width: cellW } : null]}
+        >
           <View style={s.fill}>
             {f.media_type === 'image' && f.image_paths[0] ? (
               <Image source={imageSource(f.image_paths[0])} style={StyleSheet.absoluteFill} contentFit="cover" transition={150} />
@@ -23,7 +31,7 @@ export function FlickGrid({ flicks }: { flicks: PostCard[] }) {
             )}
             <View style={s.likes}>
               <Icon name="heart" size={14} color="#fff" />
-              <T v="captionStrong" c="#fff">
+              <T v="captionStrong" c="#fff" style={s.shadow}>
                 {fmtCount(f.likes)}
               </T>
             </View>
@@ -35,9 +43,10 @@ export function FlickGrid({ flicks }: { flicks: PostCard[] }) {
 }
 
 const s = StyleSheet.create({
-  grid: { flexDirection: 'row', flexWrap: 'wrap', marginHorizontal: -1 },
-  cell: { width: '33.333%', aspectRatio: 9 / 16, padding: 1 },
-  fill: { flex: 1, overflow: 'hidden', backgroundColor: '#111' },
+  grid: { flexDirection: 'row', flexWrap: 'wrap', gap: 6 },
+  cell: { width: '32%', aspectRatio: 9 / 16 },
+  fill: { flex: 1, overflow: 'hidden', borderRadius: 12, backgroundColor: '#111' },
+  shadow: { textShadowColor: 'rgba(0,0,0,0.6)', textShadowRadius: 3, textShadowOffset: { width: 0, height: 1 } },
   video: { flex: 1, alignItems: 'center', justifyContent: 'center', backgroundColor: '#1c1c1c' },
   likes: { position: 'absolute', left: 6, bottom: 6, flexDirection: 'row', alignItems: 'center', gap: 3 },
 });

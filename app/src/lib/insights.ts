@@ -56,3 +56,34 @@ export async function myInsights(days: number): Promise<Insights | null> {
   if (error) return null;
   return data as Insights;
 }
+
+/* Antal personer, der har set et debatopslag. Hentes samlet for alle synlige opslag. */
+const countWaiters = new Map<string, ((n: number) => void)[]>();
+const countCache = new Map<string, number>();
+let countTimer: ReturnType<typeof setTimeout> | null = null;
+
+function flushCounts() {
+  countTimer = null;
+  const ids = [...countWaiters.keys()];
+  const waiters = new Map(countWaiters);
+  countWaiters.clear();
+  supabase.rpc('post_view_counts', { ids }).then(({ data }) => {
+    const got = new Map(((data ?? []) as { post_id: string; views: number }[]).map((r) => [r.post_id, Number(r.views)]));
+    ids.forEach((id) => {
+      const n = got.get(id) ?? 0;
+      countCache.set(id, n);
+      waiters.get(id)?.forEach((f) => f(n));
+    });
+  });
+}
+
+export function viewCount(postId: string): Promise<number> {
+  return new Promise((resolve) => {
+    const list = countWaiters.get(postId) ?? [];
+    list.push(resolve);
+    countWaiters.set(postId, list);
+    if (!countTimer) countTimer = setTimeout(flushCounts, 60);
+  });
+}
+
+export const cachedViewCount = (postId: string) => countCache.get(postId);

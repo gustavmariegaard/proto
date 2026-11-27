@@ -85,5 +85,12 @@ check('Opslaget er øverst blandt de bedste', ins?.top?.[0]?.id === post.id, JSO
 const { data: other } = await bo.c.rpc('my_insights', { days: 30 });
 check('Bos tal viser ikke Annas', other?.reach === 0 && other?.visits === 0, JSON.stringify(other));
 
+// Visninger på debatopslag: alle kan se antallet (ikke hvem)
+const { data: deb } = await anna.c.from('posts').insert({ author_id: anna.id, kind: 'debat', text: 'Flere cykelstier?', tags: ['Cykelstier'] }).select().single();
+await bo.c.rpc('record_views', { ids: [deb.id] });
+await cecilie.c.rpc('record_views', { ids: [deb.id] });
+const { data: vc, error: ve } = await bo.c.rpc('post_view_counts', { ids: [deb.id, post.id] });
+check('Debatopslag viser antal visninger (2)', !ve && vc?.length === 1 && Number(vc[0].views) === 2, JSON.stringify(vc ?? ve));
+
 console.log(failed ? `\n${failed} fejlede` : '\nAlle tests bestået');
 process.exit(failed ? 1 : 0);

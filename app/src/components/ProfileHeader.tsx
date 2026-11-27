@@ -1,11 +1,6 @@
 import { router } from 'expo-router';
 import type { Profile } from '@/lib/types';
-import { Pressable, StyleSheet, View } from 'react-native';
-import { color } from '@/theme/tokens';
 import { Button } from './Button';
-import { MintTile } from './CreateFlow';
-import { Icon } from './Icon';
-import { T } from './T';
 import { Glass } from './Glass';
 import { IconButton } from './IconButton';
 import { ProfileBadge, ProfileCard } from './ProfileCard';
@@ -49,18 +44,6 @@ export function ProfileHeader({ me, hasMoment, onRing, posts, followers, followi
           <IconButton icon="settings" label="Indstillinger" onPress={() => router.push('/indstillinger')} />
         </Glass>
       }
-      footer={
-        <Pressable accessibilityRole="link" onPress={() => router.push('/indsigt')} style={({ pressed }) => [st.insight, pressed && { opacity: 0.7 }]}>
-          <MintTile icon="chart" />
-          <View style={{ flex: 1, minWidth: 0 }}>
-            <T v="headingS">Indsigt</T>
-            <T v="caption" c={color.textSecondary}>
-              Se, hvem du når, og hvordan dine opslag klarer sig
-            </T>
-          </View>
-          <Icon name="chevron-right" size={18} color={color.textSecondary} />
-        </Pressable>
-      }
       action={
         <Button variant="secondary" icon="edit" onPress={() => router.push('/rediger-profil')} style={{ minHeight: 40, paddingHorizontal: 16 }}>
           Rediger profil
@@ -70,6 +53,3 @@ export function ProfileHeader({ me, hasMoment, onRing, posts, followers, followi
   );
 }
 
-const st = StyleSheet.create({
-  insight: { flexDirection: 'row', alignItems: 'center', gap: 12, paddingTop: 12, borderTopWidth: 1, borderTopColor: color.borderDefault },
-});

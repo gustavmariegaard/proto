@@ -5,7 +5,7 @@ import { Pressable, StyleSheet, View } from 'react-native';
 import { imageSource } from '@/lib/media';
 import { deletePost, hidePost, muteInDebate, setLike, setSaved } from '@/lib/posts';
 import { useMe } from '@/lib/session';
-import { ago } from '@/lib/time';
+import { ago, fmtNumber } from '@/lib/time';
 import type { PostCard as Post } from '@/lib/types';
 import { color, font, radius } from '@/theme/tokens';
 import { ActionPill } from './ActionPill';
@@ -19,7 +19,7 @@ import { SharedPost } from './SharedPost';
 import { StanceBar } from './StanceBar';
 import { VideoView } from './VideoView';
 import { MentionText } from './MentionText';
-import { trackView } from '@/lib/insights';
+import { cachedViewCount, trackView, viewCount } from '@/lib/insights';
 import { T } from './T';
 
 type Props = {
@@ -35,6 +35,15 @@ export function PostCard({ post, onRemoved, onComments }: Props) {
   const me = useMe();
   // Analytics: opslaget er vist
   useEffect(() => trackView(post.id, post.author_id, me.id), [post.id, post.author_id, me.id]);
+  const [views, setViews] = useState<number | null>(() => (post.kind === 'debat' ? (cachedViewCount(post.id) ?? null) : null));
+  useEffect(() => {
+    if (post.kind !== 'debat') return;
+    let alive = true;
+    viewCount(post.id).then((n) => alive && setViews(n));
+    return () => {
+      alive = false;
+    };
+  }, [post.id, post.kind]);
   const [liked, setLiked] = useState(post.liked);
   const [likes, setLikes] = useState(post.likes);
   const [comments, setComments] = useState(post.comments);
@@ -185,7 +194,7 @@ export function PostCard({ post, onRemoved, onComments }: Props) {
 
       <View style={s.actions}>
         {/* Hjerter overalt. Kun Offentlig debat har enig/uenig (ovenfor). */}
-        {!debate && <ActionPill icon={liked ? 'heart-filled' : 'heart'} label="Synes godt om" count={likes} on={liked} tint={liked ? color.ink700 : undefined} onPress={toggleLike} />}
+        {!debate && <ActionPill showZero icon={liked ? 'heart-filled' : 'heart'} label="Synes godt om" count={likes} on={liked} tint={liked ? color.ink700 : undefined} onPress={toggleLike} />}
         <ActionPill icon="chat" label="Kommentarer" count={comments} onPress={onComments ?? (() => setSheet(true))} />
         <ActionPill icon="send" label="Del" onPress={() => router.push(`/opslag/${post.id}/del`)} />
         <ActionPill
@@ -198,6 +207,15 @@ export function PostCard({ post, onRemoved, onComments }: Props) {
             setSaved(post.id, me.id, !saved);
           }}
         />
+        {/* Debat: hvor mange der har set opslaget */}
+        {debate && views !== null && (
+          <View style={s.views} accessible accessibilityLabel={`Set af ${fmtNumber(views)}`}>
+            <Icon name="eye" size={18} color={color.textSecondary} />
+            <T v="captionStrong" c={color.textSecondary} style={{ fontVariant: ['tabular-nums'] }}>
+              {fmtNumber(views)}
+            </T>
+          </View>
+        )}
       </View>
 
       {/* Under stemmer og knapper, så noten står for sig selv */}
@@ -234,6 +252,7 @@ export function PostCard({ post, onRemoved, onComments }: Props) {
 }
 
 const s = StyleSheet.create({
+  views: { flexDirection: 'row', alignItems: 'center', gap: 5, marginLeft: 'auto', paddingHorizontal: 4, height: 40 },
   post: {
     gap: 10,
     paddingTop: 14,

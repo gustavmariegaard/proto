@@ -47,7 +47,7 @@ export default function InsightsScreen() {
 
   return (
     <View style={s.root}>
-      <PageHeader title="Indsigt" fallback="/profil" />
+      <PageHeader title="Indsigt" fallback="/indstillinger" />
       <ScrollView
         contentContainerStyle={[s.content, { paddingBottom: 32 + insets.bottom }]}
         refreshControl={
