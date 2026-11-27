@@ -99,14 +99,11 @@ export function MoreSheet({ open, onClose }: { open: boolean; onClose: () => voi
           <View {...pan.panHandlers} accessibilityRole="button" accessibilityLabel="Luk Mere" style={s.handle}>
             <View style={s.bar} />
           </View>
-          <T v="titleL" accessibilityRole="header">
-            Mere
-          </T>
 
           <Pressable accessibilityRole="link" onPress={() => go('/profil')} style={({ pressed }) => [s.profile, pressed && s.pressed]}>
             <Avatar name={name} path={me.avatar_path} size="M" tone="blue" />
             <View style={s.profileText}>
-              <T v="headingS" numberOfLines={1}>
+              <T v="headingS" numberOfLines={2}>
                 {name}
               </T>
               <T v="caption" c={color.textSecondary} numberOfLines={1}>

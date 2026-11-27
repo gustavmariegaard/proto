@@ -3,7 +3,7 @@ import { router } from 'expo-router';
 import { StatusBar } from 'expo-status-bar';
 import { useVideoPlayer, VideoView as ExpoVideoView } from 'expo-video';
 import { useState } from 'react';
-import { KeyboardAvoidingView, Platform, Pressable, ScrollView, StyleSheet, View } from 'react-native';
+import { KeyboardAvoidingView, Platform, Pressable, ScrollView, StyleSheet, View, TextInput } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { Button } from '@/components/Button';
 import { CreateTagInput } from '@/components/CreateTagInput';
@@ -28,6 +28,7 @@ export default function NewFlick() {
   const insets = useSafeAreaInsets();
   const [captured, setCaptured] = useState<Captured | null>(null);
   const [videoOnly, setVideoOnly] = useState(false);
+  const [text, setText] = useState('');
   const [tags, setTags] = useState<string[]>([]);
   const [tagError, setTagError] = useState(false);
   const [busy, setBusy] = useState(false);
@@ -70,7 +71,7 @@ export default function NewFlick() {
     setError('');
     try {
       const path = await uploadVideo(me.id, captured.uri, captured.mime);
-      const { error } = await supabase.from('posts').insert({ author_id: me.id, kind: 'flick', media_type: 'video', image_paths: [path], text: '', tags });
+      const { error } = await supabase.from('posts').insert({ author_id: me.id, kind: 'flick', media_type: 'video', image_paths: [path], text: text.trim(), tags });
       if (error) throw error;
       router.replace('/flicks');
     } catch {
@@ -117,6 +118,17 @@ export default function NewFlick() {
       {captured && (
         <KeyboardAvoidingView behavior={Platform.OS === 'ios' ? 'padding' : undefined} style={s.panelWrap}>
           <ScrollView style={s.panel} contentContainerStyle={[s.panelContent, { paddingBottom: 16 + insets.bottom }]} keyboardShouldPersistTaps="handled">
+            {/* Tekst til flicken (vises nederst på videoen) */}
+            <TextInput
+              accessibilityLabel="Skriv en tekst"
+              placeholder="Skriv en tekst …"
+              placeholderTextColor={color.textSecondary}
+              value={text}
+              onChangeText={setText}
+              multiline
+              maxLength={300}
+              style={s.text}
+            />
             <CreateTagInput
               tags={tags}
               onTags={(t) => {
@@ -152,6 +164,7 @@ function LocalVideo({ uri }: { uri: string }) {
 }
 
 const s = StyleSheet.create({
+  text: { minHeight: 64, maxHeight: 120, paddingHorizontal: 16, paddingVertical: 12, borderRadius: 18, borderWidth: 1, borderColor: color.borderDefault, backgroundColor: color.bgSurface, color: color.textPrimary, fontFamily: font.body, fontSize: 16, textAlignVertical: 'top' },
   root: { flex: 1, backgroundColor: color.actionPrimary },
   viewfinder: { flex: 1, minHeight: 0, overflow: 'hidden', backgroundColor: color.actionPrimary },
   /* Grå cirkel, 220 px, når der ikke er et kamerabillede */

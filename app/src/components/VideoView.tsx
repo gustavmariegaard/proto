@@ -23,13 +23,15 @@ type Props = {
   active: boolean;
   style?: ViewStyle;
   contentFit?: 'cover' | 'contain';
+  /** Tryk på videoen gør dette i stedet for at slå lyden til/fra (fx åbne fuld skærm) */
+  onPress?: () => void;
 };
 
 /**
  * Video, der spiller i loop uden lyd, når den er synlig. Tryk slår lyden til og fra.
  * Bruges i Flicks (og kan bruges i moments).
  */
-export function VideoView({ path, active, style, contentFit = 'cover' }: Props) {
+export function VideoView({ path, active, style, contentFit = 'cover', onPress }: Props) {
   const [url, setUrl] = useState<string | null>(null);
   const [muted, setMuted] = useState(true);
   // Kort besked "Lyd til"/"Lyd fra", når man trykker
@@ -52,11 +54,14 @@ export function VideoView({ path, active, style, contentFit = 'cover' }: Props) 
       {url && <Player url={url} active={active} muted={muted} contentFit={contentFit} />}
       <Pressable
         accessibilityRole="button"
-        accessibilityLabel={muted ? 'Slå lyd til' : 'Slå lyd fra'}
-        onPress={() => {
-          setMuted((m) => !m);
-          setFlash(true);
-        }}
+        accessibilityLabel={onPress ? 'Vis videoen i fuld skærm' : muted ? 'Slå lyd til' : 'Slå lyd fra'}
+        onPress={
+          onPress ??
+          (() => {
+            setMuted((m) => !m);
+            setFlash(true);
+          })
+        }
         style={StyleSheet.absoluteFill}
       />
       {flash && (

@@ -39,25 +39,28 @@ export function ProfileHeader({ me, hasMoment, onRing, posts, followers, followi
             </View>
           )}
         </Pressable>
-        <View style={s.name}>
-          <T v="titleL" numberOfLines={1} accessibilityRole="header">
-            {me.name}
-          </T>
-          <View style={s.userRow}>
-            <T v="caption" c={color.textSecondary} numberOfLines={1} style={{ flexShrink: 1 }}>
-              @{me.username}
-            </T>
-            {me.is_private && (
-              <Pressable accessibilityRole="link" onPress={() => router.push('/indstillinger/privatliv')} style={s.private}>
-                <Icon name="lock" size={12} color={color.textSecondary} />
-                <T v="caption" c={color.textSecondary}>
-                  Privat
-                </T>
-              </Pressable>
-            )}
-          </View>
-        </View>
+        <View style={{ flex: 1 }} />
         <IconButton icon="settings" label="Indstillinger" onPress={() => router.push('/indstillinger')} />
+      </View>
+
+      {/* Navnet står under billedet i fuld bredde, så hele navnet altid kan ses (også lange navne) */}
+      <View style={s.name}>
+        <T v="titleL" accessibilityRole="header">
+          {me.name}
+        </T>
+        <View style={s.userRow}>
+          <T v="caption" c={color.textSecondary} style={{ flexShrink: 1 }}>
+            @{me.username}
+          </T>
+          {me.is_private && (
+            <Pressable accessibilityRole="link" onPress={() => router.push('/indstillinger/privatliv')} style={s.private}>
+              <Icon name="lock" size={12} color={color.textSecondary} />
+              <T v="caption" c={color.textSecondary}>
+                Privat
+              </T>
+            </Pressable>
+          )}
+        </View>
       </View>
 
       {!!me.bio?.trim() && <T v="bodyS">{me.bio.trim()}</T>}
@@ -109,8 +112,8 @@ const s = StyleSheet.create({
     alignItems: 'center',
     justifyContent: 'center',
   },
-  name: { flex: 1, minWidth: 0, gap: 6 },
-  userRow: { flexDirection: 'row', alignItems: 'center' },
+  name: { gap: 4, marginTop: -4 },
+  userRow: { flexDirection: 'row', alignItems: 'center', flexWrap: 'wrap' },
   private: {
     flexDirection: 'row',
     alignItems: 'center',

@@ -9,6 +9,7 @@ export default function AppLayout() {
     <Stack screenOptions={{ headerShown: false, contentStyle: { backgroundColor: color.bgApp } }}>
       <Stack.Screen name="(tabs)" />
       <Stack.Screen name="opret" options={{ presentation: 'modal' }} />
+      <Stack.Screen name="medie/[id]" options={{ animation: 'fade' }} />
     </Stack>
   );
 }

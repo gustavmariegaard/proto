@@ -106,6 +106,17 @@ export const FlickItem = memo(function FlickItem({ flick, height, bottomInset, t
         </View>
       )}
 
+      {/* Blød mørk toning nederst (i stedet for en sort boks), så teksten kan læses uden at skjule videoen */}
+      <Svg style={[s.shadeBottom, { height: bottomInset + 260, pointerEvents: 'none' }]} width="100%" height={bottomInset + 260}>
+        <Defs>
+          <LinearGradient id={`bshade-${flick.id}`} x1="0" y1="0" x2="0" y2="1">
+            <Stop offset="0" stopColor="#000" stopOpacity="0" />
+            <Stop offset="1" stopColor="#000" stopOpacity="0.6" />
+          </LinearGradient>
+        </Defs>
+        <Rect width="100%" height="100%" fill={`url(#bshade-${flick.id})`} />
+      </Svg>
+
       <View style={[s.bottom, { bottom: bottomInset }]}>
         <View style={s.actions}>
           <Action
@@ -138,13 +149,14 @@ export const FlickItem = memo(function FlickItem({ flick, height, bottomInset, t
           <T
             v="headingS"
             c="#fff"
+            style={s.textShadow}
             accessibilityRole="link"
             onPress={() => router.push(mine ? '/profil' : `/bruger/${flick.author_username}`)}
           >
             @{flick.author_username}
           </T>
           {!!flick.text && (
-            <T v="bodyS" c="#f5f5f4">
+            <T v="bodyS" c="#f5f5f4" numberOfLines={3} style={s.textShadow}>
               {flick.text}
             </T>
           )}
@@ -159,7 +171,7 @@ export const FlickItem = memo(function FlickItem({ flick, height, bottomInset, t
                   accessibilityRole="link"
                   accessibilityLabel={`Se flicks med #${t}`}
                   onPress={() => router.push({ pathname: '/flicks/tag/[tag]', params: { tag: t } })}
-                  style={s.tag}
+                  style={[s.tag, s.textShadow]}
                 >
                   #{t}
                 </T>
@@ -209,7 +221,8 @@ const s = StyleSheet.create({
   textShadow: { textShadowColor: 'rgba(0,0,0,0.55)', textShadowRadius: 3, textShadowOffset: { width: 0, height: 1 } },
   tags: { flexDirection: 'row', flexWrap: 'wrap', gap: 10 },
   tag: { paddingVertical: 4 },
-  caption: { alignItems: 'flex-start', gap: 6, paddingHorizontal: 20, paddingVertical: 14, borderRadius: 26, backgroundColor: 'rgba(10,10,10,0.85)' },
+  shadeBottom: { position: 'absolute', left: 0, right: 0, bottom: 0 },
+  caption: { alignItems: 'flex-start', gap: 4, paddingRight: 56, paddingLeft: 4 },
   hidden: {
     position: 'absolute',
     top: 0,

@@ -50,6 +50,7 @@ export function PostCard({ post, onRemoved, onComments }: Props) {
   };
 
   const open = () => router.push(`/opslag/${post.id}`);
+  const openMedia = () => router.push(`/medie/${post.id}`);
   const profile = () => router.push(mine ? '/profil' : `/bruger/${post.author_username}`);
 
   const why = mine
@@ -136,11 +137,16 @@ export function PostCard({ post, onRemoved, onComments }: Props) {
         </View>
       )}
 
-      {post.image_paths[0] && post.media_type === 'video' && <VideoView path={post.image_paths[0]} active style={s.video} contentFit="cover" />}
+      {/* Tryk på billede/video: fuld skærm. Tryk på resten af kortet: opslaget. */}
+      {post.image_paths[0] && post.media_type === 'video' && (
+        <View style={s.video}>
+          <VideoView path={post.image_paths[0]} active contentFit="cover" onPress={openMedia} />
+        </View>
+      )}
 
       {post.image_paths[0] && post.media_type !== 'video' && (
         // Billedet vises i sit eget format: højst 4:5 (højt) og højst 1,91:1 (bredt)
-        <Pressable onPress={open} accessibilityLabel="Åbn opslaget">
+        <Pressable accessibilityRole="button" onPress={openMedia} accessibilityLabel="Vis billedet i fuld skærm">
           <Image
             source={imageSource(post.image_paths[0])}
             style={[s.image, { aspectRatio: ratio }]}
