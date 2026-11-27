@@ -183,7 +183,7 @@ export function PostCard({ post, onRemoved, onComments }: Props) {
         {/* Hjerter overalt. Kun Offentlig debat har enig/uenig (ovenfor). */}
         {!debate && <ActionPill icon={liked ? 'heart-filled' : 'heart'} label="Synes godt om" count={likes} on={liked} tint={liked ? color.ink700 : undefined} onPress={toggleLike} />}
         <ActionPill icon="chat" label="Kommentarer" count={comments} onPress={onComments ?? (() => setSheet(true))} />
-        {post.allow_share && <ActionPill icon="send" label="Del" onPress={() => router.push(`/opslag/${post.id}/del`)} />}
+        <ActionPill icon="send" label="Del" onPress={() => router.push(`/opslag/${post.id}/del`)} />
         <ActionPill
           icon="bookmark"
           label="Gem"

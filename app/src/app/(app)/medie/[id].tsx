@@ -93,7 +93,7 @@ export default function MediaViewer() {
               />
             )}
             <Act icon="chat" label="Kommentarer" count={comments} onPress={() => setShowComments(true)} />
-            {post.allow_share && <Act icon="send" label="Del" onPress={() => router.push(`/opslag/${post.id}/del`)} />}
+            <Act icon="send" label="Del" onPress={() => router.push(`/opslag/${post.id}/del`)} />
             <Act
               icon="bookmark"
               label="Gem"

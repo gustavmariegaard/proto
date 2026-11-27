@@ -94,8 +94,6 @@ export default function Share() {
     );
   }
 
-  const first = post.author_name.split(' ')[0];
-  const blocked = !post.allow_share && post.author_id !== me.id;
   const q = query.trim().toLowerCase();
   const targets = [...circles.filter((c) => !q || c.name.toLowerCase().includes(q)), ...people];
   const toggle = (t: Target) => setSelected((l) => (l.some((x) => x.key === t.key) ? l.filter((x) => x.key !== t.key) : [...l, t]));
@@ -172,23 +170,16 @@ export default function Share() {
       contentStyle={{ paddingBottom: 16 }}
       footer={
         <View style={[s.footer, { paddingBottom: 12 + insets.bottom }]}>
-          {!blocked && (
-            <Button block disabled={mode === 'besked' && selected.length === 0} loading={busy} onPress={mode === 'besked' ? send : shareAsPost}>
-              {shareLabel}
-            </Button>
-          )}
+          <Button block disabled={mode === 'besked' && selected.length === 0} loading={busy} onPress={mode === 'besked' ? send : shareAsPost}>
+            {shareLabel}
+          </Button>
           <Button variant="secondary" block onPress={copyLink} accessibilityLiveRegion="polite">
             {copied ? 'Link kopieret' : 'Kopiér link'}
           </Button>
         </View>
       }
     >
-      {blocked ? (
-        <T v="bodyS" c={color.textSecondary}>
-          {first} har slået deling fra for dette opslag.
-        </T>
-      ) : (
-        <>
+      <>
           <View style={parts.full}>
             <SegmentedControl
               label="Del som"
@@ -251,9 +242,6 @@ export default function Share() {
                   {error}
                 </T>
               )}
-              <T v="caption" c={color.textSecondary}>
-                Kun dem, du sender til, kan se det. {first} kan se, at opslaget er delt, men ikke med hvem.
-              </T>
             </>
           )}
 
@@ -280,14 +268,9 @@ export default function Share() {
                   {error}
                 </T>
               )}
-              <T v="caption" c={color.textSecondary}>
-                Vises på din profil med kredit til {first}.{' '}
-                {me.is_private ? 'Din profil er privat, så kun dine følgere kan se det.' : 'Din profil er offentlig, så alle kan se det.'}
-              </T>
             </>
           )}
-        </>
-      )}
+      </>
     </ModalScreen>
   );
 }

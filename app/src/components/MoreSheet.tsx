@@ -1,5 +1,5 @@
 import { router } from 'expo-router';
-import { useEffect, useRef } from 'react';
+import { useCallback, useEffect, useLayoutEffect, useRef, useState } from 'react';
 import { Animated, BackHandler, Easing, PanResponder, Platform, Pressable, ScrollView, StyleSheet, View } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { useMe } from '@/lib/session';
@@ -32,22 +32,48 @@ export function MoreSheet({ open, onClose }: { open: boolean; onClose: () => voi
   const closeRef = useRef(onClose);
   closeRef.current = onClose;
 
-  useEffect(() => {
+  // Arket bliver vist, mens det glider ned igen, og først fjernet bagefter
+  const [shown, setShown] = useState(open);
+  const native = Platform.OS !== 'web';
+
+  // Sæt startpositionen, før arket tegnes første gang (ellers blinker det helt fremme et øjeblik)
+  useLayoutEffect(() => {
     if (!open) return;
     drag.setValue(0);
     slide.setValue(1);
     fade.setValue(0);
+    setShown(true);
     Animated.parallel([
-      Animated.timing(slide, { toValue: 0, duration: 250, easing: Easing.out(Easing.ease), useNativeDriver: false }),
-      Animated.timing(fade, { toValue: 1, duration: 200, useNativeDriver: false }),
+      Animated.timing(slide, { toValue: 0, duration: 260, easing: Easing.out(Easing.cubic), useNativeDriver: native }),
+      Animated.timing(fade, { toValue: 1, duration: 200, easing: Easing.out(Easing.quad), useNativeDriver: native }),
     ]).start();
-    const sub = BackHandler.addEventListener('hardwareBackPress', () => {
+  }, [open, slide, drag, fade, native]);
+
+  // Luk med en kort, blød bevægelse ned
+  const close = useCallback(() => {
+    Animated.parallel([
+      Animated.timing(slide, { toValue: 1, duration: 200, easing: Easing.in(Easing.cubic), useNativeDriver: native }),
+      Animated.timing(fade, { toValue: 0, duration: 180, useNativeDriver: native }),
+    ]).start(() => {
+      setShown(false);
       closeRef.current();
+    });
+  }, [slide, fade, native]);
+  const closeAnim = useRef(close);
+  closeAnim.current = close;
+
+  useEffect(() => {
+    if (!open) {
+      setShown(false);
+      return;
+    }
+    const sub = BackHandler.addEventListener('hardwareBackPress', () => {
+      closeAnim.current();
       return true;
     });
     let off = () => {};
     if (Platform.OS === 'web' && typeof window !== 'undefined') {
-      const onKey = (e: KeyboardEvent) => e.key === 'Escape' && closeRef.current();
+      const onKey = (e: KeyboardEvent) => e.key === 'Escape' && closeAnim.current();
       window.addEventListener('keydown', onKey);
       off = () => window.removeEventListener('keydown', onKey);
     }
@@ -55,7 +81,7 @@ export function MoreSheet({ open, onClose }: { open: boolean; onClose: () => voi
       sub.remove();
       off();
     };
-  }, [open, slide, drag, fade]);
+  }, [open]);
 
   const pan = useRef(
     PanResponder.create({
@@ -63,31 +89,33 @@ export function MoreSheet({ open, onClose }: { open: boolean; onClose: () => voi
       onMoveShouldSetPanResponder: () => true,
       onPanResponderMove: (_, g) => drag.setValue(Math.max(0, g.dy)),
       onPanResponderRelease: (_, g) => {
-        drag.setValue(0);
-        if (g.dy > 80 || Math.abs(g.dy) < 6) closeRef.current();
+        if (g.dy > 80 || Math.abs(g.dy) < 6) {
+          // Fortsæt bevægelsen ned derfra, hvor fingeren slap
+          closeAnim.current();
+        } else Animated.spring(drag, { toValue: 0, speed: 24, bounciness: 0, useNativeDriver: native }).start();
       },
       onPanResponderTerminate: () => drag.setValue(0),
     }),
   ).current;
 
-  if (!open) return null;
+  if (!open && !shown) return null;
 
   const go = (to: string) => {
     onClose();
     router.push(to as never);
   };
   const name = me.name.trim() || 'Dit navn';
-  const translateY = Animated.add(drag, slide.interpolate({ inputRange: [0, 1], outputRange: [0, 900] }));
+  const translateY = Animated.add(drag, slide.interpolate({ inputRange: [0, 1], outputRange: [0, 700] }));
 
   return (
     <View style={s.layer}>
       <Animated.View style={[StyleSheet.absoluteFill, s.scrim, { opacity: fade }]}>
-        <Pressable style={StyleSheet.absoluteFill} onPress={onClose} accessible={false} />
+        <Pressable style={StyleSheet.absoluteFill} onPress={close} accessible={false} />
       </Animated.View>
       <Animated.View
         accessibilityViewIsModal
         accessibilityLabel="Mere"
-        style={[s.sheet, { top: insets.top + 24, transform: [{ translateY }] }]}
+        style={[s.sheet, Platform.OS === 'web' && ({ willChange: 'transform' } as object), { top: insets.top + 24, transform: [{ translateY }] }]}
         pointerEvents="box-none"
       >
         <View style={s.spacer} pointerEvents="none" />

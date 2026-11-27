@@ -132,7 +132,7 @@ export const FlickItem = memo(function FlickItem({ flick, height, bottomInset, t
           />
           <Action icon="chat" label="Kommentarer" count={flick.comments} onPress={onComments} />
           {/* Samme deling som alle andre opslag: Besked, Opslag eller Moment */}
-          {flick.allow_share && <Action icon="send" label="Delinger" onPress={() => router.push(`/opslag/${flick.id}/del`)} />}
+          <Action icon="send" label="Delinger" onPress={() => router.push(`/opslag/${flick.id}/del`)} />
           <Action
             icon="bookmark"
             label="Gem"

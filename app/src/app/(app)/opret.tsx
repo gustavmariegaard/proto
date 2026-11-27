@@ -4,7 +4,7 @@ import { useVideoPlayer, VideoView as ExpoVideoView } from 'expo-video';
 import { useEffect, useRef, useState } from 'react';
 import { Pressable, StyleSheet, TextInput, View } from 'react-native';
 import { closeTo } from '@/components/CreateParts';
-import { AddTile, CreateButton, FlowSwitch, CreateLabel, CreateShell, createField, MediaFrame, OptionRow } from '@/components/CreateFlow';
+import { AddTile, CreateButton, CreateLabel, CreateShell, createField, MediaFrame, OptionRow } from '@/components/CreateFlow';
 import { CreateTagInput } from '@/components/CreateTagInput';
 import type { IconName } from '@/components/Icon';
 import { SharedPost } from '@/components/SharedPost';
@@ -46,7 +46,6 @@ export default function Create() {
   const [tags, setTags] = useState<string[]>([]);
   const [tagError, setTagError] = useState(false);
   const [focus, setFocus] = useState(false);
-  const [settings, setSettings] = useState<Record<string, boolean>>({ deling: true });
   const [media, setMedia] = useState<Media | null>(null);
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState('');
@@ -107,7 +106,7 @@ export default function Create() {
         image_paths: path ? [path] : [],
         media_type: media?.type ?? 'image',
         tags: debat ? tags : [],
-        allow_share: settings.deling,
+        allow_share: true,
         ...(placeKind && placeId ? { [colOf[placeKind]]: placeId } : {}),
         ...(sharing ? { shared_post_id: sharing } : {}),
       });
@@ -210,16 +209,6 @@ export default function Create() {
         </>
       )}
 
-      <CreateLabel>Indstillinger</CreateLabel>
-      <OptionRow
-        role="switch"
-        icon="send"
-        title="Tillad deling"
-        text="Andre kan dele opslaget videre."
-        on={settings.deling}
-        onPress={() => setSettings((v) => ({ ...v, deling: !v.deling }))}
-        right={<FlowSwitch on={settings.deling} />}
-      />
     </CreateShell>
   );
 }
