@@ -28,23 +28,24 @@ type Props = {
   onRemoved?: (reason: 'hidden' | 'deleted' | 'muted') => void;
   /** Kommentar-knappen. Uden: kommentarerne åbner som ark (som i prototypen). */
   onComments?: () => void;
-  /** Hjem: intet tal ved 0 likes. Andre steder (profiler, opslaget selv) vises 0. */
-  hideZeroLikes?: boolean;
+  /** Hjem: ingen visninger, og intet tal ved 0 likes */
+  feed?: boolean;
 };
 
 /** Opslag i feedet (prototypens PostCard). Debat: enig/uenig og fællesskabsnote. Ellers hjerter. */
-export function PostCard({ post, onRemoved, onComments, hideZeroLikes = false }: Props) {
+export function PostCard({ post, onRemoved, onComments, feed = false }: Props) {
   const me = useMe();
   // Analytics: opslaget er vist
   useEffect(() => trackView(post.id, post.author_id, me.id), [post.id, post.author_id, me.id]);
   const [views, setViews] = useState<number | null>(() => cachedViewCount(post.id) ?? null);
   useEffect(() => {
+    if (feed) return;
     let alive = true;
     viewCount(post.id).then((n) => alive && setViews(n));
     return () => {
       alive = false;
     };
-  }, [post.id]);
+  }, [post.id, feed]);
   const [liked, setLiked] = useState(post.liked);
   const [likes, setLikes] = useState(post.likes);
   const [comments, setComments] = useState(post.comments);
@@ -195,7 +196,7 @@ export function PostCard({ post, onRemoved, onComments, hideZeroLikes = false }:
 
       <View style={s.actions}>
         {/* Hjerter overalt. Kun Offentlig debat har enig/uenig (ovenfor). */}
-        {!debate && <ActionPill showZero={!hideZeroLikes} icon={liked ? 'heart-filled' : 'heart'} label="Synes godt om" count={likes} on={liked} tint={liked ? color.ink700 : undefined} onPress={toggleLike} />}
+        {!debate && <ActionPill showZero={!feed} icon={liked ? 'heart-filled' : 'heart'} label="Synes godt om" count={likes} on={liked} tint={liked ? color.ink700 : undefined} onPress={toggleLike} />}
         <ActionPill icon="chat" label="Kommentarer" count={comments} onPress={onComments ?? (() => setSheet(true))} />
         <ActionPill icon="send" label="Del" onPress={() => router.push(`/opslag/${post.id}/del`)} />
         <ActionPill
@@ -209,7 +210,7 @@ export function PostCard({ post, onRemoved, onComments, hideZeroLikes = false }:
           }}
         />
         {/* Hvor mange der har set opslaget */}
-        {views !== null && (
+        {!feed && views !== null && (
           <View style={s.views} accessible accessibilityLabel={`Set af ${fmtNumber(views)}`}>
             <Icon name="eye" size={18} color={color.textSecondary} />
             <T v="captionStrong" c={color.textSecondary} style={{ fontVariant: ['tabular-nums'] }}>
