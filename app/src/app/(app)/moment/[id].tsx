@@ -34,7 +34,7 @@ export default function MomentRoute() {
 
   if (!moments?.length) {
     return (
-      <View style={{ flex: 1, backgroundColor: '#000', alignItems: 'center', justifyContent: 'center' }}>
+      <View style={{ flex: 1, backgroundColor: '#171717', alignItems: 'center', justifyContent: 'center' }}>
         <ActivityIndicator color="#fff" />
       </View>
     );

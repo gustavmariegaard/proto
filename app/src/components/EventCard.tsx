@@ -1,7 +1,7 @@
 import { Image } from 'expo-image';
 import { router } from 'expo-router';
 import { Pressable, StyleSheet, View } from 'react-native';
-import { dateBadge, rsvpLabel, shortWhen, type EventCard as Ev } from '@/lib/community';
+import { dateBadge, rsvpLabel, shortWhen, timeRange, type EventCard as Ev } from '@/lib/community';
 import { imageSource } from '@/lib/media';
 import { color, font, radius } from '@/theme/tokens';
 import { Avatar } from './Avatar';
@@ -67,7 +67,7 @@ export function EventDiscoverCard({ event, onJoin }: { event: Ev; onJoin: (s: 'i
         {!!event.cover_path && <Image source={imageSource(event.cover_path)} style={s.photo} contentFit="cover" transition={150} />}
         <View style={s.body}>
           <T v="captionStrong" c={color.accentNoteText}>
-            {shortWhen(event.starts_at)}
+            {shortWhen(event.starts_at).split(' · ')[0]} · {timeRange(event.starts_at, event.ends_at).replace(/^Kl\. /, 'kl. ')}
           </T>
           <T v="headingS">{event.title}</T>
           {!!event.location && (

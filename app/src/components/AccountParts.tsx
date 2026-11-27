@@ -1,6 +1,6 @@
 import type { Href } from 'expo-router';
 import { useEffect, useState, type ReactNode } from 'react';
-import { Pressable, ScrollView, StyleSheet, View, type ViewStyle } from 'react-native';
+import { Pressable, ScrollView, StyleSheet, View, type StyleProp, type ViewStyle } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { color, radius, TAP } from '@/theme/tokens';
 import { Avatar } from './Avatar';
@@ -74,7 +74,7 @@ export function AccCard({ children, style, onPress, label }: { children: ReactNo
 }
 
 /** .acc-panel: større kort (radius 22, padding 16) */
-export function AccPanel({ children, style }: { children: ReactNode; style?: ViewStyle }) {
+export function AccPanel({ children, style }: { children: ReactNode; style?: StyleProp<ViewStyle> }) {
   return <View style={[s.panel, style]}>{children}</View>;
 }
 
