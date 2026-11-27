@@ -1,5 +1,5 @@
 import { Pressable, StyleSheet, View, type ViewStyle } from 'react-native';
-import { color, radius } from '@/theme/tokens';
+import { color, radius, shadow } from '@/theme/tokens';
 import { Glass } from './Glass';
 import { T } from './T';
 
@@ -18,7 +18,7 @@ type Props<V extends string> = {
 export function SegmentedControl<V extends string>({ options, value, onChange, label, style, glass }: Props<V>) {
   const Wrap = glass ? Glass : View;
   return (
-    <Wrap style={[s.wrap, glass && s.glass, style] as ViewStyle[]}>
+    <Wrap style={(glass ? [s.glass, style] : [s.wrap, style]) as ViewStyle[]}>
     <View style={[s.inner, glass && s.innerGlass]} accessibilityRole="tablist" accessibilityLabel={label}>
       {options.map((o) => {
         const on = o.value === value;
@@ -43,7 +43,8 @@ export function SegmentedControl<V extends string>({ options, value, onChange, l
 
 const s = StyleSheet.create({
   wrap: { height: 52, borderRadius: radius.md, backgroundColor: color.bgSubtle },
-  glass: { height: 42, borderRadius: radius.pill },
+  /* Frostet glas som bundmenuen (ingen grå baggrund) */
+  glass: { height: 42, borderRadius: radius.pill, ...shadow.tabbar },
   inner: { flex: 1, flexDirection: 'row', gap: 4, padding: 4 },
   innerGlass: { padding: 3 },
   itemGlass: { height: 34, borderRadius: radius.pill },

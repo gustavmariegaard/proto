@@ -133,7 +133,9 @@ export default function Home() {
           <MomentBubble
             name="Dig"
             fullName={me.name || 'Dig'}
-            state="add"
+            // Har du et aktivt moment, får "Dig" ringen (som på profilen) – plusset bliver
+            state={myRing ? 'new' : 'add'}
+            plus
             path={me.avatar_path}
             onPress={() => (myRing ? open(myRing) : router.push('/ny-moment'))}
             onPlus={() => router.push('/ny-moment')}
