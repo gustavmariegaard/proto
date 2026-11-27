@@ -1,10 +1,13 @@
-import { router, useFocusEffect } from 'expo-router';
+import { useFocusEffect } from 'expo-router';
 import { useCallback, useState } from 'react';
 import { ActivityIndicator, FlatList, Pressable, RefreshControl, ScrollView, StyleSheet, View } from 'react-native';
 import { Chip } from '@/components/Chip';
+import { Icon } from '@/components/Icon';
 import { PostCard } from '@/components/PostCard';
 import { Screen } from '@/components/Screen';
 import { T } from '@/components/T';
+import { TopBar } from '@/components/TopBar';
+import { TopicsSheet } from '@/components/TopicsSheet';
 import { muteInDebate, normalize } from '@/lib/posts';
 import { useMe } from '@/lib/session';
 import { supabase } from '@/lib/supabase';
@@ -25,6 +28,7 @@ export default function Debate() {
   const [muted, setMuted] = useState<{ id: string; name: string } | null>(null);
   // Skifter ved hver indlæsning, så kortene (stemmer og noter) hentes på ny, når man kommer tilbage
   const [tick, setTick] = useState(0);
+  const [editing, setEditing] = useState(false);
 
   const load = useCallback(async () => {
     const [{ data: i }, { data: p }] = await Promise.all([
@@ -56,20 +60,32 @@ export default function Debate() {
   };
 
   const header = (
-    <View style={{ gap: 16 }}>
+    <View style={s.head}>
       <T v="titleXl" accessibilityRole="header">
         Offentlig debat
       </T>
-      <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={s.row} style={s.rowWrap}>
-        <Chip label="Rediger interesser" icon="sliders" onPress={() => router.push('/interesser')} />
+      {/* Rediger interesser står først og ruller med væk, når man bladrer i emnerne */}
+      <ScrollView
+        horizontal
+        showsHorizontalScrollIndicator={false}
+        contentContainerStyle={s.row}
+        style={s.rowWrap}
+        accessibilityLabel="Filtrér efter dine interesser"
+      >
+        <Pressable accessibilityRole="button" onPress={() => setEditing(true)} style={({ pressed }) => [s.edit, pressed && { opacity: 0.7 }]}>
+          <Icon name="sliders" size={18} />
+          <T v="label">Rediger interesser</T>
+        </Pressable>
         {interests.map((t) => (
           <Chip
             key={t.topic}
-            label={t.topic}
             selected={t.active}
             trailing={t.active ? 'close' : 'plus'}
+            style={s.topic}
             onPress={() => toggle(t)}
-          />
+          >
+            {t.topic}
+          </Chip>
         ))}
       </ScrollView>
       {muted && (
@@ -88,18 +104,21 @@ export default function Debate() {
   );
 
   return (
-    <Screen edges={['top']} scroll={false}>
+    <Screen edges={[]} scroll={false}>
+      <TopBar />
       <FlatList
         data={posts ?? []}
         keyExtractor={(p) => `${p.id}-${tick}`}
         contentContainerStyle={s.list}
         ListHeaderComponent={header}
+        ListHeaderComponentStyle={{ marginBottom: 14 }}
+        ItemSeparatorComponent={() => <View style={{ height: 14 }} />}
         ListEmptyComponent={
           posts === null ? (
             <ActivityIndicator color={color.textPrimary} style={{ marginTop: 24 }} />
           ) : (
             <T v="bodyS" c={color.textSecondary}>
-              Ingen opslag om dine interesser lige nu.
+              Ingen opslag om dine interesser lige nu. Prøv at følge flere.
             </T>
           )
         }
@@ -125,14 +144,34 @@ export default function Debate() {
           />
         )}
       />
+      <TopicsSheet
+        open={editing}
+        onClose={() => {
+          setEditing(false);
+          load();
+        }}
+      />
     </Screen>
   );
 }
 
 const s = StyleSheet.create({
-  list: { padding: 20, paddingTop: 8, gap: 16, paddingBottom: TAB_SPACE },
-  rowWrap: { marginHorizontal: -20 },
+  list: { paddingHorizontal: 20, paddingBottom: TAB_SPACE },
+  head: { gap: 14 },
+  rowWrap: { marginHorizontal: -20, flexGrow: 0 },
   row: { gap: 8, paddingHorizontal: 20 },
+  edit: {
+    minHeight: TAP,
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 6,
+    paddingHorizontal: 14,
+    borderRadius: radius.pill,
+    borderWidth: 1,
+    borderColor: color.borderStrong,
+    backgroundColor: color.bgSurface,
+  },
+  topic: { paddingLeft: 16, paddingRight: 12 },
   notice: {
     flexDirection: 'row',
     alignItems: 'center',

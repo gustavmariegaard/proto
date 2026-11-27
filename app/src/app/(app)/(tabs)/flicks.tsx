@@ -1,4 +1,4 @@
-import { router, useFocusEffect, useLocalSearchParams } from 'expo-router';
+import { useFocusEffect, useLocalSearchParams } from 'expo-router';
 import { StatusBar } from 'expo-status-bar';
 import { useCallback, useEffect, useRef, useState } from 'react';
 import { ActivityIndicator, FlatList, Pressable, StyleSheet, View } from 'react-native';
@@ -7,12 +7,13 @@ import { FlickCommentsSheet } from '@/components/FlickCommentsSheet';
 import { FlickItem } from '@/components/FlickItem';
 import { Icon } from '@/components/Icon';
 import { T } from '@/components/T';
+import { TopicsSheet } from '@/components/TopicsSheet';
 import { getPost, normalize } from '@/lib/posts';
 import { useMe } from '@/lib/session';
 import { supabase } from '@/lib/supabase';
 import type { PostCard } from '@/lib/types';
 import { useDarkChrome } from '@/lib/useDarkChrome';
-import { TAP } from '@/theme/tokens';
+import { color, font, layout, radius, tabbarBar, TAP } from '@/theme/tokens';
 
 type Mode = 'interesser' | 'foelger';
 const PAGE = 10;
@@ -35,10 +36,12 @@ export default function Flicks() {
   const [focused, setFocused] = useState(true);
   const [commentsFor, setCommentsFor] = useState<string | null>(null);
   const [more, setMore] = useState(true);
+  const [editing, setEditing] = useState(false);
   const loadingMore = useRef(false);
 
-  // Bundmenuens højde (se (tabs)/_layout): 60 + kant + afstand til bunden
-  const bottomInset = Math.max(insets.bottom, 12) + 62 + 16;
+  // Tekstpanelet ligger 16 px over bundmenuen
+  const bottomInset = tabbarBar(insets.bottom) + 16;
+  const topInset = insets.top + layout.topGap;
 
   const load = useCallback(async (m: Mode) => {
     const [{ data }, { data: ints }] = await Promise.all([
@@ -114,11 +117,13 @@ export default function Flicks() {
           <T v="headingM" c="#fff" style={{ textAlign: 'center' }}>
             {mode === 'interesser' ? 'Ingen flicks om dine interesser lige nu' : 'Ingen flicks fra dem, du følger'}
           </T>
-          <Pressable accessibilityRole="button" onPress={() => router.push(mode === 'interesser' ? '/interesser' : '/soeg')} style={s.ghost}>
-            <T v="label" c="#fff">
-              {mode === 'interesser' ? 'Rediger interesser' : 'Find folk'}
-            </T>
-          </Pressable>
+          {mode === 'interesser' && (
+            <Pressable accessibilityRole="button" onPress={() => setEditing(true)} style={s.ghost}>
+              <T v="label" c="#fff">
+                Rediger interesser
+              </T>
+            </Pressable>
+          )}
         </View>
       ) : (
         <FlatList
@@ -143,40 +148,46 @@ export default function Flicks() {
               flick={item}
               height={height}
               bottomInset={bottomInset}
-              topInset={insets.top + 8}
+              topInset={topInset}
               active={focused && i === index && !commentsFor}
               why={why(item)}
               onComments={() => setCommentsFor(item.id)}
-              onHidden={() => setItems((l) => l?.filter((x) => x.id !== item.id) ?? null)}
+              onRemoved={() => setItems((l) => l?.filter((x) => x.id !== item.id) ?? null)}
             />
           )}
         />
       )}
 
-      {/* Justér interesser · Interesser · Følger · Ny flick. Valgt = hvid, resten gennemsigtige. */}
-      <View style={[s.top, { top: insets.top + 8 }]} accessibilityLabel="Vælg feed">
-        <Pressable accessibilityRole="button" accessibilityLabel="Juster dine interesser" onPress={() => router.push('/interesser')} style={[s.mode, s.icon]}>
+      {/* Justér interesser · Interesser · Følger. Valgt = hvid, resten gennemsigtige. */}
+      <View style={[s.top, { top: topInset }]} accessibilityRole="radiogroup" accessibilityLabel="Vælg feed">
+        <Pressable accessibilityRole="button" accessibilityLabel="Juster dine interesser" onPress={() => setEditing(true)} style={[s.mode, s.icon]}>
           <Icon name="sliders" size={20} color="#fff" />
         </Pressable>
         {(['interesser', 'foelger'] as Mode[]).map((m) => {
           const on = mode === m;
           return (
             <Pressable key={m} accessibilityRole="button" accessibilityState={{ selected: on }} onPress={() => switchTo(m)} style={[s.mode, on && s.modeOn]}>
-              <T v="label" c={on ? '#171717' : '#fff'}>
+              <T style={s.modeText} c={on ? color.textPrimary : '#fff'}>
                 {m === 'interesser' ? 'Interesser' : 'Følger'}
               </T>
             </Pressable>
           );
         })}
-        <Pressable accessibilityRole="button" accessibilityLabel="Ny flick" onPress={() => router.push('/flicks/ny')} style={[s.mode, s.icon]}>
-          <Icon name="plus" size={20} color="#fff" />
-        </Pressable>
       </View>
 
       <FlickCommentsSheet
         postId={commentsFor}
         onClose={() => setCommentsFor(null)}
         onCount={onCount}
+      />
+      <TopicsSheet
+        open={editing}
+        onClose={() => {
+          setEditing(false);
+          setItems(null);
+          setIndex(0);
+          load(mode);
+        }}
       />
     </View>
   );
@@ -185,17 +196,18 @@ export default function Flicks() {
 const s = StyleSheet.create({
   root: { flex: 1, backgroundColor: '#000' },
   hidden: { position: 'absolute', width: 1, height: 1, opacity: 0 },
-  top: { position: 'absolute', left: 16, flexDirection: 'row', gap: 8, zIndex: 10 },
+  top: { position: 'absolute', left: 20, flexDirection: 'row', gap: 8, zIndex: 10 },
   mode: {
     height: TAP,
     paddingHorizontal: 16,
-    borderRadius: 999,
+    borderRadius: radius.pill,
     borderWidth: 1.5,
-    borderColor: '#fff',
+    borderColor: color.bgSurface,
     alignItems: 'center',
     justifyContent: 'center',
   },
-  modeOn: { backgroundColor: '#fff' },
+  modeOn: { backgroundColor: color.bgSurface, borderWidth: 1, borderColor: color.borderStrong },
+  modeText: { fontFamily: font.bodySemi, fontSize: 14, lineHeight: 20 },
   icon: { width: TAP, paddingHorizontal: 0 },
   empty: { flex: 1, alignItems: 'center', justifyContent: 'center', gap: 16, padding: 32 },
   ghost: { minHeight: TAP, paddingHorizontal: 18, borderRadius: 999, borderWidth: 1, borderColor: 'rgba(255,255,255,0.6)', justifyContent: 'center' },
