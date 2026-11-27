@@ -24,9 +24,11 @@ export function TabBar({ current, onPress }: { current?: string; onPress: (name:
   const insets = useSafeAreaInsets();
   const bottom = tabbarBottom(insets.bottom);
   // På Flicks står menuen altid fast
-  const hidden = useHideOnScroll(current) && current !== 'flicks';
-  // Flicks: mindre, mørkt glas, så videoen fylder mest muligt (som Instagram Reels)
-  const compact = current === 'flicks';
+  const { hidden: hide, scrolled } = useHideOnScroll(current);
+  const hidden = hide && current !== 'flicks';
+  // Flicks: mørkt glas. Menuen bliver først mindre, når man ruller (som Instagram Reels)
+  const dark = current === 'flicks';
+  const compact = dark && scrolled;
   const anim = useRef(new Animated.Value(0)).current;
   useEffect(() => {
     Animated.timing(anim, { toValue: hidden ? 1 : 0, duration: 280, useNativeDriver: Platform.OS !== 'web' }).start();
@@ -44,7 +46,7 @@ export function TabBar({ current, onPress }: { current?: string; onPress: (name:
       ]}
       pointerEvents={hidden ? 'none' : 'box-none'}
     >
-      <Glass tint={compact ? 'dark' : 'light'} style={compact ? [s.pill, s.pillCompact] : s.pill}>
+      <Glass tint={dark ? 'dark' : 'light'} style={compact ? [s.pill, s.pillCompact] : s.pill}>
       <View style={s.row} accessibilityRole="tablist" accessibilityLabel="Hovedmenu">
         {tabItems.map((it) => {
           const on = current === it.name;
@@ -58,8 +60,8 @@ export function TabBar({ current, onPress }: { current?: string; onPress: (name:
               onPress={() => onPress(it.name)}
             >
               {({ pressed }) => (
-                <View style={[s.holder, compact && s.holderCompact, on && (compact ? s.holderOnDark : s.holderOn), pressed && { transform: [{ scale: 0.94 }] }]}>
-                  <Icon name={it.icon} size={compact ? 22 : 24} color={compact ? color.white : color.textPrimary} />
+                <View style={[s.holder, compact && s.holderCompact, on && (dark ? s.holderOnDark : s.holderOn), pressed && { transform: [{ scale: 0.94 }] }]}>
+                  <Icon name={it.icon} size={compact ? 22 : 24} color={dark ? color.white : color.textPrimary} />
                 </View>
               )}
             </Pressable>
@@ -72,7 +74,7 @@ export function TabBar({ current, onPress }: { current?: string; onPress: (name:
 }
 
 /* ---------- Glider væk ved scroll nedad, frem igen ved scroll opad (som prototypen) ---------- */
-type Listener = (hidden: boolean) => void;
+type Listener = (hidden: boolean, top: number) => void;
 const listeners = new Set<Listener>();
 const last = new WeakMap<object, number>();
 let lastKey: object = {};
@@ -93,14 +95,23 @@ function track(key: object, top: number, range: number) {
   if (Math.abs(delta) < 6) return;
   last.set(key, top);
   const h = delta > 0 && top > 80;
-  listeners.forEach((l) => l(h));
+  listeners.forEach((l) => l(h, top));
 }
 
 function useHideOnScroll(route?: string) {
   const [hidden, setHidden] = useState(false);
-  useEffect(() => setHidden(false), [route]);
+  // Har man rullet væk fra toppen? (Flicks: menuen bliver mindre)
+  const [scrolled, setScrolled] = useState(false);
   useEffect(() => {
-    listeners.add(setHidden);
+    setHidden(false);
+    setScrolled(false);
+  }, [route]);
+  useEffect(() => {
+    const l: Listener = (h, top) => {
+      setHidden(h);
+      setScrolled(top > 20);
+    };
+    listeners.add(l);
     let off = () => {};
     if (Platform.OS === 'web' && typeof document !== 'undefined') {
       const onScroll = (e: Event) => {
@@ -112,11 +123,11 @@ function useHideOnScroll(route?: string) {
       off = () => document.removeEventListener('scroll', onScroll, { capture: true });
     }
     return () => {
-      listeners.delete(setHidden);
+      listeners.delete(l);
       off();
     };
   }, []);
-  return hidden;
+  return { hidden, scrolled };
 }
 
 const s = StyleSheet.create({

@@ -81,7 +81,15 @@ function Player({ url, active, muted, contentFit }: { url: string; active: boole
     if (active) player.play();
     else player.pause();
   }, [player, active]);
-  return <ExpoVideoView player={player} style={StyleSheet.absoluteFill} contentFit={contentFit} nativeControls={false} />;
+  return <ExpoVideoView
+      player={player}
+      style={StyleSheet.absoluteFill}
+      contentFit={contentFit}
+      nativeControls={false}
+      // Spil i feedet – ikke i fuldskærm (iPhone/Safari åbner ellers fuldskærm)
+      playsInline
+      fullscreenOptions={{ enable: false }}
+    />;
 }
 
 const s = StyleSheet.create({

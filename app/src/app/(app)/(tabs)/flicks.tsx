@@ -13,6 +13,7 @@ import { useMe } from '@/lib/session';
 import { supabase } from '@/lib/supabase';
 import type { PostCard } from '@/lib/types';
 import { useBlackChrome } from '@/lib/useDarkChrome';
+import { reportTabScroll } from '@/components/TabBar';
 import { color, font, layout, radius, tabbarBar, TAP } from '@/theme/tokens';
 
 type Mode = 'interesser' | 'foelger';
@@ -137,6 +138,9 @@ export default function Flicks() {
           showsVerticalScrollIndicator={false}
           getItemLayout={(_d, i) => ({ length: height, offset: height * i, index: i })}
           onViewableItemsChanged={onViewable as never}
+          // Telefon: fortæl bundmenuen, at der rulles (den bliver så mindre)
+          onScroll={reportTabScroll}
+          scrollEventThrottle={32}
           viewabilityConfig={{ itemVisiblePercentThreshold: 60 }}
           onEndReached={loadMore}
           onEndReachedThreshold={1.5}
