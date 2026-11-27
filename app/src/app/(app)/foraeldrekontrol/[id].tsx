@@ -1,20 +1,20 @@
 import { router, useLocalSearchParams } from 'expo-router';
 import { useCallback, useEffect, useState } from 'react';
 import { StyleSheet, View } from 'react-native';
+import { AccPanel, AccScreen, useDraft } from '@/components/AccountParts';
 import { Avatar } from '@/components/Avatar';
 import { Button } from '@/components/Button';
 import { Chip } from '@/components/Chip';
-import { PersonRow } from '@/components/PersonRow';
-import { Screen } from '@/components/Screen';
-import { Segmented } from '@/components/Segmented';
-import { SmallButton } from '@/components/SmallButton';
+import { ToggleList } from '@/components/CreateParts';
+import { MoreCard } from '@/components/MoreParts';
+import { SaveBar, SavedToast } from '@/components/SaveBar';
+import { SegmentedControl } from '@/components/SegmentedControl';
 import { T } from '@/components/T';
 import { TextField } from '@/components/TextField';
-import { Toggle } from '@/components/Toggle';
 import { ageOf, childAreas, possessive, screenTimeOptions } from '@/lib/settings';
 import { supabase } from '@/lib/supabase';
 import { allTopics } from '@/lib/topics';
-import { color, radius } from '@/theme/tokens';
+import { color } from '@/theme/tokens';
 
 type Settings = {
   areas: Record<string, boolean>;
@@ -26,67 +26,107 @@ type Settings = {
 };
 type Child = { id: string; username: string; name: string; avatar_path: string | null; is_private: boolean; birthdate: string | null };
 type Person = { id: string; username: string; name: string; avatar_path: string | null };
+type Draft = Settings & { private: boolean };
 
-/** Ét barns indstillinger. Alt gemmes med det samme. Rute: /foraeldrekontrol/:id */
+/** Ét barns indstillinger (prototypens ChildSettingsScreen). Ændringer gemmes med "Gem ændringer". Rute: /foraeldrekontrol/:id */
 export default function ChildSettings() {
   const { id } = useLocalSearchParams<{ id: string }>();
   const [child, setChild] = useState<Child | null | undefined>(undefined);
-  const [s, setS] = useState<Settings | null>(null);
+  const [saved, setSaved] = useState<Settings | null>(null);
   const [requests, setRequests] = useState<Person[]>([]);
-  const [topic, setTopic] = useState('');
-  const [confirmRemove, setConfirmRemove] = useState(false);
 
   const load = useCallback(async () => {
     const [{ data: kids }, { data: settings }, { data: reqs }] = await Promise.all([
       supabase.rpc('my_children'),
-      supabase.from('child_settings').select('*').eq('child_id', id).maybeSingle(),
+      supabase.from('child_settings').select('areas, sensitive, blocked_topics, approve_followers, screen_time, bedtime').eq('child_id', id).maybeSingle(),
       supabase.rpc('child_follow_requests', { c: id }),
     ]);
     setChild(((kids ?? []) as Child[]).find((c) => c.id === id) ?? null);
-    setS(settings as Settings | null);
+    setSaved(settings as Settings | null);
     setRequests((reqs ?? []) as Person[]);
   }, [id]);
   useEffect(() => {
     load();
   }, [load]);
 
-  if (child === undefined) return <Screen title="Forældrekontrol">{null}</Screen>;
-  if (!child || !s) {
+  if (!child || !saved)
     return (
-      <Screen title="Forældrekontrol">
-        <T v="bodyS">Barnet er ikke tilknyttet dig.</T>
-      </Screen>
+      <AccScreen title="Forældrekontrol" fallback="/foraeldrekontrol">
+        {child === null && <T v="bodyS">Barnet er ikke tilknyttet dig.</T>}
+      </AccScreen>
     );
-  }
 
-  const first = child.name.split(' ')[0];
+  return (
+    <Editor
+      child={child}
+      saved={saved}
+      requests={requests}
+      onSaved={(next) => {
+        setSaved(next);
+        setChild({ ...child, is_private: (next as Draft).private });
+      }}
+      onAnswered={(fid) => setRequests((l) => l.filter((r) => r.id !== fid))}
+    />
+  );
+}
+
+function Editor({
+  child,
+  saved,
+  requests,
+  onSaved,
+  onAnswered,
+}: {
+  child: Child;
+  saved: Settings;
+  requests: Person[];
+  onSaved: (s: Draft) => void;
+  onAnswered: (followerId: string) => void;
+}) {
+  const d = useDraft<Draft>({ ...saved, private: child.is_private });
+  const s = d.draft;
+  const [topic, setTopic] = useState('');
+  const [confirmRemove, setConfirmRemove] = useState(false);
+  const [saving, setSaving] = useState(false);
+  const first = child.name.split(' ')[0]!;
   const age = ageOf(child.birthdate);
-  const set = async (patch: Partial<Settings>) => {
-    setS({ ...s, ...patch });
-    await supabase.from('child_settings').update({ ...patch, updated_at: new Date().toISOString() }).eq('child_id', child.id);
-  };
-  const setPrivate = async (p: boolean) => {
-    setChild({ ...child, is_private: p });
-    await supabase.rpc('set_child_private', { c: child.id, p });
-  };
-  const answer = async (follower: string, ok: boolean) => {
-    await supabase.rpc('answer_child_follow', { c: child.id, follower, ok });
-    setRequests((l) => l.filter((r) => r.id !== follower));
-  };
-  const remove = async () => {
-    await supabase.from('guardian_links').delete().eq('child_id', child.id);
-    router.back();
-  };
   const q = topic.trim().toLowerCase();
   const suggestions = q ? allTopics.filter((t) => t.toLowerCase().includes(q) && !s.blocked_topics.includes(t)).slice(0, 6) : [];
 
+  const save = async () => {
+    setSaving(true);
+    const { private: priv, ...settings } = s;
+    await supabase.from('child_settings').update({ ...settings, updated_at: new Date().toISOString() }).eq('child_id', child.id);
+    if (priv !== child.is_private) await supabase.rpc('set_child_private', { c: child.id, p: priv });
+    setSaving(false);
+    onSaved(s);
+    d.saved();
+  };
+  const answer = async (follower: string, ok: boolean) => {
+    onAnswered(follower);
+    await supabase.rpc('answer_child_follow', { c: child.id, follower, ok });
+  };
+  const remove = async () => {
+    await supabase.from('guardian_links').delete().eq('child_id', child.id);
+    router.replace('/foraeldrekontrol');
+  };
+
   return (
-    <Screen title={first}>
-      <View style={st.head}>
+    <AccScreen
+      title={first}
+      fallback="/foraeldrekontrol"
+      footer={
+        <>
+          <SaveBar dirty={d.dirty} saving={saving} onSave={save} onReset={d.reset} note={`Ændringerne gælder først for ${first}, når du gemmer.`} />
+          <SavedToast show={d.toast} />
+        </>
+      }
+    >
+      <View style={st.child}>
         <Avatar name={child.name} path={child.avatar_path} size="L" />
-        <View style={{ flex: 1 }}>
+        <View style={{ flex: 1, minWidth: 0 }}>
           <T v="headingM">
-            {child.name}
+            {first}
             {age !== null ? `, ${age} år` : ''}
           </T>
           <T v="caption" c={color.textSecondary}>
@@ -95,88 +135,138 @@ export default function ChildSettings() {
         </View>
       </View>
 
-      <T v="headingM">Daglig skærmtid</T>
+      {/* ---------- Tid ---------- */}
+      <T v="headingM" accessibilityRole="header">
+        Daglig skærmtid
+      </T>
       <View style={st.chips} accessibilityRole="radiogroup" accessibilityLabel="Daglig skærmtid">
         {screenTimeOptions.map((o) => (
-          <Chip key={o} label={o} selected={s.screen_time === o} onPress={() => set({ screen_time: o })} />
+          <Chip key={o} selected={s.screen_time === o} onPress={() => d.patch({ screen_time: o })}>
+            {o}
+          </Chip>
         ))}
       </View>
-      <Toggle title="Ro om natten" hint="Appen er lukket fra klokken 21 til 7." value={s.bedtime} onChange={(v) => set({ bedtime: v })} />
+      <ToggleList
+        rows={[{ id: 'bedtime', title: 'Ro om natten', hint: 'Appen er lukket fra klokken 21 til 7.' }]}
+        values={{ bedtime: s.bedtime }}
+        onToggle={() => d.patch({ bedtime: !s.bedtime })}
+      />
 
-      <T v="headingM">Hvad må {first} bruge?</T>
-      <View style={{ gap: 8 }}>
-        {childAreas.map((a) => (
-          <Toggle key={a.id} title={a.title} hint={a.hint} value={!!s.areas[a.id]} onChange={(v) => set({ areas: { ...s.areas, [a.id]: v } })} />
-        ))}
-      </View>
-      <Toggle title="Skjul følsomt indhold" hint="Nøgenhed, selvskade og grafiske billeder." value={s.sensitive} onChange={(v) => set({ sensitive: v })} />
+      {/* ---------- Indhold ---------- */}
+      <T v="headingM" accessibilityRole="header">
+        Hvad må {first} bruge?
+      </T>
+      <ToggleList rows={[...childAreas]} values={s.areas} onToggle={(a) => d.patch({ areas: { ...s.areas, [a]: !s.areas[a] } })} />
+      <ToggleList
+        rows={[{ id: 'sensitive', title: 'Skjul følsomt indhold', hint: 'Skjuler nøgenhed, selvskade og grafiske billeder. Vold er aldrig tilladt på ciircle.' }]}
+        values={{ sensitive: s.sensitive }}
+        onToggle={() => d.patch({ sensitive: !s.sensitive })}
+      />
 
-      <T v="headingS">Blokerede emner</T>
+      <T v="headingS" accessibilityRole="header">
+        Blokerede emner
+      </T>
       {s.blocked_topics.length > 0 && (
         <View style={st.chips}>
           {s.blocked_topics.map((t) => (
-            <Chip key={t} label={t} selected trailing="close" onPress={() => set({ blocked_topics: s.blocked_topics.filter((x) => x !== t) })} />
+            <Chip key={t} selected trailing="close" onPress={() => d.patch({ blocked_topics: s.blocked_topics.filter((x) => x !== t) })}>
+              {t}
+            </Chip>
           ))}
         </View>
       )}
-      <TextField label="Bloker et emne" showLabel={false} placeholder="Bloker et emne" value={topic} onChangeText={setTopic} />
+      <TextField label="Bloker et emne" showLabel={false} value={topic} onChangeText={setTopic} />
       {suggestions.length > 0 && (
         <View style={st.chips}>
           {suggestions.map((t) => (
             <Chip
               key={t}
-              label={t}
               trailing="plus"
               onPress={() => {
-                set({ blocked_topics: [...s.blocked_topics, t] });
+                d.patch({ blocked_topics: [...s.blocked_topics, t] });
                 setTopic('');
               }}
-            />
+            >
+              {t}
+            </Chip>
           ))}
         </View>
       )}
 
-      <T v="headingM">Hvem kan se {possessive(first)} profil?</T>
-      <Segmented
+      {/* ---------- Profil ---------- */}
+      <T v="headingM" accessibilityRole="header">
+        Hvem kan se {possessive(first)} profil?
+      </T>
+      <SegmentedControl
         label={`Hvem kan se ${possessive(first)} profil?`}
-        value={child.is_private ? 'privat' : 'offentlig'}
-        onChange={(v) => setPrivate(v === 'privat')}
+        value={s.private ? 'privat' : 'offentlig'}
+        onChange={(v) => d.patch({ private: v === 'privat' })}
         options={[
           { value: 'offentlig', label: 'Offentlig' },
           { value: 'privat', label: 'Privat' },
         ]}
       />
 
-      <T v="headingM">Godkend nye følgere</T>
-      <Toggle title={`Du godkender, før nogen kan følge ${first}`} value={s.approve_followers} onChange={(v) => set({ approve_followers: v })} />
-      {requests.length > 0 && (
-        <View style={{ gap: 8 }}>
-          {requests.map((r) => (
-            <PersonRow key={r.id} name={r.name} username={r.username} avatar={r.avatar_path}>
-              <SmallButton title="Godkend" dark onPress={() => answer(r.id, true)} />
-              <SmallButton title="Afvis" onPress={() => answer(r.id, false)} />
-            </PersonRow>
-          ))}
-        </View>
-      )}
-
-      {confirmRemove ? (
-        <View style={st.panel}>
-          <T v="bodyS">Fjern tilknytningen til {first}? Indstillingerne gælder ikke længere.</T>
-          <View style={{ flexDirection: 'row', gap: 8 }}>
-            <Button title="Annuller" variant="secondary" style={{ flex: 1 }} onPress={() => setConfirmRemove(false)} />
-            <Button title="Fjern" style={{ flex: 1 }} onPress={remove} />
+      {/* ---------- Følgere ---------- */}
+      <T v="headingM" accessibilityRole="header">
+        Følgere
+      </T>
+      <ToggleList
+        rows={[{ id: 'approve', title: 'Godkend nye følgere', hint: `Du skal godkende, før nogen kan følge ${first}.` }]}
+        values={{ approve: s.approve_followers }}
+        onToggle={() => d.patch({ approve_followers: !s.approve_followers })}
+      />
+      {requests.map((r) => (
+        <MoreCard key={r.id} label={r.name}>
+          <View style={st.row}>
+            <Avatar name={r.name} path={r.avatar_path} />
+            <View style={{ flex: 1, minWidth: 0, gap: 2 }}>
+              <T v="headingS" numberOfLines={1}>
+                {r.name}
+              </T>
+              <T v="caption" c={color.textSecondary} numberOfLines={1}>
+                Vil følge {first}
+              </T>
+            </View>
           </View>
-        </View>
+          <View style={st.buttons}>
+            <Button style={{ flex: 1 }} onPress={() => answer(r.id, true)}>
+              Godkend
+            </Button>
+            <Button variant="secondary" style={{ flex: 1 }} onPress={() => answer(r.id, false)}>
+              Afvis
+            </Button>
+          </View>
+        </MoreCard>
+      ))}
+
+      {/* ---------- Fjern ---------- */}
+      {confirmRemove ? (
+        <AccPanel>
+          <T v="bodyS">
+            Fjern tilknytningen til {first}? Indstillingerne gælder ikke længere.
+          </T>
+          <View style={[st.buttons, { alignSelf: 'stretch' }]}>
+            <Button variant="secondary" style={{ flex: 1 }} onPress={() => setConfirmRemove(false)}>
+              Annuller
+            </Button>
+            <Button style={{ flex: 1 }} onPress={remove}>
+              Fjern
+            </Button>
+          </View>
+        </AccPanel>
       ) : (
-        <Button title="Fjern tilknytning" variant="danger" onPress={() => setConfirmRemove(true)} />
+        <Button variant="danger" style={{ alignSelf: 'center' }} onPress={() => setConfirmRemove(true)}>
+          Fjern tilknytning
+        </Button>
       )}
-    </Screen>
+    </AccScreen>
   );
 }
 
 const st = StyleSheet.create({
-  head: { flexDirection: 'row', alignItems: 'center', gap: 12 },
+  child: { flexDirection: 'row', alignItems: 'center', gap: 14 },
   chips: { flexDirection: 'row', flexWrap: 'wrap', gap: 8 },
-  panel: { gap: 12, padding: 16, borderRadius: radius.xl, borderWidth: 1, borderColor: color.borderDefault, backgroundColor: color.bgSurface },
+  row: { flexDirection: 'row', alignItems: 'center', gap: 12 },
+  buttons: { flexDirection: 'row', gap: 8 },
 });

@@ -1,28 +1,31 @@
 import { router, useFocusEffect } from 'expo-router';
 import { useCallback, useState } from 'react';
-import { Pressable, Share, StyleSheet, View } from 'react-native';
+import { Share, StyleSheet, View } from 'react-native';
+import { AccCard, AccPanel, AccScreen } from '@/components/AccountParts';
 import { Avatar } from '@/components/Avatar';
 import { Button } from '@/components/Button';
 import { Icon } from '@/components/Icon';
-import { Screen } from '@/components/Screen';
+import { Sheet } from '@/components/Sheet';
 import { T } from '@/components/T';
 import { TextField } from '@/components/TextField';
 import { useMe } from '@/lib/session';
-import { ageOf } from '@/lib/settings';
+import { ageOf, childAreas } from '@/lib/settings';
 import { supabase } from '@/lib/supabase';
 import { color, radius } from '@/theme/tokens';
 
 type Child = { id: string; username: string; name: string; avatar_path: string | null; is_private: boolean; birthdate: string | null };
 
 /**
- * Forældrekontrol. Forælderen laver en kode; barnet skriver koden her på sin egen profil.
- * (I den færdige app sker tilknytningen med MitID.)
+ * Forældrekontrol (prototypens ParentalControl): dine tilknyttede børn.
+ * Tilknytning sker med en kode: forælderen laver koden, barnet skriver den på sin egen profil.
  */
 export default function ParentalControl() {
   const me = useMe();
-  const [children, setChildren] = useState<Child[]>([]);
+  const [children, setChildren] = useState<Child[] | null>(null);
+  const [areasOn, setAreasOn] = useState<Record<string, number>>({});
   const [guardians, setGuardians] = useState<string[]>([]);
   const [code, setCode] = useState<string | null>(null);
+  const [sheet, setSheet] = useState<'kode' | 'barn' | null>(null);
   const [input, setInput] = useState('');
   const [msg, setMsg] = useState('');
   const [busy, setBusy] = useState(false);
@@ -30,12 +33,20 @@ export default function ParentalControl() {
   const load = useCallback(async () => {
     const [{ data: kids }, { data: links }] = await Promise.all([
       supabase.rpc('my_children'),
-      supabase.from('guardian_links').select('guardian_id, status, code, profiles!guardian_links_guardian_id_fkey(name)').or(`child_id.eq.${me.id},guardian_id.eq.${me.id}`),
+      supabase
+        .from('guardian_links')
+        .select('guardian_id, status, code, profiles!guardian_links_guardian_id_fkey(name)')
+        .or(`child_id.eq.${me.id},guardian_id.eq.${me.id}`),
     ]);
-    setChildren((kids ?? []) as Child[]);
+    const list = (kids ?? []) as Child[];
+    setChildren(list);
     const all = (links ?? []) as any[];
     setGuardians(all.filter((l) => l.guardian_id !== me.id && l.status === 'aktiv').map((l) => l.profiles?.name).filter(Boolean));
     setCode(all.find((l) => l.guardian_id === me.id && l.status === 'afventer')?.code ?? null);
+    if (list.length) {
+      const { data } = await supabase.from('child_settings').select('child_id, areas').in('child_id', list.map((c) => c.id));
+      setAreasOn(Object.fromEntries(((data ?? []) as { child_id: string; areas: Record<string, boolean> }[]).map((r) => [r.child_id, childAreas.filter((a) => r.areas?.[a.id]).length])));
+    }
   }, [me.id]);
   useFocusEffect(
     useCallback(() => {
@@ -43,9 +54,12 @@ export default function ParentalControl() {
     }, [load]),
   );
 
-  const newCode = async () => {
-    const { data } = await supabase.rpc('create_guardian_code');
-    setCode(data as string);
+  const openCode = async () => {
+    setSheet('kode');
+    if (!code) {
+      const { data } = await supabase.rpc('create_guardian_code');
+      setCode(data as string);
+    }
   };
 
   const accept = async () => {
@@ -61,73 +75,120 @@ export default function ParentalControl() {
     }
   };
 
+  const closeSheet = () => {
+    setSheet(null);
+    setMsg('');
+    setInput('');
+  };
+
   return (
-    <Screen title="Forældrekontrol">
-      <T v="headingM">Dine børn</T>
-      {children.length === 0 ? (
-        <View style={s.panel}>
+    <AccScreen title="Forældrekontrol">
+      <T v="bodyS" c={color.textSecondary}>
+        Tilknyt dine børns profiler, og bestem selv, hvad de kan se og bruge, hvem der kan skrive til dem, og hvor længe de må være på.
+      </T>
+
+      <T v="headingM" accessibilityRole="header">
+        Dine børn
+      </T>
+      {children?.length === 0 ? (
+        <AccPanel>
           <T v="bodyS">Du har ikke tilknyttet nogen børn endnu.</T>
-        </View>
+        </AccPanel>
       ) : (
-        <View style={{ gap: 10 }}>
-          {children.map((c) => {
+        <View style={s.list}>
+          {children?.map((c) => {
             const age = ageOf(c.birthdate);
+            const first = c.name.split(' ')[0];
             return (
-              <Pressable key={c.id} accessibilityRole="link" onPress={() => router.push(`/foraeldrekontrol/${c.id}`)} style={({ pressed }) => [s.card, pressed && { opacity: 0.7 }]}>
+              <AccCard key={c.id} label={c.name} onPress={() => router.push(`/foraeldrekontrol/${c.id}`)}>
                 <Avatar name={c.name} path={c.avatar_path} />
-                <View style={{ flex: 1 }}>
+                <View style={s.text}>
                   <T v="headingS">
-                    {c.name}
+                    {first}
                     {age !== null ? `, ${age} år` : ''}
                   </T>
                   <T v="caption" c={color.textSecondary}>
-                    @{c.username} · {c.is_private ? 'Privat profil' : 'Offentlig profil'}
+                    @{c.username}
+                    {areasOn[c.id] !== undefined ? ` · ${areasOn[c.id]} af ${childAreas.length} områder slået til` : ''}
                   </T>
                 </View>
-                <Icon name="chevron-right" size={20} color={color.textSecondary} />
-              </Pressable>
+                <Icon name="chevron-right" />
+              </AccCard>
             );
           })}
         </View>
       )}
 
-      {code ? (
-        <View style={s.codeBox}>
-          <T v="caption" c={color.textSecondary}>
-            Barnets kode
-          </T>
-          <T v="titleXl" style={s.code} selectable accessibilityLabel={`Kode: ${code.split('').join(' ')}`}>
-            {code}
-          </T>
-          <T v="caption" c={color.textSecondary} style={{ textAlign: 'center' }}>
-            Barnet skriver koden under Indstillinger → Forældrekontrol.
-          </T>
-          <Button title="Del koden" variant="secondary" icon="send" onPress={() => Share.share({ message: `Min kode til forældrekontrol på ciircle: ${code}` })} />
+      <Button block onPress={openCode}>
+        Tilknyt et barn
+      </Button>
+
+      <View style={s.note}>
+        <View style={{ marginTop: 1 }}>
+          <Icon name="lock" size={18} color={color.accentNoteText} />
         </View>
+        <T v="caption" c={color.accentNoteText} style={{ flex: 1 }}>
+          Du kan aldrig læse dit barns beskeder. Du kan se, hvem de skriver med, og hvor meget tid de bruger. Børn under 16 år kan ikke selv slå
+          forældrekontrol fra.
+        </T>
+      </View>
+
+      {/* Barnets side: skriv koden fra din forælder */}
+      {guardians.length > 0 ? (
+        <T v="caption" c={color.textSecondary} style={{ textAlign: 'center' }}>
+          Du er tilknyttet {guardians.join(' og ')}.
+        </T>
       ) : (
-        <Button title="Tilknyt et barn" block onPress={newCode} />
+        <Button variant="ghost" style={{ alignSelf: 'center' }} onPress={() => setSheet('barn')}>
+          Har du fået en kode fra din forælder?
+        </Button>
       )}
 
-      <T v="headingM">Har du fået en kode?</T>
-      {guardians.length > 0 && (
-        <View style={s.panel}>
-          <T v="bodyS">Tilknyttet {guardians.join(' og ')}.</T>
+      <Sheet open={sheet !== null} onClose={closeSheet} title={sheet === 'barn' ? 'Kode fra din forælder' : 'Tilknyt et barn'} dim>
+        <View style={s.sheet}>
+          {sheet === 'kode' ? (
+            <>
+              <T v="bodyS">Dit barn skriver koden på sin egen profil under Indstillinger → Forældrekontrol. Så er I tilknyttet.</T>
+              <View style={s.codeBox}>
+                <T v="titleXl" style={s.code} selectable accessibilityLabel={code ? `Kode: ${code.split('').join(' ')}` : 'Laver kode'}>
+                  {code ?? '······'}
+                </T>
+              </View>
+              <Button block disabled={!code} onPress={() => code && Share.share({ message: `Min kode til forældrekontrol på ciircle: ${code}` })}>
+                Del koden
+              </Button>
+              <Button variant="ghost" block onPress={closeSheet}>
+                Luk
+              </Button>
+            </>
+          ) : (
+            <>
+              <T v="bodyS">Skriv koden, din forælder har fået under Forældrekontrol.</T>
+              <TextField label="Kode" showLabel={false} autoCapitalize="characters" autoCorrect={false} maxLength={6} value={input} onChangeText={setInput} />
+              {!!msg && (
+                <T v="bodyS" c={msg.startsWith('Du er') ? color.green700 : color.danger}>
+                  {msg}
+                </T>
+              )}
+              <Button block disabled={input.trim().length !== 6} loading={busy} onPress={accept}>
+                Tilknyt
+              </Button>
+              <Button variant="ghost" block onPress={closeSheet}>
+                Annuller
+              </Button>
+            </>
+          )}
         </View>
-      )}
-      <TextField label="Kode fra din forælder" autoCapitalize="characters" autoCorrect={false} maxLength={6} value={input} onChangeText={setInput} />
-      <Button title="Tilknyt" variant="secondary" block disabled={input.trim().length !== 6} loading={busy} onPress={accept} />
-      {!!msg && (
-        <T v="bodyS" c={msg.startsWith('Du er') ? color.green700 : color.danger}>
-          {msg}
-        </T>
-      )}
-    </Screen>
+      </Sheet>
+    </AccScreen>
   );
 }
 
 const s = StyleSheet.create({
-  panel: { padding: 16, borderRadius: radius.xl, borderWidth: 1, borderColor: color.borderDefault, backgroundColor: color.bgSurface },
-  card: { flexDirection: 'row', alignItems: 'center', gap: 12, padding: 12, borderRadius: radius.lg, borderWidth: 1, borderColor: color.borderDefault, backgroundColor: color.bgSurface },
-  codeBox: { alignItems: 'center', gap: 8, padding: 20, borderRadius: radius.xl, backgroundColor: color.noteBg },
+  list: { gap: 14 },
+  text: { flex: 1, minWidth: 0, alignItems: 'flex-start', gap: 2 },
+  note: { flexDirection: 'row', gap: 10, paddingVertical: 12, paddingHorizontal: 14, borderRadius: radius.md, backgroundColor: color.accentNoteBg },
+  sheet: { gap: 14, paddingTop: 16, paddingHorizontal: 20, paddingBottom: 24 },
+  codeBox: { alignItems: 'center', paddingVertical: 16, borderRadius: radius.lg, backgroundColor: color.bgSubtle },
   code: { fontSize: 36, lineHeight: 44, letterSpacing: 6 },
 });

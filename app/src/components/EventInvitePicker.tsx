@@ -7,7 +7,6 @@ import { supabase } from '@/lib/supabase';
 import { color, font, radius } from '@/theme/tokens';
 import { Avatar, initials } from './Avatar';
 import { Icon } from './Icon';
-import { ListingToggle } from './ListingRadiusSheet';
 import { T } from './T';
 import { TextField } from './TextField';
 
@@ -94,7 +93,9 @@ export function EventInvitePicker({ me, value, onChange }: { me: string; value: 
             {followers.length === 1 ? '1 person' : `${followers.length} personer`}
           </T>
         </View>
-        <ListingToggle on={value.allFollowers} />
+        <View style={[s.toggle, value.allFollowers && { backgroundColor: color.actionPrimary }]}>
+          <View style={[s.knob, value.allFollowers && { transform: [{ translateX: 18 }] }]} />
+        </View>
       </Pressable>
 
       <TextField label="Søg efter navn eller gruppe" showLabel={false} value={q} onChangeText={setQ} autoCapitalize="none" autoCorrect={false} />
@@ -182,6 +183,8 @@ const s = StyleSheet.create({
   invite: { gap: 10, alignSelf: 'stretch' },
   all: { flexDirection: 'row', alignItems: 'center', gap: 12, minHeight: 60, paddingVertical: 8, paddingLeft: 8, paddingRight: 14, borderWidth: 1, borderColor: color.borderDefault, borderRadius: radius.lg, backgroundColor: color.bgSurface },
   allIcon: { width: 42, height: 42, borderRadius: 12, backgroundColor: color.bgSubtle, alignItems: 'center', justifyContent: 'center' },
+  toggle: { width: 46, height: 28, flexShrink: 0, borderRadius: 14, backgroundColor: color.borderStrong },
+  knob: { position: 'absolute', top: 3, left: 3, width: 22, height: 22, borderRadius: 11, backgroundColor: color.white },
   results: { padding: 4, borderWidth: 1, borderColor: color.borderDefault, borderRadius: radius.lg, backgroundColor: color.bgSurface },
   row: { flexDirection: 'row', alignItems: 'center', gap: 10, minHeight: 52, paddingVertical: 6, paddingHorizontal: 10, borderRadius: radius.md },
   name: { flex: 1, minWidth: 0 },

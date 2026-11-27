@@ -103,7 +103,8 @@ export function MomentStory({ moments, startAtUnseen, onEnd, onBeforeStart, onCl
   const drag = useRef(new Animated.Value(0)).current;
   const pan = useRef(
     PanResponder.create({
-      onMoveShouldSetPanResponder: (_e, g) => g.dy > 8 && g.dy > Math.abs(g.dx),
+      onMoveShouldSetPanResponderCapture: (_e, g) => g.dy > 8 && g.dy > Math.abs(g.dx),
+      onPanResponderTerminationRequest: () => false,
       onPanResponderGrant: () => setHeld(true),
       onPanResponderMove: (_e, g) => drag.setValue(Math.max(0, g.dy)),
       onPanResponderRelease: (_e, g) => {
