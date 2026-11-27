@@ -136,7 +136,7 @@ export default function HighlightEdit() {
         ) : (
           <View style={s.addGrid}>
             {others.map((m) => (
-              <Pressable key={m.id} accessibilityRole="button" accessibilityLabel="Tilføj billede" onPress={() => add(m.id)} style={[photoStyle, s.addItem]}>
+              <Pressable key={m.id} accessibilityRole="button" accessibilityLabel="Tilføj billede" onPress={() => add(m.id)} style={s.addItem}>
                 <HighlightMedia m={m} />
                 <View style={s.check} />
               </Pressable>
@@ -169,5 +169,5 @@ const s = StyleSheet.create({
   },
   checkOn: { borderColor: color.accentHighlight, backgroundColor: color.accentHighlight },
   addGrid: { flexDirection: 'row', flexWrap: 'wrap', gap: 8 },
-  addItem: { flex: 0, width: '31.5%', aspectRatio: 1, borderRadius: radius.lg },
+  addItem: { width: '31.5%', aspectRatio: 1, overflow: 'hidden', borderRadius: radius.lg, backgroundColor: color.bgSubtle },
 });
