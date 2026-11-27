@@ -16,6 +16,11 @@ type Props = {
   footer?: ReactNode;
   /** Mørk hinde bag arket */
   dim?: boolean;
+  /** Styrken af den mørke hinde (standard 0,35 som prototypen) */
+  dimOpacity?: number;
+  /** Halv højde i px og højst denne andel af skærmen (standard 480 px / 62 %) */
+  halfHeight?: number;
+  halfMax?: number;
   /** false = børnene ruller selv (fx en FlatList) */
   scroll?: boolean;
   children: ReactNode;
@@ -26,7 +31,19 @@ type Props = {
  * gøre det højere eller lukke det. Tryk udenfor lukker.
  * Afvigelse fra prototypen: standard er "auto" og mørk hinde, fordi appens ark næsten alle er menuer.
  */
-export function Sheet({ open, onClose, title, initialSize = 'auto', footer, dim = true, scroll = true, children }: Props) {
+export function Sheet({
+  open,
+  onClose,
+  title,
+  initialSize = 'auto',
+  footer,
+  dim = true,
+  dimOpacity = 0.35,
+  halfHeight = 480,
+  halfMax = 0.62,
+  scroll = true,
+  children,
+}: Props) {
   const insets = useSafeAreaInsets();
   const { height: H } = useWindowDimensions();
   const [size, setSize] = useState<Size>(initialSize);
@@ -71,13 +88,13 @@ export function Sheet({ open, onClose, title, initialSize = 'auto', footer, dim 
   ).current;
 
   const full = H - insets.top - 26;
-  const height = size === 'half' ? Math.min(480 + insets.bottom, H * 0.62) : size === 'full' ? full : undefined;
+  const height = size === 'half' ? Math.min(halfHeight + insets.bottom, H * halfMax) : size === 'full' ? full : undefined;
   const translateY = Animated.add(drag, slide.interpolate({ inputRange: [0, 1], outputRange: [0, H] }));
 
   return (
     <Modal visible={open} transparent animationType="none" onRequestClose={onClose} statusBarTranslucent>
       <View style={s.layer}>
-        <Pressable style={[StyleSheet.absoluteFill, dim && s.dim]} onPress={onClose} accessibilityLabel="Luk" />
+        <Pressable style={[StyleSheet.absoluteFill, dim && { backgroundColor: `rgba(10,10,10,${dimOpacity})` }]} onPress={onClose} accessibilityLabel="Luk" />
         <Animated.View
           accessibilityViewIsModal
           style={[s.sheet, { height, maxHeight: full, transform: [{ translateY }] }]}
@@ -115,7 +132,6 @@ export function Sheet({ open, onClose, title, initialSize = 'auto', footer, dim 
 
 const s = StyleSheet.create({
   layer: { flex: 1, justifyContent: 'flex-end', overflow: 'hidden' },
-  dim: { backgroundColor: 'rgba(0,0,0,0.35)' },
   sheet: {
     backgroundColor: color.bgSurface,
     borderTopLeftRadius: 24,

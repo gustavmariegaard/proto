@@ -125,7 +125,7 @@ export default function Report() {
                       {tags.map((t) => {
                         const sel = wrongTags.includes(t);
                         return (
-                          <Chip key={t} selected={sel} icon={sel ? 'check' : undefined} onPress={() => setWrongTags((w) => (sel ? w.filter((x) => x !== t) : [...w, t]))}>
+                          <Chip key={t} selected={sel} icon={sel ? 'check' : undefined} iconSize={16} onPress={() => setWrongTags((w) => (sel ? w.filter((x) => x !== t) : [...w, t]))}>
                             {`#${t}`}
                           </Chip>
                         );

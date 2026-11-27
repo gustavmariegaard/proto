@@ -39,10 +39,12 @@ type Props = {
   /** S/M/L/XL som i prototypen, eller et antal px */
   size?: AvatarSize | number;
   tone?: AvatarTone;
+  /** Egne initialer (fx prototypens to bogstaver "BO" for "Bogklubben"); ellers udregnes de af navnet */
+  initials?: string;
 };
 
 /** Rund avatar: profilbillede, eller initialer på tonens baggrund */
-export function Avatar({ name, path, uri, size = 'M', tone = 'sand' }: Props) {
+export function Avatar({ name, path, uri, size = 'M', tone = 'blue', initials: letters }: Props) {
   const d = typeof size === 'number' ? size : sizes[size];
   const f =
     typeof size === 'number'
@@ -64,7 +66,7 @@ export function Avatar({ name, path, uri, size = 'M', tone = 'sand' }: Props) {
         <Image source={src} style={{ width: d, height: d }} contentFit="cover" transition={150} />
       ) : (
         <T c={t.fg} style={f}>
-          {initials(name)}
+          {letters ?? initials(name)}
         </T>
       )}
     </View>

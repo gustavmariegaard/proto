@@ -13,7 +13,8 @@ import { TextField } from '@/components/TextField';
 import { conversationTitle, isUnread, myConversations, type ConversationRow } from '@/lib/conversations';
 import { useMe } from '@/lib/session';
 import { supabase } from '@/lib/supabase';
-import { color, TAB_SPACE } from '@/theme/tokens';
+import { useSafeAreaInsets } from 'react-native-safe-area-context';
+import { color } from '@/theme/tokens';
 
 type Tab = 'alle' | 'personer' | 'cirkler' | 'anmodninger';
 
@@ -30,6 +31,7 @@ const isCircle = (c: ConversationRow) => c.is_group || c.members.length > 1;
 /** Beskeder: alle samtaler, filtreret med Alle / Personer / Cirkler / Anmodninger (som prototypen) */
 export default function Messages() {
   const me = useMe();
+  const insets = useSafeAreaInsets();
   const params = useLocalSearchParams<{ vis?: string }>();
   const [rows, setRows] = useState<ConversationRow[] | null>(null);
   const [tab, setTab] = useState<Tab>(tabs.find((t) => t.value === params.vis)?.value ?? 'alle');
@@ -87,7 +89,7 @@ export default function Messages() {
       </PageHeader>
 
       <ScrollView
-        contentContainerStyle={[msg.content, { paddingBottom: TAB_SPACE }]}
+        contentContainerStyle={[msg.content, { paddingBottom: 24 + insets.bottom }]}
         keyboardShouldPersistTaps="handled"
         refreshControl={
           <RefreshControl

@@ -63,10 +63,9 @@ const tones: AvatarTone[] = ['sand', 'blue', 'sage', 'rose'];
 /** Fast farve ud fra navnet (prototypens pickTone) */
 export const pickTone = (name: string) => tones[name.length % tones.length]!;
 
-/** Avatar med prototypens initialer (to bogstaver), da den fælles Avatar selv udregner dem */
+/** Avatar med prototypens initialer (to bogstaver) og faste farve */
 export function InitialsAvatar({ name, path, size = 'L' }: { name: string; path?: string | null; size?: 'S' | 'M' | 'L' }) {
-  // Avatar tager de første bogstaver af to ord: "L Ø" → "LØ"
-  return <Avatar name={initialsOf(name).split('').join(' ')} path={path} size={size} tone={pickTone(name)} />;
+  return <Avatar name={name} initials={initialsOf(name)} path={path} size={size} tone={pickTone(name)} />;
 }
 
 /** Række i Grupper og Sider: avatar, navn, seneste aktivitet og en mint prik ved nyt */

@@ -37,7 +37,11 @@ export function MarketEventsShell({ children, onRefresh }: { children: ReactNode
       >
         {children}
       </ScrollView>
-      <TabBar onPress={(name) => (name === 'ny' ? router.push('/opret') : name === 'mere' ? setMore(true) : router.navigate(name === 'index' ? '/' : `/${name}`))} />
+      {/* Samme bundmenu og Mere-ark som fanerne: ingen fane er markeret her, Mere kun mens arket er åbent */}
+      <TabBar
+        current={more ? 'mere' : undefined}
+        onPress={(name) => (name === 'ny' ? router.push('/opret') : name === 'mere' ? setMore(true) : router.navigate(name === 'index' ? '/' : `/${name}`))}
+      />
       <MoreSheet open={more} onClose={() => setMore(false)} />
     </View>
   );

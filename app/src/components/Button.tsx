@@ -21,6 +21,9 @@ type Props = Omit<PressableProps, 'children' | 'style'> & {
   children?: string;
   variant?: Variant;
   icon?: IconName;
+  /** Ikonets størrelse (standard 18) og afstand til teksten (standard 8) */
+  iconSize?: number;
+  gap?: number;
   loading?: boolean;
   /** Fylder hele bredden */
   block?: boolean;
@@ -32,7 +35,7 @@ type Props = Omit<PressableProps, 'children' | 'style'> & {
  * Primary til hovedhandling, Secondary til alternativ,
  * Highlight sparsomt, Ghost til mindre vigtige handlinger.
  */
-export function Button({ title, children, variant = 'primary', icon, loading, block, disabled, style, ...rest }: Props) {
+export function Button({ title, children, variant = 'primary', icon, iconSize = 18, gap, loading, block, disabled, style, ...rest }: Props) {
   const fg =
     variant === 'primary'
       ? color.textOnAction
@@ -53,6 +56,7 @@ export function Button({ title, children, variant = 'primary', icon, loading, bl
         auth && s.authBase,
         s[variant],
         block && s.block,
+        gap !== undefined && { gap },
         (disabled || loading) && s.disabled,
         pressed && (auth ? s.pressedAuth : s.pressed),
         style,
@@ -63,7 +67,7 @@ export function Button({ title, children, variant = 'primary', icon, loading, bl
         <ActivityIndicator color={fg} />
       ) : (
         <>
-          {icon && <Icon name={icon} size={18} color={fg} />}
+          {icon && <Icon name={icon} size={iconSize} color={fg} />}
           <T v="label" c={fg} numberOfLines={1}>
             {title ?? children}
           </T>

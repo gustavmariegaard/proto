@@ -6,13 +6,17 @@ import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { Avatar } from '@/components/Avatar';
 import { Button } from '@/components/Button';
 import { Icon, type IconName } from '@/components/Icon';
+import { IconButton } from '@/components/IconButton';
 import { PageHeader } from '@/components/PageHeader';
 import { PostCard } from '@/components/PostCard';
+import { Item } from '@/components/PostMenu';
+import { Sheet } from '@/components/Sheet';
 import { T } from '@/components/T';
 import { Tag } from '@/components/Tag';
 import { eventGuests, getEvent, longDate, postsWhere, rsvpLabel, setRsvp, timeRange, type EventCard, type Guest, type Rsvp } from '@/lib/community';
 import { imageSource } from '@/lib/media';
 import { useMe } from '@/lib/session';
+import { supabase } from '@/lib/supabase';
 import type { PostCard as Post } from '@/lib/types';
 import { color, font, radius, TAP } from '@/theme/tokens';
 
@@ -32,6 +36,9 @@ export default function EventDetail() {
   const [event, setEvent] = useState<EventCard | null | undefined>(undefined);
   const [guests, setGuests] = useState<Guests | null>(null);
   const [posts, setPosts] = useState<Post[]>([]);
+  // Kun arrangøren: ⋯-menu med "Slet begivenhed" (ikke i prototypen, men samme princip som "Slet opslag")
+  const [sheet, setSheet] = useState<null | 'menu' | 'slet'>(null);
+  const [deleting, setDeleting] = useState(false);
 
   const load = useCallback(async () => {
     const e = await getEvent(id);
@@ -93,7 +100,9 @@ export default function EventDetail() {
 
   return (
     <View style={s.screen}>
-      <PageHeader title="Begivenhed" fallback="/begivenheder" />
+      <PageHeader title="Begivenhed" fallback="/begivenheder">
+        {mine && <IconButton icon="dots" label="Flere muligheder" onPress={() => setSheet('menu')} />}
+      </PageHeader>
       <ScrollView contentContainerStyle={[s.content, { paddingBottom: 24 + insets.bottom }]}>
         {!!event.cover_path && <Image source={imageSource(event.cover_path)} style={s.photo} contentFit="cover" transition={150} />}
         <T v="titleL" accessibilityRole="header">
@@ -214,6 +223,36 @@ export default function EventDetail() {
           )}
         </View>
       </ScrollView>
+
+      {mine && (
+        <>
+          <Sheet open={sheet === 'menu'} onClose={() => setSheet(null)} title="Begivenhed" initialSize="auto" dim>
+            <View style={[s.menu, { paddingBottom: 16 + insets.bottom }]}>
+              <Item icon="close" label="Slet begivenhed" danger onPress={() => setSheet('slet')} />
+            </View>
+          </Sheet>
+          <Sheet open={sheet === 'slet'} onClose={() => setSheet(null)} title="Slet begivenheden?" initialSize="auto" dim>
+            <View style={[s.confirm, { paddingBottom: 24 + insets.bottom }]}>
+              <T v="bodyS" c={color.textSecondary}>
+                Gæster og opslag forsvinder også. Det kan ikke fortrydes.
+              </T>
+              <Button
+                title="Slet begivenhed"
+                block
+                loading={deleting}
+                onPress={async () => {
+                  setDeleting(true);
+                  const { error } = await supabase.from('events').delete().eq('id', event.id);
+                  setDeleting(false);
+                  setSheet(null);
+                  if (!error) router.replace('/begivenheder');
+                }}
+              />
+              <Button title="Annuller" variant="secondary" block onPress={() => setSheet(null)} />
+            </View>
+          </Sheet>
+        </>
+      )}
     </View>
   );
 }
@@ -256,4 +295,6 @@ const s = StyleSheet.create({
   guestLabel: { width: 96, flexShrink: 0 },
   faces: { flexDirection: 'row', flexShrink: 0 },
   posts: { gap: 12 },
+  menu: { paddingTop: 8, paddingHorizontal: 12 },
+  confirm: { gap: 12, paddingTop: 16, paddingHorizontal: 20 },
 });

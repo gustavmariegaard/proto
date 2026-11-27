@@ -154,6 +154,9 @@ export function FlickCommentsSheet({ postId, onClose, onCount }: Props) {
       onClose={onClose}
       title="Kommentarer"
       dim
+      dimOpacity={0.5}
+      halfHeight={560}
+      halfMax={0.72}
       initialSize="half"
       footer={
         <View style={s.composer}>

@@ -97,7 +97,7 @@ export default function Market() {
           <T v="titleXl" accessibilityRole="header">
             Torvet
           </T>
-          <Button title="Sælg noget" icon="plus" onPress={() => router.push('/torvet/saelg')} style={s.sell} />
+          <Button title="Sælg noget" icon="plus" iconSize={20} gap={6} onPress={() => router.push('/torvet/saelg')} style={s.sell} />
         </View>
 
         <SegmentedControl label="Vis annoncer" options={views} value={view} onChange={(v) => (setAll(null), setView(v))} />
@@ -157,7 +157,7 @@ export default function Market() {
 const s = StyleSheet.create({
   market: { gap: 14, paddingHorizontal: 20 },
   header: { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', gap: 12 },
-  sell: { gap: 6, paddingLeft: 14 },
+  sell: { paddingLeft: 14 },
   filters: { alignItems: 'flex-start', gap: 10 },
   /* Afstand som pille: 📍 25 km ⌄ */
   radius: {

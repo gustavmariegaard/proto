@@ -5,15 +5,16 @@ import { MoreSheet } from '@/components/MoreSheet';
 import { TabBar } from '@/components/TabBar';
 import { color } from '@/theme/tokens';
 
-// Beskeder og Profil er også faner (så bundmenuen bliver), men har ingen knap: de nås fra Hjem og Mere.
-const routes = ['index', 'debat', 'ny', 'flicks', 'beskeder', 'profil'];
+// Profil er også en fane (så bundmenuen bliver), men har ingen knap: den nås fra Mere.
+// Beskeder ligger uden for fanerne, for prototypen viser ingen bundmenu dér.
+const routes = ['index', 'debat', 'ny', 'flicks', 'profil'];
 
 /** Bundmenuen: prototypens flydende pille. Den valgte fane har grøn baggrund. */
 function Bar({ state }: BottomTabBarProps) {
   const [more, setMore] = useState(false);
   const route = state.routes[state.index]?.name;
-  // Profil hører under Mere
-  const current = more || route === 'profil' ? 'mere' : route;
+  // Som prototypen: Mere er kun markeret, mens arket er åbent; på Profil er ingen fane markeret
+  const current = more ? 'mere' : route === 'profil' ? undefined : route;
   return (
     <>
       <TabBar

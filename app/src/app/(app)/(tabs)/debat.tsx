@@ -2,7 +2,6 @@ import { useFocusEffect } from 'expo-router';
 import { useCallback, useState } from 'react';
 import { ActivityIndicator, FlatList, Pressable, RefreshControl, ScrollView, StyleSheet, View } from 'react-native';
 import { Chip } from '@/components/Chip';
-import { Icon } from '@/components/Icon';
 import { PostCard } from '@/components/PostCard';
 import { Screen } from '@/components/Screen';
 import { T } from '@/components/T';
@@ -72,16 +71,16 @@ export default function Debate() {
         style={s.rowWrap}
         accessibilityLabel="Filtrér efter dine interesser"
       >
-        <Pressable accessibilityRole="button" onPress={() => setEditing(true)} style={({ pressed }) => [s.edit, pressed && { opacity: 0.7 }]}>
-          <Icon name="sliders" size={18} />
-          <T v="label">Rediger interesser</T>
-        </Pressable>
+        <Chip icon="sliders" style={s.edit} onPress={() => setEditing(true)}>
+          Rediger interesser
+        </Chip>
         {interests.map((t) => (
           <Chip
             key={t.topic}
             selected={t.active}
             trailing={t.active ? 'close' : 'plus'}
             style={s.topic}
+            accessibilityLabel={t.active ? `${t.topic}, vises. Tryk for at fjerne` : `${t.topic}, skjult. Tryk for at vise`}
             onPress={() => toggle(t)}
           >
             {t.topic}
@@ -160,17 +159,7 @@ const s = StyleSheet.create({
   head: { gap: 14 },
   rowWrap: { marginHorizontal: -20, flexGrow: 0 },
   row: { gap: 8, paddingHorizontal: 20 },
-  edit: {
-    minHeight: TAP,
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: 6,
-    paddingHorizontal: 14,
-    borderRadius: radius.pill,
-    borderWidth: 1,
-    borderColor: color.borderStrong,
-    backgroundColor: color.bgSurface,
-  },
+  edit: { paddingHorizontal: 14 },
   topic: { paddingLeft: 16, paddingRight: 12 },
   notice: {
     flexDirection: 'row',
