@@ -2,18 +2,17 @@ import { router, useFocusEffect, useLocalSearchParams } from 'expo-router';
 import { useCallback, useRef, useState } from 'react';
 import { ActivityIndicator, FlatList, RefreshControl, ScrollView, StyleSheet, View } from 'react-native';
 import { Button } from '@/components/Button';
-import { IconButton } from '@/components/IconButton';
 import { MomentRing } from '@/components/MomentRing';
 import { PostCard } from '@/components/PostCard';
 import { Screen } from '@/components/Screen';
 import { Segmented } from '@/components/Segmented';
 import { T } from '@/components/T';
+import { TopBar } from '@/components/TopBar';
 import { pageRings, personRings, type Ring } from '@/lib/moments';
 import { normalize } from '@/lib/posts';
 import { useMe } from '@/lib/session';
 import { supabase } from '@/lib/supabase';
 import type { PostCard as Post } from '@/lib/types';
-import { useUnread } from '@/lib/unread';
 import { color, TAB_SPACE } from '@/theme/tokens';
 
 const PAGE = 20;
@@ -25,7 +24,6 @@ type Feed = 'brugere' | 'interesser';
  */
 export default function Home() {
   const me = useMe();
-  const unread = useUnread();
   const params = useLocalSearchParams<{ feed?: string }>();
   const [feed, setFeed] = useState<Feed>(params.feed === 'interesser' ? 'interesser' : 'brugere');
   const [posts, setPosts] = useState<Post[] | null>(null);
@@ -114,17 +112,8 @@ export default function Home() {
   );
 
   return (
-    <Screen scroll={false} edges={['top']}>
-      <View style={s.top}>
-        <T v="titleXl" accessibilityRole="header">
-          ciircle
-        </T>
-        <View style={s.icons}>
-          <IconButton icon="search" label="Søg" onPress={() => router.push('/soeg')} />
-          <IconButton icon="chat" label="Beskeder" dot={unread.messages > 0} onPress={() => router.push('/beskeder')} />
-          <IconButton icon="bell" label="Notifikationer" dot={unread.notifications > 0} onPress={() => router.push('/notifikationer')} />
-        </View>
-      </View>
+    <Screen scroll={false} edges={[]}>
+      <TopBar />
       <FlatList
         data={posts ?? []}
         keyExtractor={(p) => p.id}
@@ -163,8 +152,6 @@ export default function Home() {
 }
 
 const s = StyleSheet.create({
-  top: { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', paddingHorizontal: 20, paddingTop: 8, paddingBottom: 4 },
-  icons: { flexDirection: 'row', gap: 4 },
   list: { padding: 20, paddingTop: 8, paddingBottom: TAB_SPACE },
   rings: { gap: 6, paddingRight: 8 },
   empty: { alignItems: 'center', gap: 10, paddingTop: 40 },

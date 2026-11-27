@@ -41,8 +41,8 @@ export function NoteBox({ postId, refreshKey }: { postId: string; refreshKey?: n
 }
 
 const s = StyleSheet.create({
-  box: { gap: 6, paddingTop: 12, paddingHorizontal: 14, borderRadius: radius.md, borderWidth: 1, borderColor: color.borderDefault },
+  box: { gap: 6, paddingTop: 12, paddingBottom: 4, paddingHorizontal: 14, borderRadius: radius.md, borderWidth: 1, borderColor: color.borderDefault },
   title: { flexDirection: 'row', alignItems: 'center', gap: 6 },
   foot: { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', borderTopWidth: 1, borderTopColor: color.borderDefault, marginTop: 4 },
-  rate: { minHeight: TAP, justifyContent: 'center', paddingHorizontal: 8 },
+  rate: { minHeight: TAP, justifyContent: 'center', paddingHorizontal: 14, marginRight: -6 },
 });

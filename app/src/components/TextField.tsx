@@ -5,7 +5,11 @@ import { T } from './T';
 
 type Props = TextInputProps & { label: string; showLabel?: boolean; hint?: string; error?: string; multiline?: boolean; dark?: boolean };
 
-/** Tekstfelt med synlig label over (som Rediger profil i prototypen) */
+/**
+ * Tekstfelt i pilleform, 44 px højt (prototypens TextField: .field).
+ * showLabel = synlig label over feltet; uden den er pladsholderen = label.
+ * dark = felterne på log ind-skærmene (uændrede).
+ */
 export function TextField({ label, showLabel = true, hint, error, multiline, dark, style, onFocus, onBlur, ...rest }: Props) {
   const [focus, setFocus] = useState(false);
   return (
@@ -18,10 +22,11 @@ export function TextField({ label, showLabel = true, hint, error, multiline, dar
       <TextInput
         accessibilityLabel={label}
         placeholderTextColor={color.textSecondary}
+        placeholder={rest.placeholder ?? (showLabel ? undefined : label)}
         multiline={multiline}
         onFocus={(e) => (setFocus(true), onFocus?.(e))}
         onBlur={(e) => (setFocus(false), onBlur?.(e))}
-        style={[s.field, multiline && s.multi, dark && darkField, focus && (dark ? darkFocus : s.focus), noOutline, style]}
+        style={[dark ? s.authField : s.field, multiline && (dark ? s.authMulti : s.multi), dark && darkField, focus && (dark ? darkFocus : s.focus), noOutline, style]}
         {...rest}
       />
       {error ? (
@@ -48,6 +53,21 @@ const s = StyleSheet.create({
   group: { gap: 6, alignSelf: 'stretch' },
   label: { paddingLeft: 4 },
   field: {
+    minHeight: 44,
+    paddingHorizontal: 16,
+    borderRadius: radius.pill,
+    borderWidth: 1,
+    borderColor: color.borderStrong,
+    backgroundColor: color.bgSurface,
+    color: color.textPrimary,
+    fontFamily: font.body,
+    // 16 px på telefoner (ellers zoomer iPhone ind), som prototypen på touch-skærme
+    fontSize: 16,
+  },
+  /* Fokus: mørk kant + 1 px ring indenfor (box-shadow 0 0 0 1px) */
+  focus: { borderColor: color.textPrimary, borderWidth: 2, paddingHorizontal: 15 },
+  multi: { minHeight: 110, borderRadius: 20, paddingTop: 12, paddingBottom: 12, textAlignVertical: 'top' },
+  authField: {
     minHeight: 52,
     paddingHorizontal: 18,
     borderRadius: radius.pill,
@@ -58,6 +78,5 @@ const s = StyleSheet.create({
     fontFamily: font.body,
     fontSize: 16,
   },
-  focus: { borderColor: color.textPrimary, borderWidth: 1.5 },
-  multi: { minHeight: 110, borderRadius: 20, paddingTop: 14, paddingBottom: 14, textAlignVertical: 'top' },
+  authMulti: { minHeight: 110, borderRadius: 20, paddingTop: 14, paddingBottom: 14, textAlignVertical: 'top' },
 });

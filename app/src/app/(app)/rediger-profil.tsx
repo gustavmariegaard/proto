@@ -51,7 +51,7 @@ export default function EditProfile() {
   return (
     <Screen title="Rediger profil" right={<Button title="Gem" variant="ghost" disabled={!ok} onPress={save} />}>
       <Pressable accessibilityRole="button" accessibilityLabel="Skift profilbillede" onPress={choose} style={s.photo}>
-        {photo ? <Avatar name={name || me.name} uri={photo.uri} size={96} /> : <Avatar name={name || me.name} path={me.avatar_path} size="XL" />}
+        {photo ? <Avatar name={name || me.name} uri={photo.uri} size={96} /> : <Avatar name={name || me.name} path={me.avatar_path} size={96} />}
       </Pressable>
       <View style={{ alignItems: 'center' }}>
         <Button title="Skift billede" variant="secondary" icon="image" onPress={choose} style={{ minHeight: 44, paddingHorizontal: 20 }} />

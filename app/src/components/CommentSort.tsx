@@ -17,8 +17,8 @@ const options: { id: CommentOrder; label: string }[] = [
 /** Én lille knap ("Relevante ⌄"), der åbner en kort liste */
 export function CommentSort({ value, onChange }: { value: CommentOrder; onChange: (v: CommentOrder) => void }) {
   const [open, setOpen] = useState(false);
-  // Menuen lægges lige under knappen, med højre kant ud for knappens højre kant
-  const [pos, setPos] = useState({ right: 16, top: 0 });
+  // Menuen lægges lige under knappen, 4 px inde fra knappens venstre kant (som i prototypen)
+  const [pos, setPos] = useState({ left: 16, top: 0 });
   const ref = useRef<ComponentRef<typeof View>>(null);
   const { width } = useWindowDimensions();
   const current = options.find((o) => o.id === value)!;
@@ -30,7 +30,7 @@ export function CommentSort({ value, onChange }: { value: CommentOrder; onChange
         accessibilityState={{ expanded: open }}
         onPress={() => {
           ref.current?.measureInWindow((x, y, w, h) => {
-            setPos({ right: Math.max(12, width - (x + w)), top: y + h });
+            setPos({ left: Math.min(x + 4, width - 232), top: y + h - 2 });
             setOpen(true);
           });
         }}
@@ -39,7 +39,9 @@ export function CommentSort({ value, onChange }: { value: CommentOrder; onChange
         <T v="captionStrong" c={color.textSecondary}>
           {current.label}
         </T>
-        <Icon name="chevron-down" size={16} color={color.textSecondary} />
+        <View style={{ transform: [{ rotate: open ? '-90deg' : '90deg' }] }}>
+          <Icon name="chevron-right" size={16} color={color.textSecondary} />
+        </View>
       </Pressable>
       <Modal visible={open} transparent animationType="fade" onRequestClose={() => setOpen(false)}>
         <Pressable style={StyleSheet.absoluteFill} onPress={() => setOpen(false)} accessibilityLabel="Luk" />
@@ -81,10 +83,10 @@ export function sortThreads<T extends Sortable>(items: T[], order: CommentOrder)
 }
 
 const s = StyleSheet.create({
-  btn: { flexDirection: 'row', alignItems: 'center', gap: 2, minHeight: TAP, alignSelf: 'flex-start', paddingHorizontal: 4 },
+  btn: { flexDirection: 'row', alignItems: 'center', gap: 2, minHeight: TAP, alignSelf: 'flex-start', paddingHorizontal: 8 },
   menu: {
     position: 'absolute',
-    minWidth: 200,
+    minWidth: 220,
     padding: 6,
     borderRadius: radius.lg,
     borderWidth: 1,

@@ -1,10 +1,8 @@
-import { router } from 'expo-router';
 import type { ReactNode } from 'react';
 import { ScrollView, StyleSheet, View, type ViewStyle } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { color } from '@/theme/tokens';
-import { IconButton } from './IconButton';
-import { T } from './T';
+import { PageHeader } from './PageHeader';
 
 type Props = {
   title?: string;
@@ -26,22 +24,9 @@ export function Screen({ title, back = !!title, right, children, scroll = true, 
   return (
     <SafeAreaView style={s.root} edges={edges}>
       {(title || right) && (
-        <View style={s.header}>
-          {back && (
-            <IconButton
-              icon="chevron-left"
-              label="Tilbage"
-              outline
-              onPress={() => (router.canGoBack() ? router.back() : router.replace('/'))}
-            />
-          )}
-          {title && (
-            <T v="titleL" style={s.title} numberOfLines={1} accessibilityRole="header">
-              {title}
-            </T>
-          )}
-          <View style={s.right}>{right}</View>
-        </View>
+        <PageHeader title={title ?? ''} back={back} safeTop={!edges.includes('top')}>
+          {right && <View style={s.right}>{right}</View>}
+        </PageHeader>
       )}
       {scroll ? (
         <ScrollView contentContainerStyle={[s.content, contentStyle]} keyboardShouldPersistTaps="handled">
@@ -57,8 +42,6 @@ export function Screen({ title, back = !!title, right, children, scroll = true, 
 
 const s = StyleSheet.create({
   root: { flex: 1, backgroundColor: color.bgApp },
-  header: { flexDirection: 'row', alignItems: 'center', gap: 10, paddingHorizontal: 16, paddingTop: 8, paddingBottom: 8 },
-  title: { flex: 1 },
   right: { flexDirection: 'row', alignItems: 'center', marginLeft: 'auto' },
   content: { padding: 20, paddingTop: 8, gap: 16, paddingBottom: 40 },
 });

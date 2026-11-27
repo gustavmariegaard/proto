@@ -31,7 +31,7 @@ export function ListingLocationSheet({ open, onClose, onPick }: { open: boolean;
   };
 
   return (
-    <Sheet open={open} onClose={onClose} title="Hvor er du?">
+    <Sheet open={open} onClose={onClose} title="Hvor er du?" scroll={false}>
       <View style={s.body}>
         <Button title="Brug min placering" icon="pin" block loading={busy} onPress={useDevice} />
         {!!error && (

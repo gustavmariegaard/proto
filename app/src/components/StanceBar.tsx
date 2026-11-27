@@ -78,7 +78,7 @@ export function StanceBar({ postId, userId, initial }: { postId: string; userId:
   };
 
   return (
-    <View style={{ gap: 6 }}>
+    <View style={{ gap: 4 }}>
       <View style={s.row}>
         {side('enig', 'Enig', pct)}
         {side('uenig', 'Uenig', 100 - pct)}
@@ -93,7 +93,7 @@ export function StanceBar({ postId, userId, initial }: { postId: string; userId:
       <View style={s.track}>
         <View style={[s.fill, { width: `${pct}%` }]} />
       </View>
-      <T v="caption" c={color.textSecondary}>
+      <T v="caption" c={color.textSecondary} style={{ marginTop: 4 }}>
         {fmtNumber(total)} {total === 1 ? 'stemme' : 'stemmer'} i alt
       </T>
     </View>
@@ -137,6 +137,6 @@ const s = StyleSheet.create({
     gap: 6,
   },
   sideOn: { backgroundColor: color.actionPrimary, borderColor: color.actionPrimary },
-  track: { height: 8, borderRadius: radius.pill, backgroundColor: color.gray200, overflow: 'hidden', marginTop: 4 },
+  track: { height: 8, borderRadius: radius.pill, backgroundColor: color.gray200, overflow: 'hidden', marginTop: 6 },
   fill: { height: '100%', borderRadius: radius.pill, backgroundColor: color.accent },
 });
