@@ -1,5 +1,5 @@
 import { router, useFocusEffect, useLocalSearchParams } from 'expo-router';
-import { useCallback, useRef, useState } from 'react';
+import { useCallback, useEffect, useRef, useState } from 'react';
 import { ActivityIndicator, Animated, FlatList, RefreshControl, ScrollView, StyleSheet, View, type NativeScrollEvent, type NativeSyntheticEvent } from 'react-native';
 import { Chip } from '@/components/Chip';
 import { MomentBubble } from '@/components/MomentBubble';
@@ -9,6 +9,7 @@ import { T } from '@/components/T';
 import { TopBar } from '@/components/TopBar';
 import { pageRings, personRings, type Ring } from '@/lib/moments';
 import { normalize } from '@/lib/posts';
+import { readCache, readCacheSync, writeCache } from '@/lib/cache';
 import { useMe } from '@/lib/session';
 import { supabase } from '@/lib/supabase';
 import type { PostCard as Post } from '@/lib/types';
@@ -17,15 +18,18 @@ import { color, TAB_SPACE } from '@/theme/tokens';
 const PAGE = 20;
 type Feed = 'venner' | 'interesser';
 /** Brugere/Interesser-vælgeren: 52 høj + 8 luft under (prototypens .home__switch) */
-const SWITCH_H = 60;
+const SWITCH_H = 50;
 
 /** Hjem: feed fra dem, du følger, eller fra dine interesser (prototypens Home). */
 export default function Home() {
   const me = useMe();
   const params = useLocalSearchParams<{ feed?: string }>();
   const [feed, setFeed] = useState<Feed>(params.feed === 'interesser' ? 'interesser' : 'venner');
-  const [posts, setPosts] = useState<Post[] | null>(null);
-  const [rings, setRings] = useState<Ring[]>([]);
+  // Sidst viste feed vises med det samme ved åbning og opdateres i baggrunden
+  const cacheKey = (f: Feed) => `home.${me.id}.${f}`;
+  const initial = readCacheSync<{ posts: Post[]; rings: Ring[] }>(cacheKey(feed));
+  const [posts, setPosts] = useState<Post[] | null>(initial?.posts ?? null);
+  const [rings, setRings] = useState<Ring[]>(initial?.rings ?? []);
   const [refreshing, setRefreshing] = useState(false);
   const [more, setMore] = useState(true);
   const loadingMore = useRef(false);
@@ -55,7 +59,18 @@ export default function Home() {
     setPosts(list);
     setRings(r);
     setMore(list.length === PAGE);
-  }, [rpc, feed]);
+    writeCache(cacheKey(feed), { posts: list, rings: r });
+  }, [rpc, feed, me.id]);
+
+  // Telefon: gemt feed læses asynkront (web har det allerede fra første billede)
+  useEffect(() => {
+    if (posts !== null) return;
+    readCache<{ posts: Post[]; rings: Ring[] }>(cacheKey(feed)).then((c) => {
+      if (!c) return;
+      setPosts((p) => p ?? c.posts);
+      setRings((r) => (r.length ? r : c.rings));
+    });
+  }, [feed]);
 
   useFocusEffect(
     useCallback(() => {
@@ -65,8 +80,9 @@ export default function Home() {
 
   const switchFeed = (f: Feed) => {
     if (f === feed) return;
-    setPosts(null);
-    setRings([]);
+    const c = readCacheSync<{ posts: Post[]; rings: Ring[] }>(cacheKey(f));
+    setPosts(c?.posts ?? null);
+    setRings(c?.rings ?? []);
     setFeed(f);
     router.setParams({ feed: f === 'interesser' ? 'interesser' : undefined });
   };
@@ -175,6 +191,7 @@ export default function Home() {
           ]}
         >
           <SegmentedControl
+            glass
             label="Vis opslag fra"
             value={feed}
             onChange={switchFeed}
@@ -193,7 +210,7 @@ const s = StyleSheet.create({
   root: { flex: 1, backgroundColor: color.bgApp },
   list: { paddingHorizontal: 20, paddingTop: SWITCH_H + 14, paddingBottom: TAB_SPACE },
   header: { gap: 14 },
-  switch: { position: 'absolute', top: 0, left: 0, right: 0, paddingHorizontal: 20, paddingBottom: 8, backgroundColor: color.bgApp, zIndex: 5 },
+  switch: { position: 'absolute', top: 0, left: 0, right: 0, paddingHorizontal: 20, paddingTop: 2, paddingBottom: 6, zIndex: 5 },
   pages: { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', gap: 12 },
   edit: { gap: 6, paddingHorizontal: 14 },
   moments: { marginHorizontal: -20 },

@@ -1,5 +1,6 @@
 import { Pressable, StyleSheet, View, type ViewStyle } from 'react-native';
 import { color, radius } from '@/theme/tokens';
+import { Glass } from './Glass';
 import { T } from './T';
 
 type Props<V extends string> = {
@@ -9,12 +10,16 @@ type Props<V extends string> = {
   /** Beskriver gruppen for skærmlæsere, fx "Vis opslag fra" */
   label: string;
   style?: ViewStyle;
+  /** Frostet glas og lidt lavere (Hjem: Brugere/Interesser oven på feedet) */
+  glass?: boolean;
 };
 
 /** Skift mellem 2–3 visninger. Den aktive får hvid baggrund. (prototypens SegmentedControl) */
-export function SegmentedControl<V extends string>({ options, value, onChange, label, style }: Props<V>) {
+export function SegmentedControl<V extends string>({ options, value, onChange, label, style, glass }: Props<V>) {
+  const Wrap = glass ? Glass : View;
   return (
-    <View style={[s.wrap, style]} accessibilityRole="tablist" accessibilityLabel={label}>
+    <Wrap style={[s.wrap, glass && s.glass, style] as ViewStyle[]}>
+    <View style={[s.inner, glass && s.innerGlass]} accessibilityRole="tablist" accessibilityLabel={label}>
       {options.map((o) => {
         const on = o.value === value;
         return (
@@ -23,7 +28,7 @@ export function SegmentedControl<V extends string>({ options, value, onChange, l
             accessibilityRole="tab"
             accessibilityState={{ selected: on }}
             onPress={() => onChange(o.value)}
-            style={[s.item, on && s.on]}
+            style={[s.item, glass && s.itemGlass, on && s.on]}
           >
             <T v="captionStrong" c={on ? color.textPrimary : color.textSecondary} numberOfLines={1}>
               {o.label}
@@ -32,11 +37,16 @@ export function SegmentedControl<V extends string>({ options, value, onChange, l
         );
       })}
     </View>
+    </Wrap>
   );
 }
 
 const s = StyleSheet.create({
-  wrap: { flexDirection: 'row', gap: 4, height: 52, padding: 4, borderRadius: radius.md, backgroundColor: color.bgSubtle },
+  wrap: { height: 52, borderRadius: radius.md, backgroundColor: color.bgSubtle },
+  glass: { height: 42, borderRadius: radius.pill },
+  inner: { flex: 1, flexDirection: 'row', gap: 4, padding: 4 },
+  innerGlass: { padding: 3 },
+  itemGlass: { height: 34, borderRadius: radius.pill },
   item: { flex: 1, minWidth: 0, height: 44, borderRadius: radius.sm, alignItems: 'center', justifyContent: 'center' },
   on: { backgroundColor: color.bgSurface },
 });

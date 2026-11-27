@@ -2,6 +2,7 @@ import { useEffect, useRef, useState } from 'react';
 import { Animated, Platform, Pressable, StyleSheet, View, type NativeScrollEvent, type NativeSyntheticEvent } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { color, shadow, tabbarBottom } from '@/theme/tokens';
+import { Glass } from './Glass';
 import { Icon, type IconName } from './Icon';
 
 export type TabName = 'index' | 'debat' | 'ny' | 'flicks' | 'mere';
@@ -24,6 +25,8 @@ export function TabBar({ current, onPress }: { current?: string; onPress: (name:
   const bottom = tabbarBottom(insets.bottom);
   // På Flicks står menuen altid fast
   const hidden = useHideOnScroll(current) && current !== 'flicks';
+  // Flicks: mindre, mørkt glas, så videoen fylder mest muligt (som Instagram Reels)
+  const compact = current === 'flicks';
   const anim = useRef(new Animated.Value(0)).current;
   useEffect(() => {
     Animated.timing(anim, { toValue: hidden ? 1 : 0, duration: 280, useNativeDriver: Platform.OS !== 'web' }).start();
@@ -32,6 +35,7 @@ export function TabBar({ current, onPress }: { current?: string; onPress: (name:
     <Animated.View
       style={[
         s.bar,
+        compact && s.barCompact,
         {
           bottom,
           opacity: anim.interpolate({ inputRange: [0, 1], outputRange: [1, 0] }),
@@ -40,7 +44,8 @@ export function TabBar({ current, onPress }: { current?: string; onPress: (name:
       ]}
       pointerEvents={hidden ? 'none' : 'box-none'}
     >
-      <View style={s.pill} accessibilityRole="tablist" accessibilityLabel="Hovedmenu">
+      <Glass tint={compact ? 'dark' : 'light'} style={compact ? [s.pill, s.pillCompact] : s.pill}>
+      <View style={s.row} accessibilityRole="tablist" accessibilityLabel="Hovedmenu">
         {tabItems.map((it) => {
           const on = current === it.name;
           return (
@@ -49,18 +54,19 @@ export function TabBar({ current, onPress }: { current?: string; onPress: (name:
               accessibilityRole="tab"
               accessibilityLabel={it.label}
               accessibilityState={{ selected: on }}
-              style={s.tab}
+              style={[s.tab, compact && s.tabCompact]}
               onPress={() => onPress(it.name)}
             >
               {({ pressed }) => (
-                <View style={[s.holder, on && s.holderOn, pressed && { transform: [{ scale: 0.94 }] }]}>
-                  <Icon name={it.icon} />
+                <View style={[s.holder, compact && s.holderCompact, on && (compact ? s.holderOnDark : s.holderOn), pressed && { transform: [{ scale: 0.94 }] }]}>
+                  <Icon name={it.icon} size={compact ? 22 : 24} color={compact ? color.white : color.textPrimary} />
                 </View>
               )}
             </Pressable>
           );
         })}
       </View>
+      </Glass>
     </Animated.View>
   );
 }
@@ -115,17 +121,14 @@ function useHideOnScroll(route?: string) {
 
 const s = StyleSheet.create({
   bar: { position: 'absolute', left: 16, right: 16, zIndex: 20 },
-  pill: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    height: 52,
-    paddingHorizontal: 4,
-    backgroundColor: color.bgSurface,
-    borderWidth: 1,
-    borderColor: color.borderDefault,
-    borderRadius: 26,
-    ...shadow.tabbar,
-  },
+  barCompact: { left: 44, right: 44 },
+  /* Frostet glas i stedet for hvid (indholdet skinner igennem) */
+  pill: { height: 52, borderRadius: 26, ...shadow.tabbar },
+  pillCompact: { height: 44, borderRadius: 22, shadowOpacity: 0 },
+  row: { flex: 1, flexDirection: 'row', alignItems: 'center', paddingHorizontal: 4 },
+  tabCompact: { height: 42 },
+  holderCompact: { height: 34, maxWidth: 56, borderRadius: 17 },
+  holderOnDark: { backgroundColor: 'rgba(255,255,255,0.2)' },
   tab: { flex: 1, height: 50, paddingHorizontal: 2, alignItems: 'center', justifyContent: 'center', borderRadius: 999 },
   /* Den valgte fane: 42 px høj, op til 72 px bred */
   holder: { width: '100%', maxWidth: 72, height: 42, borderRadius: 21, alignItems: 'center', justifyContent: 'center' },

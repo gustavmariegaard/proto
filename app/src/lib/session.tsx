@@ -1,5 +1,6 @@
 import type { Session } from '@supabase/supabase-js';
 import { createContext, useCallback, useContext, useEffect, useState, type ReactNode } from 'react';
+import { clearCache, readCache, writeCache } from './cache';
 import { openedFromRecoveryLink, supabase } from './supabase';
 import type { Profile } from './types';
 
@@ -27,6 +28,7 @@ export function SessionProvider({ children }: { children: ReactNode }) {
     supabase.auth.getSession().then(({ data }) => setSession(data.session));
     const { data } = supabase.auth.onAuthStateChange((event, s) => {
       if (event === 'PASSWORD_RECOVERY') setRecovering(true);
+      if (event === 'SIGNED_OUT') clearCache();
       setSession(s);
     });
     return () => data.subscription.unsubscribe();
@@ -38,6 +40,9 @@ export function SessionProvider({ children }: { children: ReactNode }) {
       setProfile(session === null ? null : undefined);
       return;
     }
+    // Vis den gemte profil med det samme (hurtig start), og hent den friske bagefter
+    const cached = await readCache<Profile>(`profile.${userId}`);
+    if (cached) setProfile((p) => (p === undefined ? cached : p));
     let { data } = await supabase.from('profiles').select('*').eq('id', userId).maybeSingle();
     // Navn og brugernavn fra tilmeldingen: opret profilen, hvis databasen ikke selv nåede det
     const meta = session?.user.user_metadata ?? {};
@@ -46,6 +51,7 @@ export function SessionProvider({ children }: { children: ReactNode }) {
       if (meta.birthdate) await supabase.from('profile_private').insert({ id: userId, birthdate: meta.birthdate });
       ({ data } = await supabase.from('profiles').select('*').eq('id', userId).maybeSingle());
     }
+    if (data) writeCache(`profile.${userId}`, data);
     setProfile((data as Profile | null) ?? null);
   }, [userId, session]);
 
@@ -55,6 +61,7 @@ export function SessionProvider({ children }: { children: ReactNode }) {
 
   const signOut = useCallback(async () => {
     await supabase.auth.signOut();
+    clearCache();
     setProfile(null);
   }, []);
 
