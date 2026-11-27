@@ -106,10 +106,10 @@ export function CreateShell({ kind, switchable, progress, kicker, title, lead, o
 }
 
 /** Mint ikonfelt, præcis som punkterne på forsiden (40 px, hjørner 12, grøn kant) */
-export function MintTile({ icon, size = 40 }: { icon: IconName; size?: 40 | 48 }) {
+export function MintTile({ icon, size = 40, tone = 'mint' }: { icon: IconName; size?: 40 | 48; tone?: 'mint' | 'danger' }) {
   return (
-    <View style={[s.tile, { width: size, height: size }]} accessible={false}>
-      <Icon name={icon} size={size === 48 ? 22 : 18} color={color.green700} />
+    <View style={[s.tile, tone === 'danger' && s.tileDanger, { width: size, height: size }]} accessible={false}>
+      <Icon name={icon} size={size === 48 ? 22 : 18} color={tone === 'danger' ? color.danger : color.green700} />
     </View>
   );
 }
@@ -237,6 +237,7 @@ const s = StyleSheet.create({
     borderWidth: 1,
     borderColor: color.accentBg,
   },
+  tileDanger: { backgroundColor: '#fdeeee', borderColor: '#f7cfcf' },
   option: {
     flexDirection: 'row',
     alignItems: 'center',

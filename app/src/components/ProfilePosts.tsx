@@ -45,10 +45,10 @@ export function ProfilePosts({ userId, posts, own = false, name, locked = false,
   const feed = personal.filter((p) => p.kind === 'feed');
   const debate = personal.filter((p) => p.kind === 'debat');
   const flicks = personal.filter((p) => p.kind === 'flick');
-  const tabs: { value: Tab; label: string; icon: IconName; count: number }[] = [
-    { value: 'opslag', label: 'Opslag', icon: 'layout-list', count: feed.length },
-    { value: 'debat', label: 'Debat', icon: 'compass', count: debate.length },
-    { value: 'flicks', label: 'Flicks', icon: 'clip', count: flicks.length },
+  const tabs: { value: Tab; label: string; icon: IconName }[] = [
+    { value: 'opslag', label: 'Opslag', icon: 'layout-list' },
+    { value: 'debat', label: 'Debat', icon: 'compass' },
+    { value: 'flicks', label: 'Flicks', icon: 'clip' },
   ];
   const shownPosts = openAll ? feed : feed.slice(0, 6);
   const card = (p: Post) => <PostCard key={p.id} post={p} onRemoved={onChanged} />;
@@ -74,13 +74,6 @@ export function ProfilePosts({ userId, posts, own = false, name, locked = false,
               <T v="label" c={on ? color.textPrimary : color.textSecondary} numberOfLines={1}>
                 {t.label}
               </T>
-              {!lockedTab && (
-                <View style={s.count}>
-                  <T style={s.countTxt} c={on ? color.textPrimary : color.textSecondary}>
-                    {t.count}
-                  </T>
-                </View>
-              )}
             </Pressable>
           );
         })}
@@ -202,8 +195,6 @@ const s = StyleSheet.create({
   tabs: { flex: 1, minWidth: 0, flexDirection: 'row', gap: 2, padding: 3, borderRadius: radius.pill, backgroundColor: color.bgSubtle },
   tab: { flex: 1, minWidth: 0, flexDirection: 'row', alignItems: 'center', justifyContent: 'center', gap: 5, minHeight: 40, borderRadius: radius.pill },
   tabOn: { backgroundColor: color.bgSurface, shadowColor: '#000', shadowOpacity: 0.08, shadowRadius: 6, shadowOffset: { width: 0, height: 1 } },
-  count: { paddingHorizontal: 5 },
-  countTxt: { fontFamily: font.bodySemi, fontSize: 12, lineHeight: 18 },
   viewBtn: { width: TAP, height: TAP, flexShrink: 0, alignItems: 'center', justifyContent: 'center', borderRadius: TAP / 2, backgroundColor: color.bgSubtle },
   panel: { gap: 14 },
   more: { alignSelf: 'center', minHeight: TAP, paddingHorizontal: 12, justifyContent: 'center' },

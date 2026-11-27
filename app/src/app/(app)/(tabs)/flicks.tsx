@@ -165,12 +165,13 @@ export default function Flicks() {
       )}
 
       {/* Diskrete faner som tekst (fed + streg = valgt) og et lille ikon til at justere interesser */}
-      <View style={[s.top, { top: topInset, pointerEvents: 'box-none' }]}>
-        <Pressable accessibilityRole="button" accessibilityLabel="Juster dine interesser" onPress={() => setEditing(true)} style={s.icon} hitSlop={4}>
-          <View style={shadowIcon}>
-            <Icon name="sliders" size={22} color="#fff" />
-          </View>
-        </Pressable>
+      <Pressable accessibilityRole="button" accessibilityLabel="Juster dine interesser" onPress={() => setEditing(true)} style={[s.icon, { top: topInset }]} hitSlop={4}>
+        <View style={shadowIcon}>
+          <Icon name="sliders" size={22} color="#fff" />
+        </View>
+      </Pressable>
+      {/* Fanerne i midten. Rækken holder sig fri af ⋯ til højre, så den ikke fanger trykket */}
+      <View style={[s.top, { top: topInset }]}>
         <View style={s.modes} accessibilityRole="radiogroup" accessibilityLabel="Vælg feed">
           {(['interesser', 'foelger'] as Mode[]).map((m) => {
             const on = mode === m;
@@ -236,8 +237,8 @@ const s = StyleSheet.create({
   root: { flex: 1, backgroundColor: '#000' },
   hidden: { position: 'absolute', width: 1, height: 1, opacity: 0 },
   // Fanerne står i midten; ⋯ på selve flicken ligger til højre
-  top: { position: 'absolute', left: 10, right: 10, height: TAP, flexDirection: 'row', alignItems: 'center', justifyContent: 'center', zIndex: 10 },
-  icon: { position: 'absolute', left: 0, width: TAP, height: TAP, alignItems: 'center', justifyContent: 'center' },
+  top: { position: 'absolute', left: 64, right: 64, height: TAP, flexDirection: 'row', alignItems: 'center', justifyContent: 'center', zIndex: 10 },
+  icon: { position: 'absolute', left: 10, zIndex: 10, width: TAP, height: TAP, alignItems: 'center', justifyContent: 'center' },
   modes: { flexDirection: 'row', gap: 4 },
   mode: { height: TAP, paddingHorizontal: 10, alignItems: 'center', justifyContent: 'center' },
   modeText: { fontFamily: font.bodyBold, fontSize: 16, lineHeight: 22, textShadowColor: 'rgba(0,0,0,0.5)', textShadowRadius: 3, textShadowOffset: { width: 0, height: 1 } },

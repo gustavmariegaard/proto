@@ -1,28 +1,29 @@
 import { useLocalSearchParams } from 'expo-router';
 import { useEffect, useState } from 'react';
-import { KeyboardAvoidingView, Platform, StyleSheet, TextInput, View } from 'react-native';
-import { Button } from '@/components/Button';
+import { StyleSheet, TextInput, View } from 'react-native';
 import { Chip } from '@/components/Chip';
-import { Choice, CloseHeader, closeTo, ModalScreen, parts, RadioDot } from '@/components/CreateParts';
+import { CreateButton, CreateShell, createField, MintTile, OptionRow } from '@/components/CreateFlow';
+import { closeTo } from '@/components/CreateParts';
+import type { IconName } from '@/components/Icon';
 import { T } from '@/components/T';
 import { noOutline } from '@/components/TextField';
 import { getPost } from '@/lib/posts';
 import { useMe } from '@/lib/session';
 import { supabase } from '@/lib/supabase';
 import type { PostCard } from '@/lib/types';
-import { color, font, radius } from '@/theme/tokens';
+import { color } from '@/theme/tokens';
 
 /** Samme grunde som prototypen (src/data/create.ts) */
 const reportReasons = [
-  { id: 'had', title: 'Hadefuldt eller truende', hint: 'Trusler, chikane eller hadtale.' },
-  { id: 'ulovligt', title: 'Ulovligt indhold', hint: 'Noget, der er ulovligt, hvor du bor.' },
-  { id: 'svindel', title: 'Svindel eller falsk profil', hint: 'Forsøg på at snyde eller udgive sig for andre.' },
-  { id: 'misinformation', title: 'Misinformation', hint: 'Påstande, der kan skade andre.' },
-  { id: 'boern', title: 'Børns sikkerhed', hint: 'Noget, der kan skade et barn.' },
-  { id: 'andet', title: 'Andet', hint: 'Noget, der ikke passer til listen.' },
+  { id: 'had', icon: 'ban' as IconName, title: 'Hadefuldt eller truende', hint: 'Trusler, chikane eller hadtale.' },
+  { id: 'ulovligt', icon: 'lock' as IconName, title: 'Ulovligt indhold', hint: 'Noget, der er ulovligt, hvor du bor.' },
+  { id: 'svindel', icon: 'user-minus' as IconName, title: 'Svindel eller falsk profil', hint: 'Forsøg på at snyde eller udgive sig for andre.' },
+  { id: 'misinformation', icon: 'megaphone' as IconName, title: 'Misinformation', hint: 'Påstande, der kan skade andre.' },
+  { id: 'boern', icon: 'heart' as IconName, title: 'Børns sikkerhed', hint: 'Noget, der kan skade et barn.' },
+  { id: 'andet', icon: 'dots' as IconName, title: 'Andet', hint: 'Noget, der ikke passer til listen.' },
 ];
 
-/** Rapportér et opslag (prototypens Report): vælg en grund og send. */
+/** Anmeld et opslag: vælg, hvad der er galt, og send. Samme udtryk som oprettelsen. */
 export default function Report() {
   const { id } = useLocalSearchParams<{ id: string }>();
   const me = useMe();
@@ -40,22 +41,25 @@ export default function Report() {
     getPost(id).then(setPost);
   }, [id]);
 
-  const header = <CloseHeader title="Rapportér" onClose={close} />;
-  if (post === undefined) return <ModalScreen header={header}>{null}</ModalScreen>;
+  const shell = (title: string, children: React.ReactNode, footer?: React.ReactNode, lead?: string) => (
+    <CreateShell kind="opslag" title={title} lead={lead} onClose={close} footer={footer}>
+      {children}
+    </CreateShell>
+  );
+  if (post === undefined) return shell('Anmeld opslag', null);
   if (!post) {
-    return (
-      <ModalScreen header={header}>
-        <T v="bodyS" c={color.textSecondary}>
-          Opslaget findes ikke længere.
-        </T>
-      </ModalScreen>
+    return shell(
+      'Anmeld opslag',
+      <T v="bodyS" c={color.textSecondary}>
+        Opslaget findes ikke længere.
+      </T>,
     );
   }
 
   const first = post.author_name.split(' ')[0];
   const tags = post.tags;
   const reasons = tags.length
-    ? [{ id: 'kategori', title: 'Forkert kategoriseret', hint: tags.length > 1 ? 'Et eller flere tags passer ikke' : `Passer ikke til #${tags[0]}` }, ...reportReasons]
+    ? [{ id: 'kategori', icon: 'compass' as IconName, title: 'Forkert kategoriseret', hint: tags.length > 1 ? 'Et eller flere tags passer ikke' : `Passer ikke til #${tags[0]}` }, ...reportReasons]
     : reportReasons;
   const needsText = reason === 'andet';
   const pickTags = reason === 'kategori' && tags.length > 1;
@@ -73,115 +77,83 @@ export default function Report() {
       details: other.trim(),
     });
     setBusy(false);
-    if (e) setError('Rapporten kunne ikke sendes. Prøv igen.');
+    if (e) setError('Anmeldelsen kunne ikke sendes. Prøv igen.');
     else setSent(true);
   };
 
   if (sent) {
-    return (
-      <ModalScreen header={header}>
-        <T v="headingM" accessibilityRole="header">
-          Tak for din rapport
-        </T>
-        <T v="bodyS">Vi kigger på opslaget hurtigst muligt. Din rapport er anonym for {first}.</T>
-        <Button block onPress={close} style={{ alignSelf: 'stretch' }}>
-          Færdig
-        </Button>
-      </ModalScreen>
+    return shell(
+      'Tak for din anmeldelse',
+      <View style={s.done}>
+        <MintTile icon="check" size={48} />
+      </View>,
+      <CreateButton onPress={close}>Færdig</CreateButton>,
+      `Vi kigger på opslaget hurtigst muligt. ${first} får ikke at vide, hvem der har anmeldt det.`,
     );
   }
 
   const status =
-    reason === null ? 'Vælg en kategori for at sende rapporten.' : pickTags && wrongTags.length === 0 ? 'Vælg mindst ét tag.' : needsText && !canSend ? 'Skriv et par ord om problemet.' : '';
+    reason === null ? 'Vælg, hvad der er galt.' : pickTags && wrongTags.length === 0 ? 'Vælg mindst ét tag.' : needsText && !canSend ? 'Skriv et par ord om problemet.' : '';
 
-  return (
-    <KeyboardAvoidingView style={{ flex: 1 }} behavior={Platform.OS === 'ios' ? 'padding' : undefined}>
-      <ModalScreen header={header}>
-        <T v="headingM" accessibilityRole="header">
-          Hvad er der galt?
-        </T>
-        <T v="caption" c={color.textSecondary}>
-          Opslag fra {post.author_name}. Din rapport er anonym for {first}.
-        </T>
-        <View style={parts.choiceList} accessibilityRole="radiogroup">
-          {reasons.map((r) => {
-            const on = reason === r.id;
-            return (
-              <View key={r.id}>
-                <Choice role="radio" on={on} onPress={() => setReason(r.id)} label={r.title}>
-                  <RadioDot on={on} size={22} />
-                  <View style={[parts.choiceText, s.choicePad]}>
-                    <T v="label">{r.title}</T>
-                    <T v="caption" c={color.textSecondary}>
-                      {r.hint}
-                    </T>
-                  </View>
-                </Choice>
-                {/* Tags vises lige under valget */}
-                {r.id === 'kategori' && pickTags && (
-                  <View style={[s.other, s.tagPick]}>
-                    <T v="label">Hvilke tags passer ikke?</T>
-                    <View style={s.tags}>
-                      {tags.map((t) => {
-                        const sel = wrongTags.includes(t);
-                        return (
-                          <Chip key={t} selected={sel} icon={sel ? 'check' : undefined} iconSize={16} onPress={() => setWrongTags((w) => (sel ? w.filter((x) => x !== t) : [...w, t]))}>
-                            {`#${t}`}
-                          </Chip>
-                        );
-                      })}
-                    </View>
-                  </View>
-                )}
+  return shell(
+    'Hvad er der galt?',
+    <>
+      <View style={s.list} accessibilityRole="radiogroup">
+        {reasons.map((r) => (
+          <View key={r.id} style={{ gap: 10 }}>
+            <OptionRow role="radio" icon={r.icon} title={r.title} text={r.hint} on={reason === r.id} onPress={() => setReason(r.id)} />
+            {/* Tags vises lige under valget */}
+            {r.id === 'kategori' && pickTags && (
+              <View style={s.tagPick}>
+                <T v="label" c={color.textSecondary}>
+                  Hvilke tags passer ikke?
+                </T>
+                <View style={s.tags}>
+                  {tags.map((t) => {
+                    const sel = wrongTags.includes(t);
+                    return (
+                      <Chip key={t} selected={sel} icon={sel ? 'check' : undefined} iconSize={16} onPress={() => setWrongTags((w) => (sel ? w.filter((x) => x !== t) : [...w, t]))}>
+                        {`#${t}`}
+                      </Chip>
+                    );
+                  })}
+                </View>
               </View>
-            );
-          })}
-        </View>
-        {needsText && (
-          <View style={s.other}>
-            <T v="label">Beskriv problemet</T>
-            <TextInput
-              style={[s.field, noOutline]}
-              accessibilityLabel="Beskriv problemet"
-              placeholder="Fortæl kort, hvad der er galt"
-              placeholderTextColor={color.textSecondary}
-              multiline
-              maxLength={1000}
-              value={other}
-              onChangeText={setOther}
-              autoFocus
-            />
+            )}
           </View>
-        )}
-        <T v="caption" c={error ? color.danger : color.textSecondary} accessibilityLiveRegion="polite">
+        ))}
+      </View>
+      {needsText && (
+        <TextInput
+          style={[createField.box, { minHeight: 100 }, noOutline]}
+          accessibilityLabel="Beskriv problemet"
+          placeholder="Fortæl kort, hvad der er galt"
+          placeholderTextColor={color.textSecondary}
+          multiline
+          maxLength={1000}
+          value={other}
+          onChangeText={setOther}
+          autoFocus
+        />
+      )}
+    </>,
+    <>
+      {!!(error || status) && (
+        <T v="caption" c={error ? color.danger : color.textSecondary} accessibilityLiveRegion="polite" style={{ textAlign: 'center' }}>
           {error || status}
         </T>
-        <Button block disabled={!canSend} loading={busy} onPress={send} style={{ alignSelf: 'stretch' }}>
-          Send rapport
-        </Button>
-      </ModalScreen>
-    </KeyboardAvoidingView>
+      )}
+      <CreateButton disabled={!canSend} loading={busy} onPress={send}>
+        Send anmeldelse
+      </CreateButton>
+    </>,
+    `Opslag fra ${post.author_name}. Din anmeldelse er anonym.`,
   );
 }
 
 const s = StyleSheet.create({
-  /* .report .choice: 10 px 14 px (Choice har 8 px; 2 px ekstra her) */
-  choicePad: { paddingVertical: 2 },
-  other: { gap: 8, alignSelf: 'stretch' },
-  tagPick: { paddingTop: 10, paddingHorizontal: 4, paddingBottom: 4 },
+  list: { gap: 10 },
+  tagPick: { gap: 8, paddingHorizontal: 4, paddingBottom: 4 },
   tags: { flexDirection: 'row', flexWrap: 'wrap', gap: 8 },
-  field: {
-    minHeight: 90,
-    paddingVertical: 12,
-    paddingHorizontal: 14,
-    borderWidth: 1,
-    borderColor: color.borderStrong,
-    borderRadius: radius.md,
-    backgroundColor: color.bgSurface,
-    color: color.textPrimary,
-    fontFamily: font.body,
-    fontSize: 16,
-    lineHeight: 22,
-    textAlignVertical: 'top',
-  },
+  done: { alignItems: 'flex-start' },
 });
