@@ -2,11 +2,11 @@ import { Image } from 'expo-image';
 import { router, useLocalSearchParams } from 'expo-router';
 import { useVideoPlayer, VideoView as ExpoVideoView } from 'expo-video';
 import { useEffect, useRef, useState } from 'react';
-import { KeyboardAvoidingView, Platform, Pressable, StyleSheet, TextInput, View } from 'react-native';
-import { Button } from '@/components/Button';
-import { CloseHeader, closeTo, ModalScreen, ToggleList } from '@/components/CreateParts';
+import { Pressable, StyleSheet, TextInput, View } from 'react-native';
+import { closeTo } from '@/components/CreateParts';
+import { AddTile, CreateButton, FlowSwitch, CreateLabel, CreateShell, createField, MediaFrame, OptionRow } from '@/components/CreateFlow';
 import { CreateTagInput } from '@/components/CreateTagInput';
-import { Icon, type IconName } from '@/components/Icon';
+import type { IconName } from '@/components/Icon';
 import { SharedPost } from '@/components/SharedPost';
 import { T } from '@/components/T';
 import { noOutline, TextField } from '@/components/TextField';
@@ -14,27 +14,17 @@ import { listEvents, listGroups } from '@/lib/community';
 import { imageSource, pickMedia, uploadImage, uploadVideo } from '@/lib/media';
 import { useMe } from '@/lib/session';
 import { supabase } from '@/lib/supabase';
-import { color, font, radius } from '@/theme/tokens';
+import { color, radius } from '@/theme/tokens';
 
-type Kind = 'opslag' | 'flick' | 'moment';
 type Audience = 'offentlig' | 'debat';
 type Media = { uri: string; mime: string; type: 'image' | 'video' };
 type PlaceKind = 'gruppe' | 'begivenhed' | 'side';
 type Place = { id: string; name: string; path: string | null; meta: string };
 
-const kinds: { value: Kind; label: string }[] = [
-  { value: 'opslag', label: 'Opslag' },
-  { value: 'flick', label: 'Flick' },
-  { value: 'moment', label: 'Moment' },
-];
-
 const audiences: { value: Audience; label: string; hint: string; icon: IconName }[] = [
   { value: 'offentlig', label: 'Din profil', icon: 'user', hint: 'Til dem, der følger dig.' },
   { value: 'debat', label: 'Offentlig debat', icon: 'compass', hint: 'Til alle' },
 ];
-
-/** Flere indstillinger: kun dem, databasen kan gemme (Tillad deling) */
-const postSettings = [{ id: 'deling', title: 'Tillad deling', hint: 'Andre kan dele opslaget til deres egen profil.' }];
 
 const colOf = { gruppe: 'group_id', begivenhed: 'event_id', side: 'page_id' } as const;
 
@@ -55,7 +45,7 @@ export default function Create() {
   const [audience, setAudience] = useState<Audience>(params.sted === 'debat' ? 'debat' : 'offentlig');
   const [tags, setTags] = useState<string[]>([]);
   const [tagError, setTagError] = useState(false);
-  const [more, setMore] = useState(false);
+  const [focus, setFocus] = useState(false);
   const [settings, setSettings] = useState<Record<string, boolean>>({ deling: true });
   const [media, setMedia] = useState<Media | null>(null);
   const [busy, setBusy] = useState(false);
@@ -134,185 +124,103 @@ export default function Create() {
 
   const hint = audience === 'offentlig' && me.is_private ? 'Din profil er privat, så kun dine følgere kan se opslaget. Det kan du ændre på din profil.' : '';
 
-  const audiencePicker = placeKind ? (
-    <PlacePicker kind={placeKind} places={places} place={place} onPlace={setPlaceId} />
-  ) : (
-    <View style={s.audience}>
-      <T v="headingS" accessibilityRole="header">
-        Hvor skal det deles?
-      </T>
-      <View style={s.dest} accessibilityRole="radiogroup">
-        {audiences.map((a) => {
-          const on = audience === a.value;
-          return (
-            <Pressable key={a.value} accessibilityRole="radio" accessibilityState={{ checked: on }} onPress={() => setAudience(a.value)} style={[s.destItem, on && s.destItemOn]}>
-              <View style={[s.destIcon, on && s.destIconOn]}>
-                <Icon name={a.icon} size={20} />
-              </View>
-              <View style={s.destText}>
-                <T v="label">{a.label}</T>
-                <T v="caption" c={color.textSecondary}>
-                  {a.hint}
-                </T>
-              </View>
-              <View style={[s.destCheck, on && s.destCheckOn]}>{on && <Icon name="check" size={14} color={color.textOnAction} />}</View>
-            </Pressable>
-          );
-        })}
-      </View>
-      {!!hint && (
-        <T v="caption" c={color.textSecondary}>
-          {hint}
-        </T>
-      )}
-      {audience === 'debat' && (
-        <CreateTagInput
-          tags={tags}
-          onTags={(t) => {
-            setTags(t);
-            setTagError(false);
-          }}
-          error={tagError}
-          required
-        />
-      )}
-    </View>
-  );
-
-  const errorLine = !!error && (
-    <T v="bodyS" c={color.danger}>
-      {error}
-    </T>
-  );
-
-  /* ---------- Opret · Billede / Video ---------- */
-  if (media) {
-    return (
-      <KeyboardAvoidingView style={{ flex: 1 }} behavior={Platform.OS === 'ios' ? 'padding' : undefined}>
-        <ModalScreen
-          header={
-            <CloseHeader title={media.type === 'image' ? 'Nyt billede' : 'Ny video'} closeLabel={media.type === 'image' ? 'Fjern billede' : 'Fjern video'} onClose={() => setMedia(null)}>
-              <Button onPress={publish} disabled={busy} loading={busy}>
-                Del
-              </Button>
-            </CloseHeader>
-          }
-        >
-          <View style={s.previewWrap}>
-            <View style={s.preview}>
-              {media.type === 'image' ? (
-                <Image source={{ uri: media.uri }} style={StyleSheet.absoluteFill} contentFit="cover" accessibilityLabel="Det valgte billede" />
-              ) : (
-                <LocalVideo uri={media.uri} />
-              )}
-            </View>
-          </View>
-          {sharing && (
-            <View style={{ alignSelf: 'stretch' }}>
-              <SharedPost id={sharing} />
-            </View>
-          )}
-          <TextInput
-            style={[s.field, s.caption, noOutline]}
-            accessibilityLabel="Skriv en tekst (valgfri)"
-            placeholder="Skriv en tekst (valgfri)"
-            placeholderTextColor={color.textSecondary}
-            multiline
-            maxLength={2200}
-            value={text}
-            onChangeText={setText}
-          />
-          {audiencePicker}
-          <ToggleList rows={postSettings} values={settings} onToggle={(id) => setSettings((v) => ({ ...v, [id]: !v[id] }))} />
-          {errorLine}
-        </ModalScreen>
-      </KeyboardAvoidingView>
-    );
-  }
-
-  /* ---------- Opret ---------- */
-  const addButtons: { label: string; icon: IconName; onPress: () => void }[] = [
-    { label: 'Foto', icon: 'image', onPress: () => pick('image') },
-    { label: 'Video', icon: 'clip', onPress: () => pick('video') },
-  ];
-
   return (
-    <KeyboardAvoidingView style={{ flex: 1 }} behavior={Platform.OS === 'ios' ? 'padding' : undefined}>
-      <ModalScreen
-        header={
-          <CloseHeader title="Opret" onClose={close}>
-            <Button onPress={publish} disabled={busy} loading={busy}>
-              Publicér
-            </Button>
-          </CloseHeader>
-        }
-        contentStyle={s.content}
-      >
-        {!placeKind && !sharing && (
-          <View style={s.tabs} accessibilityRole="tablist" accessibilityLabel="Hvad vil du oprette?">
-            {kinds.map((k) => {
-              const on = k.value === 'opslag';
-              return (
-                <Pressable
-                  key={k.value}
-                  accessibilityRole="tab"
-                  accessibilityState={{ selected: on }}
-                  // Flick og Moment åbner deres egen skærm (vælg video/billede og del)
-                  onPress={() => (k.value === 'flick' ? router.push('/flicks/ny') : k.value === 'moment' ? router.push('/ny-moment') : undefined)}
-                  style={s.tab}
-                >
-                  <T v="label" c={on ? color.textPrimary : color.textSecondary}>
-                    {k.label}
-                  </T>
-                  <View style={[s.tabLine, on && s.tabLineOn]} />
-                </Pressable>
-              );
-            })}
-          </View>
-        )}
+    <CreateShell
+      kind="opslag"
+      switchable={!placeKind && !sharing}
+      title={sharing ? 'Del opslaget' : 'Nyt opslag'}
+      onClose={close}
+      footer={
+        <>
+          {!!error && (
+            <T v="bodyS" c={color.danger} accessibilityLiveRegion="polite">
+              {error}
+            </T>
+          )}
+          <CreateButton onPress={publish} loading={busy} disabled={!media && !text.trim() && !sharing}>
+            Del opslag
+          </CreateButton>
+        </>
+      }
+    >
+      <TextInput
+        ref={textRef}
+        style={[createField.box, focus && createField.focus, noOutline]}
+        accessibilityLabel={media ? 'Skriv en tekst (valgfri)' : 'Hvad har du på hjerte?'}
+        placeholder={media ? 'Skriv en tekst (valgfri)' : 'Hvad har du på hjerte?'}
+        placeholderTextColor={color.textSecondary}
+        multiline
+        maxLength={2200}
+        value={text}
+        onChangeText={setText}
+        onFocus={() => setFocus(true)}
+        onBlur={() => setFocus(false)}
+      />
 
-        <TextInput
-          ref={textRef}
-          style={[s.field, s.post, noOutline]}
-          accessibilityLabel="Hvad har du på hjerte?"
-          placeholder="Hvad har du på hjerte?"
-          placeholderTextColor={color.textSecondary}
-          multiline
-          maxLength={2200}
-          value={text}
-          onChangeText={setText}
-        />
-
-        {sharing && (
-          <View style={{ alignSelf: 'stretch' }}>
-            <SharedPost id={sharing} />
-          </View>
-        )}
-
-        <View style={s.add}>
-          {addButtons.map((b) => (
-            <Pressable key={b.label} accessibilityRole="button" onPress={b.onPress} style={({ pressed }) => [s.addBtn, pressed && { transform: [{ scale: 0.97 }] }]}>
-              <Icon name={b.icon} size={20} />
-              <T v="label">{b.label}</T>
-            </Pressable>
-          ))}
+      {sharing && (
+        <View style={{ alignSelf: 'stretch' }}>
+          <SharedPost id={sharing} />
         </View>
+      )}
 
-        {audiencePicker}
-
-        <Pressable accessibilityRole="button" accessibilityState={{ expanded: more }} onPress={() => setMore((m) => !m)} style={s.more}>
-          <T v="label" c={color.textSecondary}>
-            Flere indstillinger
-          </T>
-          <View style={{ transform: [{ rotate: more ? '-90deg' : '90deg' }] }}>
-            <Icon name="chevron-right" />
+      {media ? (
+        <MediaFrame onRemove={() => setMedia(null)} removeLabel={media.type === 'image' ? 'Fjern billede' : 'Fjern video'}>
+          {media.type === 'image' ? (
+            <Image source={{ uri: media.uri }} style={StyleSheet.absoluteFill} contentFit="cover" accessibilityLabel="Det valgte billede" />
+          ) : (
+            <LocalVideo uri={media.uri} />
+          )}
+        </MediaFrame>
+      ) : (
+        !sharing && (
+          <View style={s.add}>
+            <AddTile icon="image" label="Billede" onPress={() => pick('image')} />
+            <AddTile icon="clip" label="Video" onPress={() => pick('video')} />
           </View>
-        </Pressable>
+        )
+      )}
 
-        {more && <ToggleList rows={postSettings} values={settings} onToggle={(id) => setSettings((v) => ({ ...v, [id]: !v[id] }))} />}
-        {errorLine}
-      </ModalScreen>
-    </KeyboardAvoidingView>
+      {placeKind ? (
+        <PlacePicker kind={placeKind} places={places} place={place} onPlace={setPlaceId} />
+      ) : (
+        <>
+          <CreateLabel>Hvor skal det deles?</CreateLabel>
+          <View style={s.list} accessibilityRole="radiogroup">
+            {audiences.map((a) => (
+              <OptionRow key={a.value} role="radio" icon={a.icon} title={a.label} text={a.hint} on={audience === a.value} onPress={() => setAudience(a.value)} />
+            ))}
+          </View>
+          {!!hint && (
+            <T v="caption" c={color.textSecondary}>
+              {hint}
+            </T>
+          )}
+          {audience === 'debat' && (
+            <CreateTagInput
+              flow
+              tags={tags}
+              onTags={(t) => {
+                setTags(t);
+                setTagError(false);
+              }}
+              error={tagError}
+              required
+            />
+          )}
+        </>
+      )}
+
+      <CreateLabel>Indstillinger</CreateLabel>
+      <OptionRow
+        role="switch"
+        icon="send"
+        title="Tillad deling"
+        text="Andre kan dele opslaget videre."
+        on={settings.deling}
+        onPress={() => setSettings((v) => ({ ...v, deling: !v.deling }))}
+        right={<FlowSwitch on={settings.deling} />}
+      />
+    </CreateShell>
   );
 }
 
@@ -331,9 +239,7 @@ function PlacePicker({ kind, places, place, onPlace }: { kind: PlaceKind; places
 
   return (
     <View style={s.audience}>
-      <T v="headingS" accessibilityRole="header">
-        {title}
-      </T>
+      <CreateLabel>{title}</CreateLabel>
       {place && (
         <View style={s.place}>
           <PlacePic place={place} />
@@ -425,72 +331,21 @@ function LocalVideo({ uri }: { uri: string }) {
 }
 
 const s = StyleSheet.create({
-  content: { gap: 18, paddingTop: 8 },
-  tabs: { flexDirection: 'row', alignItems: 'flex-end', gap: 22, alignSelf: 'stretch', borderBottomWidth: 1, borderBottomColor: color.borderDefault, marginTop: -5 },
-  tab: { minHeight: 44, paddingTop: 13, paddingBottom: 11 },
-  tabLine: { position: 'absolute', left: 0, right: 0, bottom: 0, height: 3, borderRadius: 2 },
-  tabLineOn: { backgroundColor: color.accentHighlight },
-  field: {
-    alignSelf: 'stretch',
-    borderWidth: 1,
-    borderColor: color.borderStrong,
-    borderRadius: radius.lg,
-    backgroundColor: color.bgSurface,
-    color: color.textPrimary,
-    fontFamily: font.body,
-    fontSize: 16,
-    lineHeight: 22,
-    textAlignVertical: 'top',
-  },
-  post: { height: 170, padding: 16 },
-  caption: { height: 90, padding: 14 },
-  add: { flexDirection: 'row', flexWrap: 'wrap', gap: 8 },
-  addBtn: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: 8,
-    minHeight: 44,
-    paddingLeft: 14,
-    paddingRight: 16,
-    borderWidth: 1,
-    borderColor: color.borderStrong,
-    borderRadius: radius.pill,
-    backgroundColor: color.bgSurface,
-  },
+  add: { flexDirection: 'row', gap: 10, alignSelf: 'stretch' },
+  list: { gap: 10, alignSelf: 'stretch' },
   audience: { gap: 10, alignSelf: 'stretch' },
-  dest: { gap: 8 },
-  destItem: {
+  destText: { flex: 1, minWidth: 0 },
+  place: {
     flexDirection: 'row',
     alignItems: 'center',
     gap: 12,
     minHeight: 64,
     paddingVertical: 10,
-    paddingLeft: 10,
-    paddingRight: 14,
-    borderWidth: 1.5,
-    borderColor: color.borderDefault,
-    borderRadius: radius.lg,
-    backgroundColor: color.bgSurface,
-  },
-  destItemOn: { borderColor: color.textPrimary },
-  destIcon: { width: 42, height: 42, borderRadius: 12, backgroundColor: color.bgSubtle, alignItems: 'center', justifyContent: 'center' },
-  destIconOn: { backgroundColor: color.accentVerifiedBg },
-  destText: { flex: 1, minWidth: 0 },
-  destCheck: { width: 22, height: 22, borderRadius: 11, borderWidth: 1.5, borderColor: color.borderStrong, alignItems: 'center', justifyContent: 'center' },
-  destCheckOn: { borderColor: color.actionPrimary, backgroundColor: color.actionPrimary },
-  more: { flexDirection: 'row', alignItems: 'center', gap: 6, minHeight: 44, marginVertical: -12 },
-  previewWrap: { alignSelf: 'stretch', alignItems: 'center' },
-  preview: { width: 224, maxWidth: '100%', aspectRatio: 4 / 5, overflow: 'hidden', borderRadius: radius.lg, backgroundColor: color.bgSubtle },
-  place: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: 12,
-    paddingVertical: 10,
-    paddingLeft: 10,
+    paddingLeft: 12,
     paddingRight: 12,
     borderWidth: 1.5,
-    borderColor: color.textPrimary,
-    borderRadius: radius.lg,
+    borderColor: color.accent,
+    borderRadius: 20,
     backgroundColor: color.bgSurface,
   },
   placeChange: { minHeight: 44, paddingHorizontal: 10, justifyContent: 'center' },

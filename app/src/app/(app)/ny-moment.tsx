@@ -4,11 +4,12 @@ import { router, useLocalSearchParams } from 'expo-router';
 import { StatusBar } from 'expo-status-bar';
 import { useVideoPlayer, VideoView as ExpoVideoView } from 'expo-video';
 import { useEffect, useState } from 'react';
-import { Pressable, StyleSheet, View } from 'react-native';
+import { StyleSheet, View } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import Svg, { Defs, LinearGradient, Rect, Stop } from 'react-native-svg';
 import { Avatar } from '@/components/Avatar';
 import { Button } from '@/components/Button';
+import { CreateButton, CreateShell, MediaFrame, OptionRow } from '@/components/CreateFlow';
 import { IconButton } from '@/components/IconButton';
 import { T } from '@/components/T';
 import { imageSource, pickMedia, uploadImage, uploadVideo } from '@/lib/media';
@@ -64,8 +65,7 @@ function useShare() {
 /* ---------- Nyt moment (søgeren) ---------- */
 
 function Camera() {
-  useBlackChrome();
-  const insets = useSafeAreaInsets();
+  const { side } = useLocalSearchParams<{ side?: string }>();
   const [captured, setCaptured] = useState<Captured | null>(null);
   const { busy, error, share } = useShare();
 
@@ -83,62 +83,50 @@ function Camera() {
   };
   const gallery = async () => fromAsset(await pickMedia(true));
 
-  return (
-    <View style={[s.newflick, { paddingTop: insets.top }]} accessibilityLabel="Nyt moment">
-      <StatusBar style="light" />
-      <View style={s.viewfinder}>
-        {captured ? (
-          captured.video ? (
+  /* Trin 2: se det, og del */
+  if (captured) {
+    return (
+      <CreateShell
+        kind="moment"
+        progress={[2, 2]}
+        kicker="Trin 2 af 2"
+        title="Klar til at dele"
+        lead={side ? 'Momentet vises på siden i 24 timer.' : 'Dem, der følger dig, kan se dit moment i 24 timer.'}
+        onClose={() => setCaptured(null)}
+        closeIcon="chevron-left"
+        closeLabel="Tilbage"
+        footer={
+          <>
+            {!!error && (
+              <T v="bodyS" c={color.danger} accessibilityLiveRegion="polite">
+                {error}
+              </T>
+            )}
+            <CreateButton loading={busy} onPress={() => share(captured, null)}>
+              Del moment
+            </CreateButton>
+          </>
+        }
+      >
+        <MediaFrame ratio={9 / 16} width={220} onRemove={() => setCaptured(null)} removeLabel="Kassér">
+          {captured.video ? (
             <LocalVideo uri={captured.uri} />
           ) : (
             <Image source={{ uri: captured.uri }} style={StyleSheet.absoluteFill} contentFit="cover" accessibilityLabel="Dit billede" />
-          )
-        ) : (
-          <>
-            <View style={s.placeholder} />
-            <T v="bodyS" c={color.bgSubtle} style={s.hint} accessibilityLiveRegion="polite">
-              Tryk for foto. Hold nede for at optage.
-            </T>
-          </>
-        )}
-
-        <View style={s.top}>
-          <IconButton icon="close" label={captured ? 'Kassér' : 'Luk'} tint={color.white} onPress={() => (captured ? setCaptured(null) : close())} />
-          <T v="headingS" c={color.white} style={s.title} accessibilityRole="header">
-            Nyt moment
-          </T>
-          <View style={{ width: 44 }} />
-        </View>
-
-        {!captured && (
-          <View style={[s.controls, { bottom: Math.max(70, insets.bottom + 40) }]}>
-            <IconButton icon="image" label="Vælg fra billeder" tint={color.white} onPress={gallery} />
-            <Pressable
-              accessibilityRole="button"
-              accessibilityLabel="Tag foto"
-              onPress={camera}
-              style={({ pressed }) => [s.shutter, pressed && { transform: [{ scale: 0.96 }] }]}
-            >
-              <View style={s.shutterInner} />
-            </Pressable>
-            <IconButton icon="camera" label="Skift kamera" tint={color.white} onPress={camera} />
-          </View>
-        )}
-      </View>
-
-      {captured && (
-        <View style={[s.panel, { paddingBottom: 16 + insets.bottom }]}>
-          {!!error && (
-            <T v="bodyS" c={color.danger}>
-              {error}
-            </T>
           )}
-          <Button variant="highlight" block loading={busy} onPress={() => share(captured, null)}>
-            Del moment
-          </Button>
-        </View>
-      )}
-    </View>
+        </MediaFrame>
+      </CreateShell>
+    );
+  }
+
+  /* Trin 1: tag eller vælg et foto/en video */
+  return (
+    <CreateShell kind="moment" switchable={!side} kicker="Trin 1 af 2" title="Nyt moment" lead="Et moment forsvinder igen efter 24 timer." onClose={close}>
+      <View style={s.list}>
+        <OptionRow icon="camera" title="Tag et foto eller en video" text="Brug telefonens kamera" onPress={camera} />
+        <OptionRow icon="image" title="Vælg fra kamerarullen" text="Et billede eller en video" onPress={gallery} />
+      </View>
+    </CreateShell>
   );
 }
 
@@ -236,29 +224,7 @@ function ShareMoment({ postId }: { postId: string }) {
 }
 
 const s = StyleSheet.create({
-  /* Nyt moment */
-  newflick: { flex: 1, backgroundColor: color.actionPrimary },
-  viewfinder: { flex: 1, overflow: 'hidden', backgroundColor: color.actionPrimary },
-  placeholder: { position: 'absolute', left: '50%', top: '44%', width: 220, height: 220, marginLeft: -110, marginTop: -110, borderRadius: 110, backgroundColor: color.ink700, opacity: 0.75 },
-  hint: { position: 'absolute', left: 16, right: 16, top: '44%', marginTop: -20, textAlign: 'center', textShadowColor: 'rgba(0,0,0,0.4)', textShadowOffset: { width: 0, height: 1 }, textShadowRadius: 4 },
-  top: { position: 'absolute', top: 18, left: 20, right: 20, flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between' },
-  title: { textShadowColor: 'rgba(0,0,0,0.5)', textShadowOffset: { width: 0, height: 1 }, textShadowRadius: 3 },
-  controls: { position: 'absolute', left: 60, right: 60, minHeight: 76, flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between' },
-  shutter: { width: 76, height: 76, borderRadius: 38, borderWidth: 4, borderColor: color.accentHighlight, alignItems: 'center', justifyContent: 'center' },
-  shutterInner: { width: 56, height: 56, borderRadius: 28, backgroundColor: color.bgSurface },
-  panel: {
-    position: 'absolute',
-    left: 0,
-    right: 0,
-    bottom: 0,
-    zIndex: 5,
-    gap: 12,
-    paddingTop: 16,
-    paddingHorizontal: 20,
-    borderTopLeftRadius: 24,
-    borderTopRightRadius: 24,
-    backgroundColor: color.bgSurface,
-  },
+  list: { gap: 10 },
   /* Del som moment */
   smoment: { flex: 1, backgroundColor: color.ink900 },
   stage: { ...StyleSheet.absoluteFill, alignItems: 'center', justifyContent: 'center', overflow: 'hidden', backgroundColor: color.ink900 },

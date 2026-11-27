@@ -16,10 +16,12 @@ type Props = {
   /** Mindst ét tag (Offentlig debat) */
   required?: boolean;
   hint?: string;
+  /** Oprettelses-flowets udtryk (som oprettelsen af en konto): lyse felter og grønne valgte tags */
+  flow?: boolean;
 };
 
 /** Tags på opslag (prototypens TagInput): skriv selv, eller vælg blandt forslag. Højst fem. */
-export function CreateTagInput({ tags, onTags, error = false, required = false, hint }: Props) {
+export function CreateTagInput({ tags, onTags, error = false, required = false, hint, flow = false }: Props) {
   const [text, setText] = useState('');
   const q = text.trim().replace(/^#/, '');
   const known = [...new Set([...trending, ...allTopics])];
@@ -37,7 +39,7 @@ export function CreateTagInput({ tags, onTags, error = false, required = false, 
 
   return (
     <View style={s.tags}>
-      <T v="headingS" accessibilityRole="header">
+      <T v={flow ? 'label' : 'headingS'} c={flow ? color.textSecondary : undefined} accessibilityRole="header">
         Tags{' '}
         {!required && (
           <T v="caption" c={color.textSecondary}>
@@ -53,7 +55,7 @@ export function CreateTagInput({ tags, onTags, error = false, required = false, 
       {tags.length > 0 && (
         <View style={s.wrap}>
           {tags.map((t, i) => (
-            <TagChip key={t} selected label={`Fjern tagget ${t}`} onPress={() => onTags(tags.filter((x) => x !== t))} icon="close">
+            <TagChip key={t} selected flow={flow} label={`Fjern tagget ${t}`} onPress={() => onTags(tags.filter((x) => x !== t))} icon="close">
               {`#${t}`}
               {i === 0 && required && (
                 <View style={s.main}>
@@ -70,6 +72,7 @@ export function CreateTagInput({ tags, onTags, error = false, required = false, 
         <TextField
           label="Skriv et tag"
           showLabel={false}
+          dark={flow}
           placeholder="Skriv et tag, fx Cykelstier"
           value={text}
           autoCapitalize="sentences"
@@ -82,12 +85,12 @@ export function CreateTagInput({ tags, onTags, error = false, required = false, 
       {!full && suggestions.length > 0 && (
         <View style={s.wrap} accessibilityLabel="Forslag">
           {!!q && !known.some((k) => k.toLowerCase() === q.toLowerCase()) && (
-            <TagChip onPress={() => add(q)} icon="plus">
+            <TagChip flow={flow} onPress={() => add(q)} icon="plus">
               {`Nyt tag: #${q}`}
             </TagChip>
           )}
           {suggestions.map((t) => (
-            <TagChip key={t} onPress={() => add(t)} icon="plus">
+            <TagChip key={t} flow={flow} onPress={() => add(t)} icon="plus">
               {`#${t}`}
             </TagChip>
           ))}
@@ -98,11 +101,11 @@ export function CreateTagInput({ tags, onTags, error = false, required = false, 
 }
 
 /** Chip med tekst, evt. "emne"-mærke og et ikon til sidst (.chip.create__tag: 0 12 0 14, gap 6) */
-function TagChip({ children, selected, onPress, icon, label }: { children: React.ReactNode; selected?: boolean; onPress: () => void; icon: 'close' | 'plus'; label?: string }) {
-  const fg = selected ? color.textOnAction : color.textPrimary;
+function TagChip({ children, selected, onPress, icon, label, flow }: { children: React.ReactNode; selected?: boolean; onPress: () => void; icon: 'close' | 'plus'; label?: string; flow?: boolean }) {
+  const fg = selected && !flow ? color.textOnAction : color.textPrimary;
   const [text, ...rest] = Array.isArray(children) ? children : [children];
   return (
-    <Pressable accessibilityRole="button" accessibilityLabel={label} onPress={onPress} style={[s.chip, selected && s.on]}>
+    <Pressable accessibilityRole="button" accessibilityLabel={label} onPress={onPress} style={[s.chip, flow && s.flowChip, selected && (flow ? s.flowOn : s.on)]}>
       <T v="label" c={fg} numberOfLines={1}>
         {text}
       </T>
@@ -128,5 +131,7 @@ const s = StyleSheet.create({
     backgroundColor: color.bgSurface,
   },
   on: { backgroundColor: color.actionPrimary, borderColor: color.actionPrimary },
+  flowChip: { minHeight: 40, borderColor: color.borderDefault },
+  flowOn: { backgroundColor: color.accentVerifiedBg, borderColor: color.accent },
   main: { paddingVertical: 1, paddingHorizontal: 6, borderRadius: radius.pill, backgroundColor: color.accentHighlight },
 });

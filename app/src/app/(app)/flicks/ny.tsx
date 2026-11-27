@@ -1,31 +1,26 @@
 import * as ImagePicker from 'expo-image-picker';
 import { router } from 'expo-router';
-import { StatusBar } from 'expo-status-bar';
 import { useVideoPlayer, VideoView as ExpoVideoView } from 'expo-video';
 import { useState } from 'react';
-import { KeyboardAvoidingView, Platform, Pressable, ScrollView, StyleSheet, View, TextInput } from 'react-native';
-import { useSafeAreaInsets } from 'react-native-safe-area-context';
-import { Button } from '@/components/Button';
+import { Platform, StyleSheet, TextInput, View } from 'react-native';
+import { CreateButton, CreateShell, createField, MediaFrame, OptionRow } from '@/components/CreateFlow';
 import { CreateTagInput } from '@/components/CreateTagInput';
-import { IconButton } from '@/components/IconButton';
 import { T } from '@/components/T';
+import { noOutline } from '@/components/TextField';
 import { uploadVideo } from '@/lib/media';
 import { useMe } from '@/lib/session';
 import { supabase } from '@/lib/supabase';
-import { useBlackChrome } from '@/lib/useDarkChrome';
-import { color, font, palette } from '@/theme/tokens';
+import { color } from '@/theme/tokens';
 
 type Captured = { uri: string; mime: string };
 
 /**
- * Ny flick (prototypens NewFlick): mørk søger i fuld skærm.
- * Udløseren åbner telefonens kamera (flicks er videoer), billedikonet vælger en video.
- * Efter optagelse: tags og "Del flick".
+ * Ny flick i to trin (samme udtryk som oprettelsen af en konto):
+ * 1. Optag med telefonens kamera eller vælg en video.
+ * 2. Tekst, tags (mindst ét) og "Del flick".
  */
 export default function NewFlick() {
-  useBlackChrome();
   const me = useMe();
-  const insets = useSafeAreaInsets();
   const [captured, setCaptured] = useState<Captured | null>(null);
   const [videoOnly, setVideoOnly] = useState(false);
   const [text, setText] = useState('');
@@ -33,6 +28,7 @@ export default function NewFlick() {
   const [tagError, setTagError] = useState(false);
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState('');
+  const [focus, setFocus] = useState(false);
 
   const close = () => (router.canGoBack() ? router.back() : router.replace('/flicks'));
 
@@ -80,76 +76,73 @@ export default function NewFlick() {
     }
   };
 
-  return (
-    <View style={[s.root, { paddingTop: insets.top }]} accessibilityViewIsModal accessibilityLabel="Ny flick">
-      <StatusBar style="light" />
-      <View style={s.viewfinder}>
-        {captured ? (
-          <LocalVideo uri={captured.uri} />
-        ) : (
+  /* Trin 2: tekst, tags og del */
+  if (captured) {
+    return (
+      <CreateShell
+        kind="flick"
+        progress={[2, 2]}
+        kicker="Trin 2 af 2"
+        title="Gør den klar"
+        lead="Skriv en tekst, og vælg mindst ét tag, så andre kan finde din flick."
+        onClose={() => setCaptured(null)}
+        closeIcon="chevron-left"
+        closeLabel="Tilbage"
+        footer={
           <>
-            <View style={s.placeholder} />
-            <T v="bodyS" c={videoOnly ? color.accentHighlight : color.bgSubtle} style={[s.hint, videoOnly && { fontFamily: font.bodySemi }]} accessibilityLiveRegion="polite">
-              {videoOnly ? 'Flicks er videoer. Hold knappen nede for at optage.' : 'Hold nede for at optage en flick.'}
-            </T>
-          </>
-        )}
-
-        <View style={s.top}>
-          <IconButton icon="close" label={captured ? 'Kassér' : 'Luk'} tint={color.textOnAction} onPress={() => (captured ? setCaptured(null) : close())} />
-          <T v="headingS" c="#fff" style={s.title}>
-            Ny flick
-          </T>
-          <View style={{ width: 44 }} />
-        </View>
-
-        {!captured && (
-          <View style={[s.controls, { bottom: Math.max(70, insets.bottom + 40) }]}>
-            <IconButton icon="image" label="Vælg video" tint={color.textOnAction} onPress={gallery} />
-            <Pressable accessibilityRole="button" accessibilityLabel="Hold nede for at optage" onPress={camera} onLongPress={camera} style={s.shutter}>
-              {({ pressed }) => <View style={[s.shutterInner, pressed && { transform: [{ scale: 0.92 }] }]} />}
-            </Pressable>
-            <IconButton icon="camera" label="Skift kamera" tint={color.textOnAction} onPress={camera} />
-          </View>
-        )}
-      </View>
-
-      {/* Efter optagelse: tilføj tags, og del */}
-      {captured && (
-        <KeyboardAvoidingView behavior={Platform.OS === 'ios' ? 'padding' : undefined} style={s.panelWrap}>
-          <ScrollView style={s.panel} contentContainerStyle={[s.panelContent, { paddingBottom: 16 + insets.bottom }]} keyboardShouldPersistTaps="handled">
-            {/* Tekst til flicken (vises nederst på videoen) */}
-            <TextInput
-              accessibilityLabel="Skriv en tekst"
-              placeholder="Skriv en tekst …"
-              placeholderTextColor={color.textSecondary}
-              value={text}
-              onChangeText={setText}
-              multiline
-              maxLength={300}
-              style={s.text}
-            />
-            <CreateTagInput
-              tags={tags}
-              onTags={(t) => {
-                setTags(t);
-                if (t.length) setTagError(false);
-              }}
-              error={tagError}
-              required
-            />
             {!!error && (
-              <T v="bodyS" c={color.danger}>
+              <T v="bodyS" c={color.danger} accessibilityLiveRegion="polite">
                 {error}
               </T>
             )}
-            <Button variant="highlight" block loading={busy} disabled={tags.length === 0} onPress={share}>
+            <CreateButton loading={busy} disabled={tags.length === 0} onPress={share}>
               Del flick
-            </Button>
-          </ScrollView>
-        </KeyboardAvoidingView>
+            </CreateButton>
+          </>
+        }
+      >
+        <MediaFrame ratio={9 / 16} width={150} onRemove={() => setCaptured(null)} removeLabel="Kassér videoen">
+          <LocalVideo uri={captured.uri} />
+        </MediaFrame>
+        <TextInput
+          accessibilityLabel="Skriv en tekst"
+          placeholder="Skriv en tekst …"
+          placeholderTextColor={color.textSecondary}
+          value={text}
+          onChangeText={setText}
+          onFocus={() => setFocus(true)}
+          onBlur={() => setFocus(false)}
+          multiline
+          maxLength={300}
+          style={[createField.box, { minHeight: 100 }, focus && createField.focus, noOutline]}
+        />
+        <CreateTagInput
+          flow
+          tags={tags}
+          onTags={(t) => {
+            setTags(t);
+            if (t.length) setTagError(false);
+          }}
+          error={tagError}
+          required
+        />
+      </CreateShell>
+    );
+  }
+
+  /* Trin 1: optag eller vælg en video */
+  return (
+    <CreateShell kind="flick" switchable kicker="Trin 1 af 2" title="Ny flick" lead="Flicks er lodrette videoer på op til 60 sekunder." onClose={close}>
+      <View style={s.list}>
+        <OptionRow icon="camera" title="Optag en video" text="Brug telefonens kamera" onPress={camera} />
+        <OptionRow icon="image" title="Vælg en video" text="Fra dit kamerarul" onPress={gallery} />
+      </View>
+      {videoOnly && (
+        <T v="bodyS" c={color.danger} accessibilityLiveRegion="polite">
+          Flicks er videoer. Vælg eller optag en video.
+        </T>
       )}
-    </View>
+    </CreateShell>
   );
 }
 
@@ -164,30 +157,5 @@ function LocalVideo({ uri }: { uri: string }) {
 }
 
 const s = StyleSheet.create({
-  text: { minHeight: 64, maxHeight: 120, paddingHorizontal: 16, paddingVertical: 12, borderRadius: 18, borderWidth: 1, borderColor: color.borderDefault, backgroundColor: color.bgSurface, color: color.textPrimary, fontFamily: font.body, fontSize: 16, textAlignVertical: 'top' },
-  root: { flex: 1, backgroundColor: color.actionPrimary },
-  viewfinder: { flex: 1, minHeight: 0, overflow: 'hidden', backgroundColor: color.actionPrimary },
-  /* Grå cirkel, 220 px, når der ikke er et kamerabillede */
-  placeholder: { position: 'absolute', alignSelf: 'center', top: '44%', marginTop: -110, width: 220, height: 220, borderRadius: 110, backgroundColor: palette.ink700, opacity: 0.75 },
-  hint: {
-    position: 'absolute',
-    left: 16,
-    right: 16,
-    top: '44%',
-    marginTop: -20,
-    textAlign: 'center',
-    textShadowColor: 'rgba(0,0,0,0.4)',
-    textShadowRadius: 4,
-    textShadowOffset: { width: 0, height: 1 },
-  },
-  top: { position: 'absolute', top: 18, left: 20, right: 20, flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between' },
-  title: { textShadowColor: 'rgba(0,0,0,0.5)', textShadowRadius: 3, textShadowOffset: { width: 0, height: 1 } },
-  /* Udløser og knapper: 70 px fra bunden, ikonerne 60 px fra kanterne */
-  controls: { position: 'absolute', left: 60, right: 60, minHeight: 76, flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between' },
-  /* Mint ring (76 px) med hvid knap (56 px) indeni */
-  shutter: { width: 76, height: 76, borderRadius: 38, borderWidth: 4, borderColor: color.accentHighlight, alignItems: 'center', justifyContent: 'center' },
-  shutterInner: { width: 56, height: 56, borderRadius: 28, backgroundColor: color.bgSurface },
-  panelWrap: { position: 'absolute', left: 0, right: 0, bottom: 0, maxHeight: '62%', zIndex: 5 },
-  panel: { borderTopLeftRadius: 24, borderTopRightRadius: 24, backgroundColor: color.bgSurface },
-  panelContent: { gap: 12, paddingTop: 16, paddingHorizontal: 20 },
+  list: { gap: 10 },
 });
