@@ -3,7 +3,7 @@ import { router } from 'expo-router';
 import { useVideoPlayer, VideoView as ExpoVideoView } from 'expo-video';
 import { useState } from 'react';
 import { Platform, StyleSheet, TextInput, View } from 'react-native';
-import { CreateButton, CreateShell, createField, MediaFrame, OptionRow } from '@/components/CreateFlow';
+import { CreateButton, CreateShell, createField, OptionRow } from '@/components/CreateFlow';
 import { CreateTagInput } from '@/components/CreateTagInput';
 import { T } from '@/components/T';
 import { noOutline } from '@/components/TextField';
@@ -84,7 +84,7 @@ export default function NewFlick() {
         progress={[2, 2]}
         kicker="Trin 2 af 2"
         title="Gør den klar"
-        lead="Skriv en tekst, og vælg mindst ét tag, så andre kan finde din flick."
+        lead="Vælg mindst ét tag, så andre kan finde din flick."
         onClose={() => setCaptured(null)}
         closeIcon="chevron-left"
         closeLabel="Tilbage"
@@ -96,26 +96,29 @@ export default function NewFlick() {
               </T>
             )}
             <CreateButton loading={busy} disabled={tags.length === 0} onPress={share}>
-              Del flick
+              {tags.length === 0 ? 'Tilføj et tag for at dele' : 'Del flick'}
             </CreateButton>
           </>
         }
       >
-        <MediaFrame ratio={9 / 16} width={150} onRemove={() => setCaptured(null)} removeLabel="Kassér videoen">
-          <LocalVideo uri={captured.uri} />
-        </MediaFrame>
-        <TextInput
-          accessibilityLabel="Skriv en tekst"
-          placeholder="Skriv en tekst …"
-          placeholderTextColor={color.textSecondary}
-          value={text}
-          onChangeText={setText}
-          onFocus={() => setFocus(true)}
-          onBlur={() => setFocus(false)}
-          multiline
-          maxLength={300}
-          style={[createField.box, { minHeight: 100 }, focus && createField.focus, noOutline]}
-        />
+        {/* Videoen lille til venstre og teksten ved siden af, så tags kan ses uden at rulle */}
+        <View style={s.row}>
+          <View style={s.thumb}>
+            <LocalVideo uri={captured.uri} />
+          </View>
+          <TextInput
+            accessibilityLabel="Skriv en tekst"
+            placeholder="Skriv en tekst …"
+            placeholderTextColor={color.textSecondary}
+            value={text}
+            onChangeText={setText}
+            onFocus={() => setFocus(true)}
+            onBlur={() => setFocus(false)}
+            multiline
+            maxLength={300}
+            style={[createField.box, s.text, focus && createField.focus, noOutline]}
+          />
+        </View>
         <CreateTagInput
           flow
           tags={tags}
@@ -158,4 +161,7 @@ function LocalVideo({ uri }: { uri: string }) {
 
 const s = StyleSheet.create({
   list: { gap: 10 },
+  row: { flexDirection: 'row', gap: 12, alignSelf: 'stretch' },
+  thumb: { width: 96, aspectRatio: 9 / 16, overflow: 'hidden', borderRadius: 16, backgroundColor: color.ink900 },
+  text: { flex: 1, alignSelf: 'auto', minHeight: 0 },
 });

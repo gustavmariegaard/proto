@@ -39,6 +39,18 @@ export function CreateTagInput({ tags, onTags, error = false, required = false, 
 
   return (
     <View style={s.tags}>
+      {flow && required ? (
+        <View style={s.flowHead}>
+          <T v="headingS" accessibilityRole="header">
+            Tags
+          </T>
+          <View style={[s.req, tags.length > 0 && s.reqDone]}>
+            <T v="micro" c={color.ink900}>
+              {tags.length > 0 ? `${tags.length} valgt` : 'Påkrævet'}
+            </T>
+          </View>
+        </View>
+      ) : (
       <T v={flow ? 'label' : 'headingS'} c={flow ? color.textSecondary : undefined} accessibilityRole="header">
         Tags{' '}
         {!required && (
@@ -47,6 +59,7 @@ export function CreateTagInput({ tags, onTags, error = false, required = false, 
           </T>
         )}
       </T>
+      )}
       <T v="caption" c={error ? color.danger : color.textSecondary} accessibilityLiveRegion="polite">
         {error
           ? 'Tilføj mindst ét tag, så andre kan finde opslaget.'
@@ -54,16 +67,9 @@ export function CreateTagInput({ tags, onTags, error = false, required = false, 
       </T>
       {tags.length > 0 && (
         <View style={s.wrap}>
-          {tags.map((t, i) => (
+          {tags.map((t) => (
             <TagChip key={t} selected flow={flow} label={`Fjern tagget ${t}`} onPress={() => onTags(tags.filter((x) => x !== t))} icon="close">
               {`#${t}`}
-              {i === 0 && required && (
-                <View style={s.main}>
-                  <T v="micro" c={color.ink900}>
-                    emne
-                  </T>
-                </View>
-              )}
             </TagChip>
           ))}
         </View>
@@ -100,7 +106,7 @@ export function CreateTagInput({ tags, onTags, error = false, required = false, 
   );
 }
 
-/** Chip med tekst, evt. "emne"-mærke og et ikon til sidst (.chip.create__tag: 0 12 0 14, gap 6) */
+/** Chip med tekst og et ikon til sidst (.chip.create__tag: 0 12 0 14, gap 6) */
 function TagChip({ children, selected, onPress, icon, label, flow }: { children: React.ReactNode; selected?: boolean; onPress: () => void; icon: 'close' | 'plus'; label?: string; flow?: boolean }) {
   const fg = selected && !flow ? color.textOnAction : color.textPrimary;
   const [text, ...rest] = Array.isArray(children) ? children : [children];
@@ -131,7 +137,9 @@ const s = StyleSheet.create({
     backgroundColor: color.bgSurface,
   },
   on: { backgroundColor: color.actionPrimary, borderColor: color.actionPrimary },
+  flowHead: { flexDirection: 'row', alignItems: 'center', gap: 8 },
+  req: { paddingVertical: 2, paddingHorizontal: 8, borderRadius: radius.pill, backgroundColor: color.accentVerifiedBg },
+  reqDone: { backgroundColor: color.bgSubtle },
   flowChip: { minHeight: 40, borderColor: color.borderDefault },
   flowOn: { backgroundColor: color.accentVerifiedBg, borderColor: color.accent },
-  main: { paddingVertical: 1, paddingHorizontal: 6, borderRadius: radius.pill, backgroundColor: color.accentHighlight },
 });
