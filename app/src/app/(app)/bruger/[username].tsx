@@ -120,7 +120,7 @@ export default function UserProfile() {
     await supabase.from('reports').insert({ reporter_id: me.id, profile_id: p.id, reason });
   };
 
-  const avatar = <Avatar name={p.name} path={p.avatar_path} size="XL" />;
+  const avatar = <Avatar name={p.name} path={p.avatar_path} size={74} />;
 
   return (
     <View style={s.root}>
@@ -250,9 +250,9 @@ const s = StyleSheet.create({
   root: { flex: 1, backgroundColor: color.bgApp },
   content: { gap: 16, paddingTop: 4, paddingHorizontal: 20 },
   identity: { flexDirection: 'row', alignItems: 'center', gap: 16 },
-  ring: { width: 86, height: 86, flexShrink: 0, borderRadius: 43, alignItems: 'center', justifyContent: 'center' },
+  ring: { width: 84, height: 84, flexShrink: 0, borderRadius: 42, alignItems: 'center', justifyContent: 'center' },
   ringNew: { borderWidth: 3, borderColor: color.accentHighlight },
-  ringSeen: { borderWidth: 2, borderColor: color.borderStrong },
+  ringSeen: { borderWidth: 3, borderColor: color.borderStrong },
   name: { flex: 1, minWidth: 0, gap: 2, alignItems: 'flex-start' },
   pill: {
     flexDirection: 'row',

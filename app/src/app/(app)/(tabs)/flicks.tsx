@@ -14,7 +14,7 @@ import { supabase } from '@/lib/supabase';
 import type { PostCard } from '@/lib/types';
 import { useBlackChrome } from '@/lib/useDarkChrome';
 import { reportTabScroll } from '@/components/TabBar';
-import { color, font, layout, radius, tabbarBar, TAP } from '@/theme/tokens';
+import { font, layout, tabbarBar, TAP } from '@/theme/tokens';
 
 type Mode = 'interesser' | 'foelger';
 const PAGE = 10;
@@ -164,21 +164,26 @@ export default function Flicks() {
         />
       )}
 
-      {/* Justér interesser · Interesser · Følger. Valgt = hvid, resten gennemsigtige. */}
-      <View style={[s.top, { top: topInset }]} accessibilityRole="radiogroup" accessibilityLabel="Vælg feed">
-        <Pressable accessibilityRole="button" accessibilityLabel="Juster dine interesser" onPress={() => setEditing(true)} style={[s.mode, s.icon]}>
-          <Icon name="sliders" size={20} color="#fff" />
+      {/* Diskrete faner som tekst (fed + streg = valgt) og et lille ikon til at justere interesser */}
+      <View style={[s.top, { top: topInset, pointerEvents: 'box-none' }]}>
+        <Pressable accessibilityRole="button" accessibilityLabel="Juster dine interesser" onPress={() => setEditing(true)} style={s.icon} hitSlop={4}>
+          <View style={shadowIcon}>
+            <Icon name="sliders" size={22} color="#fff" />
+          </View>
         </Pressable>
-        {(['interesser', 'foelger'] as Mode[]).map((m) => {
-          const on = mode === m;
-          return (
-            <Pressable key={m} accessibilityRole="button" accessibilityState={{ selected: on }} onPress={() => switchTo(m)} style={[s.mode, on && s.modeOn]}>
-              <T style={s.modeText} c={on ? color.textPrimary : '#fff'}>
-                {m === 'interesser' ? 'Interesser' : 'Følger'}
-              </T>
-            </Pressable>
-          );
-        })}
+        <View style={s.modes} accessibilityRole="radiogroup" accessibilityLabel="Vælg feed">
+          {(['interesser', 'foelger'] as Mode[]).map((m) => {
+            const on = mode === m;
+            return (
+              <Pressable key={m} accessibilityRole="radio" accessibilityState={{ selected: on, checked: on }} onPress={() => switchTo(m)} style={s.mode}>
+                <T style={[s.modeText, !on && s.modeOff]} c="#fff">
+                  {m === 'interesser' ? 'Interesser' : 'Følger'}
+                </T>
+                <View style={[s.bar, on && s.barOn]} />
+              </Pressable>
+            );
+          })}
+        </View>
       </View>
 
       <FlickCommentsSheet
@@ -223,22 +228,22 @@ function useUnderSafariBar() {
   return extra;
 }
 
+const shadowIcon = (Platform.OS === 'web'
+  ? { filter: 'drop-shadow(0 1px 3px rgba(0,0,0,0.55))' }
+  : { shadowColor: '#000', shadowOpacity: 0.55, shadowRadius: 3, shadowOffset: { width: 0, height: 1 } }) as object;
+
 const s = StyleSheet.create({
   root: { flex: 1, backgroundColor: '#000' },
   hidden: { position: 'absolute', width: 1, height: 1, opacity: 0 },
-  top: { position: 'absolute', left: 20, flexDirection: 'row', gap: 8, zIndex: 10 },
-  mode: {
-    height: TAP,
-    paddingHorizontal: 16,
-    borderRadius: radius.pill,
-    borderWidth: 1.5,
-    borderColor: color.bgSurface,
-    alignItems: 'center',
-    justifyContent: 'center',
-  },
-  modeOn: { backgroundColor: color.bgSurface, borderWidth: 1, borderColor: color.borderStrong },
-  modeText: { fontFamily: font.bodySemi, fontSize: 14, lineHeight: 20 },
-  icon: { width: TAP, paddingHorizontal: 0 },
+  // Fanerne står i midten; ⋯ på selve flicken ligger til højre
+  top: { position: 'absolute', left: 10, right: 10, height: TAP, flexDirection: 'row', alignItems: 'center', justifyContent: 'center', zIndex: 10 },
+  icon: { position: 'absolute', left: 0, width: TAP, height: TAP, alignItems: 'center', justifyContent: 'center' },
+  modes: { flexDirection: 'row', gap: 4 },
+  mode: { height: TAP, paddingHorizontal: 10, alignItems: 'center', justifyContent: 'center' },
+  modeText: { fontFamily: font.bodyBold, fontSize: 16, lineHeight: 22, textShadowColor: 'rgba(0,0,0,0.5)', textShadowRadius: 3, textShadowOffset: { width: 0, height: 1 } },
+  modeOff: { opacity: 0.65 },
+  bar: { position: 'absolute', bottom: 6, width: 18, height: 2.5, borderRadius: 2, backgroundColor: 'transparent' },
+  barOn: { backgroundColor: '#fff' },
   empty: { flex: 1, alignItems: 'center', justifyContent: 'center', gap: 16, padding: 32 },
   ghost: { minHeight: TAP, paddingHorizontal: 18, borderRadius: 999, borderWidth: 1, borderColor: 'rgba(255,255,255,0.6)', justifyContent: 'center' },
 });

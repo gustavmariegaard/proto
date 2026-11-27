@@ -1,5 +1,5 @@
 import { Pressable, StyleSheet, View } from 'react-native';
-import { color, radius } from '@/theme/tokens';
+import { color, momentRing, radius } from '@/theme/tokens';
 import { Avatar, type AvatarTone } from './Avatar';
 import { Icon } from './Icon';
 import { T } from './T';
@@ -35,7 +35,7 @@ export function MomentBubble({ name, fullName, state = 'new', tone, path, uri, p
       <View style={s.wrap}>
         <Pressable accessibilityRole="button" accessibilityLabel={label} onPress={onPress} style={({ pressed }) => [pressed && { transform: [{ scale: 0.96 }] }]}>
           <View style={[s.ring, state === 'seen' && s.seen, state === 'add' && (showPlus ? s.addPic : s.add)]}>
-            {state === 'add' && !hasPic ? <Icon name="plus" /> : <Avatar name={fullName ?? name} tone={tone} path={path} uri={uri} size="XL" />}
+            {state === 'add' && !hasPic ? <Icon name="plus" /> : <Avatar name={fullName ?? name} tone={tone} path={path} uri={uri} size={74 - 2 * (momentRing.width + momentRing.gap)} />}
           </View>
         </Pressable>
         {showPlus && (
@@ -58,7 +58,7 @@ const s = StyleSheet.create({
     width: 74,
     height: 74,
     borderRadius: 37,
-    borderWidth: 2,
+    borderWidth: momentRing.width,
     borderColor: color.accentHighlight,
     backgroundColor: color.bgSurface,
     alignItems: 'center',
@@ -66,7 +66,7 @@ const s = StyleSheet.create({
     overflow: 'hidden',
   },
   seen: { borderColor: color.borderStrong },
-  add: { borderStyle: 'dashed', borderColor: color.textSecondary },
+  add: { borderStyle: 'dashed', borderWidth: 2, borderColor: color.textSecondary },
   /* Eget billede: ingen ring, bare billedet */
   addPic: { borderColor: 'transparent' },
   plus: {

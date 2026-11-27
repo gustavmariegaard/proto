@@ -1,7 +1,6 @@
 import { router, useFocusEffect } from 'expo-router';
 import { useCallback, useState } from 'react';
 import { RefreshControl, ScrollView, StyleSheet, View } from 'react-native';
-import { Button } from '@/components/Button';
 import { ProfileHeader } from '@/components/ProfileHeader';
 import { profilePosts, ProfilePosts } from '@/components/ProfilePosts';
 import { TopBar } from '@/components/TopBar';
@@ -58,9 +57,6 @@ export default function MyProfile() {
           followers={view?.followers ?? 0}
           following={view?.following ?? 0}
         />
-        <Button variant="secondary" block onPress={() => router.push('/rediger-profil')}>
-          Rediger profil
-        </Button>
         <ProfilePosts userId={me.id} own name={me.name.split(' ')[0] ?? me.name} posts={posts} onChanged={load} />
       </ScrollView>
     </View>

@@ -126,3 +126,6 @@ export const TAP = 44;
 
 /** Plads i bunden af faneskærme (--tabbar-bar + 24 px), så indhold ikke gemmes bag bundmenuen */
 export const TAB_SPACE = 10 + 52 + 24;
+
+/** Moment-ringen: samme tykkelse og luft overalt (Hjem, din profil, andres profiler) */
+export const momentRing = { width: 3, gap: 2 };
