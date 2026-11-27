@@ -23,7 +23,7 @@ type Props = {
 };
 
 /**
- * Moment som bobbel (74 px). Grøn ring = nyt, grå ring = set.
+ * Moment som bobbel (68 px). Grøn ring = nyt, grå ring = set.
  * "Tilføj" viser dit eget profilbillede med et plus nederst til højre.
  */
 export function MomentBubble({ name, fullName, state = 'new', tone, path, uri, plus, onPress, onPlus }: Props) {
@@ -35,7 +35,7 @@ export function MomentBubble({ name, fullName, state = 'new', tone, path, uri, p
       <View style={s.wrap}>
         <Pressable accessibilityRole="button" accessibilityLabel={label} onPress={onPress} style={({ pressed }) => [pressed && { transform: [{ scale: 0.96 }] }]}>
           <View style={[s.ring, state === 'seen' && s.seen, state === 'add' && (showPlus ? s.addPic : s.add)]}>
-            {state === 'add' && !hasPic ? <Icon name="plus" /> : <Avatar name={fullName ?? name} tone={tone} path={path} uri={uri} size={74 - 2 * (momentRing.width + momentRing.gap)} />}
+            {state === 'add' && !hasPic ? <Icon name="plus" /> : <Avatar name={fullName ?? name} tone={tone} path={path} uri={uri} size={SIZE - 2 * (momentRing.width + momentRing.gap)} />}
           </View>
         </Pressable>
         {showPlus && (
@@ -51,13 +51,16 @@ export function MomentBubble({ name, fullName, state = 'new', tone, path, uri, p
   );
 }
 
+/** Boblens størrelse på Hjem (lidt mindre end på profilen, så første opslag kommer højere op) */
+const SIZE = 68;
+
 const s = StyleSheet.create({
-  moment: { alignItems: 'center', gap: 6, flexShrink: 0, borderRadius: radius.md },
+  moment: { alignItems: 'center', gap: 4, flexShrink: 0, borderRadius: radius.md },
   wrap: { position: 'relative' },
   ring: {
-    width: 74,
-    height: 74,
-    borderRadius: 37,
+    width: SIZE,
+    height: SIZE,
+    borderRadius: SIZE / 2,
     borderWidth: momentRing.width,
     borderColor: color.accentHighlight,
     backgroundColor: color.bgSurface,
@@ -82,5 +85,5 @@ const s = StyleSheet.create({
     alignItems: 'center',
     justifyContent: 'center',
   },
-  name: { maxWidth: 74, textAlign: 'center' },
+  name: { maxWidth: SIZE + 4, textAlign: 'center' },
 });

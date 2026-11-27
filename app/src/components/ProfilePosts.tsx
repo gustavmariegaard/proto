@@ -37,9 +37,6 @@ type Props = {
 export function ProfilePosts({ userId, posts, own = false, name, locked = false, onChanged }: Props) {
   const { fane } = useLocalSearchParams<{ fane?: string }>();
   const tab: Tab = fane === 'debat' || fane === 'flicks' || fane === 'opslag' ? fane : locked ? 'debat' : 'opslag';
-  const [openAll, setOpenAll] = useState(false);
-  // Opslag som gitter eller liste. Gitter er standard.
-  const [view, setView] = useState<'gitter' | 'liste'>('gitter');
 
   const personal = profilePosts(posts);
   const feed = personal.filter((p) => p.kind === 'feed');
@@ -50,7 +47,6 @@ export function ProfilePosts({ userId, posts, own = false, name, locked = false,
     { value: 'debat', label: 'Debat', icon: 'compass' },
     { value: 'flicks', label: 'Flicks', icon: 'clip' },
   ];
-  const shownPosts = openAll ? feed : feed.slice(0, 6);
   const card = (p: Post) => <PostCard key={p.id} post={p} onRemoved={onChanged} />;
 
   return (
@@ -78,17 +74,6 @@ export function ProfilePosts({ userId, posts, own = false, name, locked = false,
           );
         })}
       </View>
-        {/* Gitter eller liste – kun på Opslag, i samme række som fanerne */}
-        {!locked && tab === 'opslag' && feed.length > 0 && (
-          <Pressable
-            accessibilityRole="button"
-            accessibilityLabel={view === 'gitter' ? 'Vis som liste' : 'Vis som gitter'}
-            onPress={() => setView(view === 'gitter' ? 'liste' : 'gitter')}
-            style={s.viewBtn}
-          >
-            <Icon name={view === 'gitter' ? 'layout-rows' : 'layout-grid'} size={20} color={color.textSecondary} />
-          </Pressable>
-        )}
       </View>
 
       <View style={s.panel}>
@@ -110,19 +95,8 @@ export function ProfilePosts({ userId, posts, own = false, name, locked = false,
           tab === 'opslag' &&
           (feed.length === 0 ? (
             <Empty text={own ? 'Du har ikke delt noget endnu.' : `${name} har ikke delt noget endnu.`} action={own ? { label: 'Skriv et opslag', to: '/opret' } : undefined} />
-          ) : view === 'gitter' ? (
-            <PostGrid posts={feed} />
           ) : (
-            <>
-              {shownPosts.map(card)}
-              {feed.length > shownPosts.length && (
-                <Pressable accessibilityRole="button" onPress={() => setOpenAll(true)} style={s.more}>
-                  <T v="label" style={{ textDecorationLine: 'underline' }}>
-                    Vis alle {feed.length} opslag
-                  </T>
-                </Pressable>
-              )}
-            </>
+            <PostGrid posts={feed} />
           ))}
 
         {tab === 'debat' &&
@@ -195,9 +169,7 @@ const s = StyleSheet.create({
   tabs: { flex: 1, minWidth: 0, flexDirection: 'row', gap: 2, padding: 3, borderRadius: radius.pill, backgroundColor: color.bgSubtle },
   tab: { flex: 1, minWidth: 0, flexDirection: 'row', alignItems: 'center', justifyContent: 'center', gap: 5, minHeight: 40, borderRadius: radius.pill },
   tabOn: { backgroundColor: color.bgSurface, shadowColor: '#000', shadowOpacity: 0.08, shadowRadius: 6, shadowOffset: { width: 0, height: 1 } },
-  viewBtn: { width: TAP, height: TAP, flexShrink: 0, alignItems: 'center', justifyContent: 'center', borderRadius: TAP / 2, backgroundColor: color.bgSubtle },
   panel: { gap: 14 },
-  more: { alignSelf: 'center', minHeight: TAP, paddingHorizontal: 12, justifyContent: 'center' },
   flicks: { flexDirection: 'row', flexWrap: 'wrap', gap: 6 },
   flick: { aspectRatio: 9 / 16, overflow: 'hidden', borderRadius: radius.md, backgroundColor: color.ink900 },
   flickViews: { position: 'absolute', left: 6, bottom: 6, flexDirection: 'row', alignItems: 'center', gap: 3 },

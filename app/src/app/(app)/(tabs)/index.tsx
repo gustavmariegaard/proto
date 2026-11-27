@@ -18,7 +18,8 @@ import { color, TAB_SPACE } from '@/theme/tokens';
 const PAGE = 20;
 type Feed = 'venner' | 'interesser';
 /** Brugere/Interesser-vælgeren: 52 høj + 8 luft under (prototypens .home__switch) */
-const SWITCH_H = 58;
+/** Brugere/Interesser: 8 px luft over (så skyggen ikke skæres af), 40 px kontakt, 4 px under */
+const SWITCH_H = 52;
 
 /** Hjem: feed fra dem, du følger, eller fra dine interesser (prototypens Home). */
 export default function Home() {
@@ -210,9 +211,9 @@ export default function Home() {
 
 const s = StyleSheet.create({
   root: { flex: 1, backgroundColor: color.bgApp },
-  list: { paddingHorizontal: 20, paddingTop: SWITCH_H + 14, paddingBottom: TAB_SPACE },
-  header: { gap: 14 },
-  switch: { position: 'absolute', top: 0, left: 0, right: 0, paddingHorizontal: 20, paddingTop: 10, paddingBottom: 6, zIndex: 5 },
+  list: { paddingHorizontal: 20, paddingTop: SWITCH_H + 8, paddingBottom: TAB_SPACE },
+  header: { gap: 12 },
+  switch: { position: 'absolute', top: 0, left: 0, right: 0, paddingHorizontal: 20, paddingTop: 8, paddingBottom: 4, zIndex: 5 },
   pages: { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', gap: 12 },
   edit: { gap: 6, paddingHorizontal: 14 },
   moments: { marginHorizontal: -20 },
