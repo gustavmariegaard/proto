@@ -44,7 +44,8 @@ export function SegmentedControl<V extends string>({ options, value, onChange, l
 const s = StyleSheet.create({
   wrap: { height: 52, borderRadius: radius.md, backgroundColor: color.bgSubtle },
   /* Frostet glas som bundmenuen (ingen grå baggrund) */
-  glass: { height: 42, borderRadius: radius.pill, ...shadow.tabbar },
+  /* Jævn skygge hele vejen rundt (ingen forskydning nedad) */
+  glass: { height: 42, borderRadius: radius.pill, ...shadow.tabbar, shadowOffset: { width: 0, height: 0 }, shadowRadius: 12 },
   inner: { flex: 1, flexDirection: 'row', gap: 4, padding: 4 },
   innerGlass: { padding: 3 },
   itemGlass: { height: 34, borderRadius: radius.pill },

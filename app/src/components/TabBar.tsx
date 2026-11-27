@@ -1,5 +1,5 @@
 import { useEffect, useRef, useState } from 'react';
-import { Animated, Platform, Pressable, StyleSheet, View, type NativeScrollEvent, type NativeSyntheticEvent } from 'react-native';
+import { Animated, Easing, Platform, Pressable, StyleSheet, View, type NativeScrollEvent, type NativeSyntheticEvent } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { color, shadow, tabbarBottom } from '@/theme/tokens';
 import { Glass } from './Glass';
@@ -24,11 +24,19 @@ export function TabBar({ current, onPress }: { current?: string; onPress: (name:
   const insets = useSafeAreaInsets();
   const bottom = tabbarBottom(insets.bottom);
   // På Flicks står menuen altid fast
-  const { hidden: hide, scrolled } = useHideOnScroll(current);
-  const hidden = hide && current !== 'flicks';
-  // Flicks: mørkt glas. Menuen bliver først mindre, når man ruller (som Instagram Reels)
+  const { hidden: down } = useHideOnScroll(current);
   const dark = current === 'flicks';
-  const compact = dark && scrolled;
+  const hidden = down && !dark;
+  // Flicks: mørkt glas. Ruller man ned, glider menuen blødt ind og bliver mindre;
+  // ruller man op, bliver den straks stor igen (som Instagram Reels)
+  const compact = dark && down;
+  const size = useRef(new Animated.Value(0)).current;
+  useEffect(() => {
+    Animated.timing(size, { toValue: compact ? 1 : 0, duration: 220, easing: Easing.out(Easing.cubic), useNativeDriver: false }).start();
+  }, [compact, size]);
+  const side = size.interpolate({ inputRange: [0, 1], outputRange: [16, 44] });
+  const pillH = size.interpolate({ inputRange: [0, 1], outputRange: [52, 44] });
+  const iconScale = size.interpolate({ inputRange: [0, 1], outputRange: [1, 0.88] });
   const anim = useRef(new Animated.Value(0)).current;
   useEffect(() => {
     Animated.timing(anim, { toValue: hidden ? 1 : 0, duration: 280, useNativeDriver: Platform.OS !== 'web' }).start();
@@ -37,8 +45,9 @@ export function TabBar({ current, onPress }: { current?: string; onPress: (name:
     <Animated.View
       style={[
         s.bar,
-        compact && s.barCompact,
         {
+          left: side,
+          right: side,
           bottom,
           opacity: anim.interpolate({ inputRange: [0, 1], outputRange: [1, 0] }),
           transform: [{ translateY: anim.interpolate({ inputRange: [0, 1], outputRange: [0, 52 + bottom + 8] }) }],
@@ -46,7 +55,8 @@ export function TabBar({ current, onPress }: { current?: string; onPress: (name:
       ]}
       pointerEvents={hidden ? 'none' : 'box-none'}
     >
-      <Glass tint={dark ? 'dark' : 'light'} style={compact ? [s.pill, s.pillCompact] : s.pill}>
+      <Animated.View style={{ height: pillH, borderRadius: 26 }}>
+      <Glass tint={dark ? 'dark' : 'light'} style={[s.pill, dark && s.pillDark]}>
       <View style={s.row} accessibilityRole="tablist" accessibilityLabel="Hovedmenu">
         {tabItems.map((it) => {
           const on = current === it.name;
@@ -56,19 +66,20 @@ export function TabBar({ current, onPress }: { current?: string; onPress: (name:
               accessibilityRole="tab"
               accessibilityLabel={it.label}
               accessibilityState={{ selected: on }}
-              style={[s.tab, compact && s.tabCompact]}
+              style={s.tab}
               onPress={() => onPress(it.name)}
             >
               {({ pressed }) => (
-                <View style={[s.holder, compact && s.holderCompact, on && (dark ? s.holderOnDark : s.holderOn), pressed && { transform: [{ scale: 0.94 }] }]}>
-                  <Icon name={it.icon} size={compact ? 22 : 24} color={dark ? color.white : color.textPrimary} />
-                </View>
+                <Animated.View style={[s.holder, on && (dark ? s.holderOnDark : s.holderOn), { transform: [{ scale: pressed ? 0.94 : iconScale }] as never }]}>
+                  <Icon name={it.icon} size={24} color={dark ? color.white : color.textPrimary} />
+                </Animated.View>
               )}
             </Pressable>
           );
         })}
       </View>
       </Glass>
+      </Animated.View>
     </Animated.View>
   );
 }
@@ -100,17 +111,11 @@ function track(key: object, top: number, range: number) {
 
 function useHideOnScroll(route?: string) {
   const [hidden, setHidden] = useState(false);
-  // Har man rullet væk fra toppen? (Flicks: menuen bliver mindre)
-  const [scrolled, setScrolled] = useState(false);
   useEffect(() => {
     setHidden(false);
-    setScrolled(false);
   }, [route]);
   useEffect(() => {
-    const l: Listener = (h, top) => {
-      setHidden(h);
-      setScrolled(top > 20);
-    };
+    const l: Listener = (h) => setHidden(h);
     listeners.add(l);
     let off = () => {};
     if (Platform.OS === 'web' && typeof document !== 'undefined') {
@@ -127,20 +132,17 @@ function useHideOnScroll(route?: string) {
       off();
     };
   }, []);
-  return { hidden, scrolled };
+  return { hidden };
 }
 
 const s = StyleSheet.create({
   bar: { position: 'absolute', left: 16, right: 16, zIndex: 20 },
-  barCompact: { left: 44, right: 44 },
   /* Frostet glas i stedet for hvid (indholdet skinner igennem) */
-  pill: { height: 52, borderRadius: 26, ...shadow.tabbar },
-  pillCompact: { height: 44, borderRadius: 22, shadowOpacity: 0 },
+  pill: { flex: 1, borderRadius: 26, ...shadow.tabbar },
+  pillDark: { shadowOpacity: 0 },
   row: { flex: 1, flexDirection: 'row', alignItems: 'center', paddingHorizontal: 4 },
-  tabCompact: { height: 42 },
-  holderCompact: { height: 34, maxWidth: 56, borderRadius: 17 },
   holderOnDark: { backgroundColor: 'rgba(255,255,255,0.2)' },
-  tab: { flex: 1, height: 50, paddingHorizontal: 2, alignItems: 'center', justifyContent: 'center', borderRadius: 999 },
+  tab: { flex: 1, height: '100%', paddingHorizontal: 2, alignItems: 'center', justifyContent: 'center', borderRadius: 999 },
   /* Den valgte fane: 42 px høj, op til 72 px bred */
   holder: { width: '100%', maxWidth: 72, height: 42, borderRadius: 21, alignItems: 'center', justifyContent: 'center' },
   holderOn: { backgroundColor: color.accentVerifiedBg },

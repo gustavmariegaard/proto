@@ -1,7 +1,7 @@
 import { useFocusEffect, useLocalSearchParams } from 'expo-router';
 import { StatusBar } from 'expo-status-bar';
 import { useCallback, useEffect, useRef, useState } from 'react';
-import { ActivityIndicator, FlatList, Pressable, StyleSheet, View } from 'react-native';
+import { ActivityIndicator, FlatList, Platform, Pressable, StyleSheet, View } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { FlickCommentsSheet } from '@/components/FlickCommentsSheet';
 import { FlickItem } from '@/components/FlickItem';
@@ -40,8 +40,10 @@ export default function Flicks() {
   const [editing, setEditing] = useState(false);
   const loadingMore = useRef(false);
 
+  // Safari: videoen går helt ned under browserens bundbjælke (den er gennemsigtig)
+  const under = useUnderSafariBar();
   // Tekstpanelet ligger 16 px over bundmenuen
-  const bottomInset = tabbarBar(insets.bottom) + 16;
+  const bottomInset = tabbarBar(insets.bottom) + 16 + under;
   const topInset = insets.top + layout.topGap;
 
   const load = useCallback(async (m: Mode) => {
@@ -105,7 +107,7 @@ export default function Flicks() {
   };
 
   return (
-    <View style={s.root} onLayout={(e) => setHeight(e.nativeEvent.layout.height)}>
+    <View style={[s.root, under > 0 && ({ position: 'fixed', top: 0, left: 0, right: 0, bottom: -under } as object)]} onLayout={(e) => setHeight(e.nativeEvent.layout.height)}>
       <StatusBar style="light" />
       <T v="headingM" style={s.hidden} accessibilityRole="header">
         Flicks
@@ -195,6 +197,30 @@ export default function Flicks() {
       />
     </View>
   );
+}
+
+/**
+ * Web i Safari: hvor meget af skærmen browserens bundbjælke dækker (forskellen på den store
+ * og den synlige skærmhøjde). Flicks fylder så hele skærmen, også bag bjælken.
+ */
+function useUnderSafariBar() {
+  const [extra, setExtra] = useState(0);
+  useEffect(() => {
+    if (Platform.OS !== 'web' || typeof document === 'undefined' || !CSS.supports?.('height', '100lvh')) return;
+    const probe = document.createElement('div');
+    probe.style.cssText = 'position:fixed;top:0;left:0;width:0;height:100lvh;visibility:hidden;pointer-events:none';
+    document.body.appendChild(probe);
+    const measure = () => setExtra(Math.max(0, Math.round(probe.getBoundingClientRect().height - window.innerHeight)));
+    measure();
+    window.addEventListener('resize', measure);
+    window.visualViewport?.addEventListener('resize', measure);
+    return () => {
+      window.removeEventListener('resize', measure);
+      window.visualViewport?.removeEventListener('resize', measure);
+      probe.remove();
+    };
+  }, []);
+  return extra;
 }
 
 const s = StyleSheet.create({
