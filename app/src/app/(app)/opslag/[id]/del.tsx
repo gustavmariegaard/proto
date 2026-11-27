@@ -91,7 +91,7 @@ export default function Share() {
   const preview = (
     <View style={s.preview}>
       <View style={s.previewHead}>
-        <Avatar name={post.author_name} path={post.author_avatar_path} size="S" />
+        <Avatar name={post.author_name} path={post.author_avatar_path} size={24} />
         <T v="captionStrong" numberOfLines={1}>
           {post.author_name}
         </T>

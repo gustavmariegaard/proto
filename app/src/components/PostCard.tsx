@@ -70,7 +70,7 @@ export function PostCard({ post, onRemoved, onComments }: Props) {
                   </View>
                 )}
                 <View style={s.ctxAuthor}>
-                  <Avatar name={post.author_name} path={post.author_avatar_path} size="S" />
+                  <Avatar name={post.author_name} path={post.author_avatar_path} size={24} />
                 </View>
               </View>
             </Pressable>

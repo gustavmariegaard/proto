@@ -69,7 +69,7 @@ export default function NewMoment() {
       {post ? (
         <View style={s.post}>
           <View style={s.postHead}>
-            <Avatar name={post.author_name} path={post.author_avatar_path} size="S" />
+            <Avatar name={post.author_name} path={post.author_avatar_path} size={24} />
             <T v="captionStrong">{post.author_name}</T>
           </View>
           {post.image_paths[0] && <Image source={imageSource(post.image_paths[0])} style={s.postImg} contentFit="cover" />}

@@ -145,7 +145,7 @@ export default function EventDetail() {
             <View style={s.faces}>
               {r.list.slice(0, 4).map((g, i) => (
                 <View key={g.id} style={{ marginLeft: i ? -8 : 0, borderRadius: 14, borderWidth: 2, borderColor: color.bgApp }}>
-                  <Avatar name={g.name} path={g.avatar_path} size="S" />
+                  <Avatar name={g.name} path={g.avatar_path} size={24} />
                 </View>
               ))}
             </View>

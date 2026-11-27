@@ -14,10 +14,10 @@ export function ConversationAvatar({ members, size = 'M' }: { members: Member[];
   return (
     <View style={{ width: d, height: d }} accessible={false}>
       <View style={s.back}>
-        <Avatar name={a!.name} path={a!.avatar_path} size="S" />
+        <Avatar name={a!.name} path={a!.avatar_path} size={24} />
       </View>
       <View style={[s.front, { borderColor: color.bgApp }]}>
-        <Avatar name={b!.name} path={b!.avatar_path} size={size === 'L' ? 'M' : 'S'} />
+        <Avatar name={b!.name} path={b!.avatar_path} size={size === 'L' ? 40 : 24} />
       </View>
     </View>
   );

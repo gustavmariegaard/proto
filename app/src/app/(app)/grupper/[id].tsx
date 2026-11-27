@@ -103,7 +103,7 @@ export default function GroupView() {
           <View style={s.faces}>
             {active.slice(0, 5).map((m, i) => (
               <View key={m.id} style={{ marginLeft: i ? -8 : 0, borderRadius: 14, borderWidth: 2, borderColor: color.bgSubtle }}>
-                <Avatar name={m.name} path={m.avatar_path} size="S" />
+                <Avatar name={m.name} path={m.avatar_path} size={24} />
               </View>
             ))}
           </View>

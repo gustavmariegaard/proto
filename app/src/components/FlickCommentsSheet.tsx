@@ -118,7 +118,7 @@ export function FlickCommentsSheet({ postId, onClose, onCount }: { postId: strin
           renderItem={({ item: c }) => (
             <View style={[s.row, c.parent_id && { paddingLeft: 44 }]}>
               <Pressable onPress={() => (onClose(), router.push(c.author_id === me.id ? '/profil' : `/bruger/${c.author_username}`))}>
-                <Avatar name={c.author_name} path={c.author_avatar_path} size={c.parent_id ? 'S' : 'M'} />
+                <Avatar name={c.author_name} path={c.author_avatar_path} size={c.parent_id ? 24 : 'M'} />
               </Pressable>
               <View style={{ flex: 1, gap: 2 }}>
                 <T v="captionStrong" c="#fff">
@@ -181,7 +181,7 @@ export function FlickCommentsSheet({ postId, onClose, onCount }: { postId: strin
           </View>
         )}
         <View style={s.composer}>
-          <Avatar name={me.name} path={me.avatar_path} size="S" />
+          <Avatar name={me.name} path={me.avatar_path} size={24} />
           <TextInput
             ref={input}
             value={text}

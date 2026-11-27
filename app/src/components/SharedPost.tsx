@@ -36,7 +36,7 @@ export function SharedPost({ id, compact, onDark }: { id: string; compact?: bool
   return (
     <Pressable accessibilityRole="link" accessibilityLabel={`Delt opslag fra ${name}`} onPress={open} style={({ pressed }) => [s.card, compact && s.compact, onDark && s.onDark, pressed && { opacity: 0.8 }]}>
       <View style={s.head}>
-        <Avatar name={name} path={post.page_avatar_path ?? post.author_avatar_path} size="S" />
+        <Avatar name={name} path={post.page_avatar_path ?? post.author_avatar_path} size={24} />
         <T v="captionStrong" numberOfLines={1} style={{ flex: 1 }}>
           {name}
         </T>

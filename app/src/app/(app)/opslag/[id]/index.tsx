@@ -118,7 +118,7 @@ export default function PostScreen() {
         accessibilityLabel={`Kommentar fra ${c.author_name}`}
       >
         <Pressable onPress={() => router.push(own ? '/profil' : `/bruger/${c.author_username}`)} accessibilityRole="link" accessibilityLabel={`Gå til ${c.author_name}`}>
-          <Avatar name={c.author_name} path={c.author_avatar_path} size={reply ? 'S' : 'M'} />
+          <Avatar name={c.author_name} path={c.author_avatar_path} size={reply ? 24 : 'M'} />
         </Pressable>
         <View style={{ flex: 1, gap: 2 }}>
           <T v="headingS">{c.author_name}</T>

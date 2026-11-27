@@ -47,7 +47,7 @@ export default function PageView() {
   return (
     <Screen title="Side">
       <View style={s.head}>
-        <Avatar name={page.name} path={page.avatar_path} size="XL" />
+        <Avatar name={page.name} path={page.avatar_path} size={96} />
         <T v="titleL" accessibilityRole="header" style={{ textAlign: 'center' }}>
           {page.name}
         </T>

@@ -11,7 +11,7 @@ import { T } from './T';
 export function ProfileHeader({ p, children }: { p: Pick<ProfileView, 'name' | 'username' | 'bio' | 'avatar_path' | 'public_kind' | 'posts' | 'followers' | 'following'>; children?: ReactNode }) {
   return (
     <View style={s.wrap}>
-      <Avatar name={p.name} path={p.avatar_path} size="XL" />
+      <Avatar name={p.name} path={p.avatar_path} size={96} />
       <View style={s.nameRow}>
         <T v="titleL" accessibilityRole="header">
           {p.name}

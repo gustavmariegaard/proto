@@ -56,7 +56,7 @@ export default function NewPage() {
   return (
     <Screen title="Opret side">
       <Pressable accessibilityRole="button" accessibilityLabel="Vælg billede" onPress={choose} style={s.photo}>
-        <Avatar name={name || '?'} uri={photo ?? undefined} size="XL" />
+        <Avatar name={name || '?'} uri={photo ?? undefined} size={96} />
       </Pressable>
       <View style={{ alignItems: 'center' }}>
         <Button title={photo ? 'Skift billede' : 'Vælg billede'} variant="secondary" icon="image" onPress={choose} style={{ minHeight: 44, paddingHorizontal: 20 }} />

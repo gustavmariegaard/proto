@@ -163,7 +163,7 @@ export function MomentStory({ moments, startAtUnseen, title, onEnd, onBeforeStar
         </View>
         <View style={s.head}>
           <Pressable accessibilityRole="link" onPress={openProfile} style={s.who}>
-            <Avatar name={who} path={whoPath} size="S" />
+            <Avatar name={who} path={whoPath} size={24} />
             <T v="label" c={color.white} numberOfLines={1} style={{ flexShrink: 1 }}>
               {title ?? (isPage ? who : `@${current.author_username}`)}
             </T>
@@ -184,7 +184,7 @@ export function MomentStory({ moments, startAtUnseen, title, onEnd, onBeforeStar
           {post && (
             <Pressable accessibilityRole="link" onPress={() => router.push(`/opslag/${post.id}`)} style={s.post}>
               <View style={s.postHead}>
-                <Avatar name={post.author_name} path={post.author_avatar_path} size="S" />
+                <Avatar name={post.author_name} path={post.author_avatar_path} size={24} />
                 <T v="captionStrong">{post.author_name}</T>
               </View>
               {post.image_paths[0] && <Image source={imageSource(post.image_paths[0])} style={s.postImg} contentFit="cover" />}

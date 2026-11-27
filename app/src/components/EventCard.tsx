@@ -73,7 +73,7 @@ export function EventDiscoverCard({ event, onJoin }: { event: Ev; onJoin: (s: 'i
             </View>
           )}
           <View style={s.line}>
-            <Avatar name={event.organizer_name} path={event.organizer_avatar_path} size="S" />
+            <Avatar name={event.organizer_name} path={event.organizer_avatar_path} size={24} />
             <T v="caption" numberOfLines={1} style={{ flex: 1 }}>
               {event.organizer_name}
             </T>
