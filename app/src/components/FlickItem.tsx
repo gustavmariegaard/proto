@@ -2,6 +2,7 @@ import { Image } from 'expo-image';
 import { router } from 'expo-router';
 import { memo, useState } from 'react';
 import { Pressable, StyleSheet, View } from 'react-native';
+import { Platform } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import Svg, { Defs, LinearGradient, Rect, Stop } from 'react-native-svg';
 import { imageSource } from '@/lib/media';
@@ -148,9 +149,22 @@ export const FlickItem = memo(function FlickItem({ flick, height, bottomInset, t
             </T>
           )}
           {flick.tags.length > 0 && (
-            <T v="captionStrong" c="rgba(255,255,255,0.8)">
-              {flick.tags.map((t) => `#${t}`).join(' ')}
-            </T>
+            <View style={s.tags}>
+              {flick.tags.map((t) => (
+                // Tryk på et hashtag: alle flicks med det tag
+                <T
+                  key={t}
+                  v="captionStrong"
+                  c="rgba(255,255,255,0.85)"
+                  accessibilityRole="link"
+                  accessibilityLabel={`Se flicks med #${t}`}
+                  onPress={() => router.push({ pathname: '/flicks/tag/[tag]', params: { tag: t } })}
+                  style={s.tag}
+                >
+                  #{t}
+                </T>
+              ))}
+            </View>
           )}
         </View>
       </View>
@@ -168,7 +182,7 @@ function Action({ icon, label, count, pressed, filled, onPress }: { icon: IconNa
       onPress={onPress}
       style={({ pressed: p }) => [s.act, p && { opacity: 0.6 }]}
     >
-      <View style={s.shadow}>
+      <View style={iconShadow}>
         <Icon name={icon} size={28} color="#fff" filled={filled} />
       </View>
       {count !== undefined && (
@@ -180,6 +194,11 @@ function Action({ icon, label, count, pressed, filled, onPress }: { icon: IconNa
   );
 }
 
+/* Skygge om selve ikonet (ikke en mørk kasse bagved): web bruger drop-shadow, telefon en blød skygge */
+const iconShadow = (Platform.OS === 'web'
+  ? { filter: 'drop-shadow(0 1px 3px rgba(0,0,0,0.55))' }
+  : { shadowColor: '#000', shadowOpacity: 0.55, shadowRadius: 3, shadowOffset: { width: 0, height: 1 } }) as object;
+
 const s = StyleSheet.create({
   shade: { position: 'absolute', top: 0, left: 0, right: 0 },
   more: { position: 'absolute', zIndex: 11, right: 10, width: TAP, height: TAP, borderRadius: TAP / 2, alignItems: 'center', justifyContent: 'center' },
@@ -188,6 +207,8 @@ const s = StyleSheet.create({
   act: { minWidth: 48, minHeight: TAP, alignItems: 'center', gap: 2 },
   shadow: { shadowColor: '#000', shadowOpacity: 0.55, shadowRadius: 3, shadowOffset: { width: 0, height: 1 } },
   textShadow: { textShadowColor: 'rgba(0,0,0,0.55)', textShadowRadius: 3, textShadowOffset: { width: 0, height: 1 } },
+  tags: { flexDirection: 'row', flexWrap: 'wrap', gap: 10 },
+  tag: { paddingVertical: 4 },
   caption: { alignItems: 'flex-start', gap: 6, paddingHorizontal: 20, paddingVertical: 14, borderRadius: 26, backgroundColor: 'rgba(10,10,10,0.85)' },
   hidden: {
     position: 'absolute',

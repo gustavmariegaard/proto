@@ -1,6 +1,7 @@
 import { useVideoPlayer, VideoView as ExpoVideoView } from 'expo-video';
 import { useEffect, useState } from 'react';
-import { Pressable, StyleSheet, View, type ViewStyle } from 'react-native';
+import { createElement } from 'react';
+import { Platform, Pressable, StyleSheet, View, type ViewStyle } from 'react-native';
 import { supabase } from '@/lib/supabase';
 import { T } from './T';
 
@@ -69,7 +70,11 @@ export function VideoView({ path, active, style, contentFit = 'cover' }: Props) 
   );
 }
 
-function Player({ url, active, muted, contentFit }: { url: string; active: boolean; muted: boolean; contentFit: 'cover' | 'contain' }) {
+function Player(props: { url: string; active: boolean; muted: boolean; contentFit: 'cover' | 'contain' }) {
+  return Platform.OS === 'web' ? <WebPlayer {...props} /> : <NativePlayer {...props} />;
+}
+
+function NativePlayer({ url, active, muted, contentFit }: { url: string; active: boolean; muted: boolean; contentFit: 'cover' | 'contain' }) {
   const player = useVideoPlayer(url, (p) => {
     p.loop = true;
     p.muted = true;
@@ -81,15 +86,36 @@ function Player({ url, active, muted, contentFit }: { url: string; active: boole
     if (active) player.play();
     else player.pause();
   }, [player, active]);
-  return <ExpoVideoView
-      player={player}
-      style={StyleSheet.absoluteFill}
-      contentFit={contentFit}
-      nativeControls={false}
-      // Spil i feedet – ikke i fuldskærm (iPhone/Safari åbner ellers fuldskærm)
-      playsInline
-      fullscreenOptions={{ enable: false }}
-    />;
+  return <ExpoVideoView player={player} style={StyleSheet.absoluteFill} contentFit={contentFit} nativeControls={false} fullscreenOptions={{ enable: false }} />;
+}
+
+/**
+ * Web: en almindelig <video>, der altid fylder hele rammen (beskæres som Reels),
+ * spiller inde i siden (playsInline – ellers går iPhone i fuldskærm) og uden knapper.
+ */
+function WebPlayer({ url, active, muted, contentFit }: { url: string; active: boolean; muted: boolean; contentFit: 'cover' | 'contain' }) {
+  const [el, setEl] = useState<HTMLVideoElement | null>(null);
+  useEffect(() => {
+    if (!el) return;
+    el.muted = muted;
+  }, [el, muted]);
+  useEffect(() => {
+    if (!el) return;
+    if (active) el.play().catch(() => {});
+    else el.pause();
+  }, [el, active]);
+  return createElement('video', {
+    ref: setEl,
+    src: url,
+    loop: true,
+    muted: true,
+    playsInline: true,
+    'webkit-playsinline': 'true',
+    preload: 'auto',
+    disablePictureInPicture: true,
+    controls: false,
+    style: { position: 'absolute', inset: 0, width: '100%', height: '100%', objectFit: contentFit, background: '#000', pointerEvents: 'none' },
+  });
 }
 
 const s = StyleSheet.create({

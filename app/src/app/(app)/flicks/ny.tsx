@@ -124,14 +124,14 @@ export default function NewFlick() {
                 if (t.length) setTagError(false);
               }}
               error={tagError}
-              hint="Fx #Dans eller #Cykelstier, så andre kan finde den."
+              required
             />
             {!!error && (
               <T v="bodyS" c={color.danger}>
                 {error}
               </T>
             )}
-            <Button variant="highlight" block loading={busy} onPress={share}>
+            <Button variant="highlight" block loading={busy} disabled={tags.length === 0} onPress={share}>
               Del flick
             </Button>
           </ScrollView>
