@@ -12,7 +12,7 @@ import { getPost, normalize } from '@/lib/posts';
 import { useMe } from '@/lib/session';
 import { supabase } from '@/lib/supabase';
 import type { PostCard } from '@/lib/types';
-import { useDarkChrome } from '@/lib/useDarkChrome';
+import { useBlackChrome } from '@/lib/useDarkChrome';
 import { color, font, layout, radius, tabbarBar, TAP } from '@/theme/tokens';
 
 type Mode = 'interesser' | 'foelger';
@@ -24,7 +24,7 @@ const PAGE = 10;
  * ?vis=<id> åbner en bestemt flick først (fx fra en profil).
  */
 export default function Flicks() {
-  useDarkChrome();
+  useBlackChrome();
   const me = useMe();
   const insets = useSafeAreaInsets();
   const { vis } = useLocalSearchParams<{ vis?: string }>();

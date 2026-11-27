@@ -16,7 +16,7 @@ import { getPost } from '@/lib/posts';
 import { useMe } from '@/lib/session';
 import { supabase } from '@/lib/supabase';
 import type { PostCard } from '@/lib/types';
-import { useDarkChrome } from '@/lib/useDarkChrome';
+import { useBlackChrome } from '@/lib/useDarkChrome';
 import { color, radius } from '@/theme/tokens';
 
 type Captured = { uri: string; mime: string; video: boolean };
@@ -64,7 +64,7 @@ function useShare() {
 /* ---------- Nyt moment (søgeren) ---------- */
 
 function Camera() {
-  useDarkChrome();
+  useBlackChrome();
   const insets = useSafeAreaInsets();
   const [captured, setCaptured] = useState<Captured | null>(null);
   const { busy, error, share } = useShare();
@@ -155,7 +155,7 @@ function LocalVideo({ uri }: { uri: string }) {
 /* ---------- Del som moment ---------- */
 
 function ShareMoment({ postId }: { postId: string }) {
-  useDarkChrome();
+  useBlackChrome();
   const me = useMe();
   const insets = useSafeAreaInsets();
   const [post, setPost] = useState<PostCard | null | undefined>(undefined);

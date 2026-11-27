@@ -1,17 +1,88 @@
 import { ImageManipulator, SaveFormat } from 'expo-image-manipulator';
 import * as ImagePicker from 'expo-image-picker';
+import { Platform } from 'react-native';
 import { SUPABASE_URL, supabase } from './supabase';
 
 /*
- * Billeder ligger i en privat "media"-mappe i Supabase. Kun loggede ind kan hente dem,
- * så vi sender login-token med, når et billede vises (expo-image understøtter headers).
+ * Billeder ligger i en privat "media"-mappe i Supabase. Kun loggede ind kan hente dem.
+ *
+ * Telefon: login-token sendes med som header, og expo-image gemmer billedet på telefonen.
+ * Web: et billede hentet med header kan browseren ikke gemme, så det hentes forfra hver gang
+ * (langsomt og blinkende). Derfor får hvert billede en tidsbegrænset adresse (signeret URL, 24 t),
+ * som huskes i browseren. Samme adresse næste gang = browseren viser billedet med det samme.
+ * Adresserne laves samlet i små portioner og kun til loggede ind brugere.
  */
 let token: string | null = null;
 supabase.auth.getSession().then(({ data }) => (token = data.session?.access_token ?? null));
-supabase.auth.onAuthStateChange((_e, session) => (token = session?.access_token ?? null));
+supabase.auth.onAuthStateChange((_e, session) => {
+  token = session?.access_token ?? null;
+  if (!session) clearSigned();
+});
+
+const isWeb = Platform.OS === 'web';
+const SIGN_SECONDS = 24 * 3600;
+const STORE_KEY = 'ciircle.signed-media';
+type Signed = Record<string, { url: string; exp: number }>;
+
+let signed: Signed = {};
+if (isWeb) {
+  try {
+    signed = JSON.parse(localStorage.getItem(STORE_KEY) ?? '{}');
+  } catch {
+    signed = {};
+  }
+}
+const saveSigned = () => {
+  try {
+    localStorage.setItem(STORE_KEY, JSON.stringify(signed));
+  } catch {
+    /* fuld lagring: ikke vigtigt */
+  }
+};
+function clearSigned() {
+  signed = {};
+  if (isWeb) {
+    try {
+      localStorage.removeItem(STORE_KEY);
+    } catch {
+      /* */
+    }
+  }
+}
+
+// Saml forespørgsler og signér dem i én omgang lidt efter
+const queue = new Set<string>();
+let timer: ReturnType<typeof setTimeout> | null = null;
+const listeners = new Set<() => void>();
+function requestSign(path: string) {
+  queue.add(path);
+  if (timer) return;
+  timer = setTimeout(async () => {
+    timer = null;
+    const paths = [...queue];
+    queue.clear();
+    if (!token || !paths.length) return;
+    const { data } = await supabase.storage.from('media').createSignedUrls(paths, SIGN_SECONDS);
+    const exp = Date.now() + (SIGN_SECONDS - 3600) * 1000; // forny en time før udløb
+    for (const d of data ?? []) if (d.signedUrl && d.path) signed[d.path] = { url: d.signedUrl, exp };
+    saveSigned();
+    listeners.forEach((l) => l());
+  }, 30);
+}
+
+/** Kaldes af skærme, der vil tegne igen, når nye billedadresser er klar (web) */
+export function onSignedMedia(l: () => void) {
+  listeners.add(l);
+  return () => listeners.delete(l);
+}
 
 export function imageSource(path: string | null | undefined) {
   if (!path) return undefined;
+  if (isWeb) {
+    const hit = signed[path];
+    if (hit && hit.exp > Date.now()) return { uri: hit.url, cacheKey: path };
+    requestSign(path);
+  }
   return {
     uri: `${SUPABASE_URL}/storage/v1/object/authenticated/media/${path}`,
     headers: token ? { Authorization: `Bearer ${token}` } : undefined,

@@ -12,7 +12,7 @@ import { useMe } from '@/lib/session';
 import { supabase } from '@/lib/supabase';
 import { ago } from '@/lib/time';
 import type { PostCard } from '@/lib/types';
-import { useDarkChrome } from '@/lib/useDarkChrome';
+import { useBlackChrome } from '@/lib/useDarkChrome';
 import { color, font, radius, TAP } from '@/theme/tokens';
 import { Avatar } from './Avatar';
 import { Icon } from './Icon';
@@ -44,7 +44,7 @@ type Props = {
  * Fremdriften er tynde streger nederst. Nederst: svar, hjerte og del.
  */
 export function MomentStory({ moments, startAtUnseen, onEnd, onBeforeStart, onClose }: Props) {
-  useDarkChrome();
+  useBlackChrome();
   const me = useMe();
   const insets = useSafeAreaInsets();
   const first = startAtUnseen ? moments.findIndex((m) => !m.seen && m.author_id !== me.id) : 0;

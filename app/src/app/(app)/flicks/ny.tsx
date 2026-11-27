@@ -12,7 +12,7 @@ import { T } from '@/components/T';
 import { uploadVideo } from '@/lib/media';
 import { useMe } from '@/lib/session';
 import { supabase } from '@/lib/supabase';
-import { useDarkChrome } from '@/lib/useDarkChrome';
+import { useBlackChrome } from '@/lib/useDarkChrome';
 import { color, font, palette } from '@/theme/tokens';
 
 type Captured = { uri: string; mime: string };
@@ -23,7 +23,7 @@ type Captured = { uri: string; mime: string };
  * Efter optagelse: tags og "Del flick".
  */
 export default function NewFlick() {
-  useDarkChrome();
+  useBlackChrome();
   const me = useMe();
   const insets = useSafeAreaInsets();
   const [captured, setCaptured] = useState<Captured | null>(null);

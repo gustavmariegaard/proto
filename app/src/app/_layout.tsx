@@ -53,7 +53,12 @@ function Gate() {
       router.replace(h.slice(2) as never);
     }
   }, [session, profile]);
-  if (session === undefined || (session && profile === undefined)) return <Loading />;
+  const ready = !(session === undefined || (session && profile === undefined));
+  // Web: startskærmen (fra index.html) fader først ud, når appen er klar – så den ikke blinker
+  useEffect(() => {
+    if (ready && Platform.OS === 'web') (window as unknown as { __ciircleReady?: () => void }).__ciircleReady?.();
+  }, [ready]);
+  if (!ready) return <Loading />;
   const loggedIn = !!session;
   const hasProfile = !!profile;
   // Første gang efter tilmelding: velkomst med profilbillede (vises én gang)
