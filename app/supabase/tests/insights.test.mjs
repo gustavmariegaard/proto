@@ -90,7 +90,9 @@ const { data: deb } = await anna.c.from('posts').insert({ author_id: anna.id, ki
 await bo.c.rpc('record_views', { ids: [deb.id] });
 await cecilie.c.rpc('record_views', { ids: [deb.id] });
 const { data: vc, error: ve } = await bo.c.rpc('post_view_counts', { ids: [deb.id, post.id] });
-check('Debatopslag viser antal visninger (2)', !ve && vc?.length === 1 && Number(vc[0].views) === 2, JSON.stringify(vc ?? ve));
+const n = new Map((vc ?? []).map((r) => [r.post_id, Number(r.views)]));
+check('Debatopslag viser antal visninger (2)', !ve && n.get(deb.id) === 2, JSON.stringify(vc ?? ve));
+check('Almindelige opslag viser også antal visninger (2)', n.get(post.id) === 2, JSON.stringify(vc));
 
 console.log(failed ? `\n${failed} fejlede` : '\nAlle tests bestået');
 process.exit(failed ? 1 : 0);

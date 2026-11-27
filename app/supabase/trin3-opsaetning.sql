@@ -1,4 +1,4 @@
--- ciircle trin 3: Indsigt (analytics), tagging med @, visninger på debatopslag og deling altid tilladt.
+-- ciircle trin 3: Indsigt (analytics), tagging med @, visninger på opslag og deling altid tilladt.
 -- Kopiér HELE filen ind i Supabase → SQL Editor → New query, og tryk Run. Den kan køres flere gange uden skade.
 
 -- Trin 3: analytics på egen profil, tagging (@) af personer og sider, og deling altid tilladt.
@@ -170,12 +170,12 @@ drop trigger if exists profiles_bio_mention on public.profiles;
 create trigger profiles_bio_mention after insert or update of bio on public.profiles for each row execute function public.on_bio_mention();
 
 -- ============================================================
--- Debatopslag: antal personer, der har set opslaget (vises med et øje). Kun antallet, aldrig hvem.
+-- Alle opslag: antal personer, der har set opslaget (vises med et øje). Kun antallet, aldrig hvem.
 -- ============================================================
 create or replace function public.post_view_counts(ids uuid[])
 returns table (post_id uuid, views bigint) language sql stable security definer set search_path = public as $$
   select p.id, (select count(distinct v.viewer_id) from post_views v where v.post_id = p.id)
   from posts p
-  where p.id = any (ids) and p.kind = 'debat' and can_see_post(auth.uid(), p.id);
+  where p.id = any (ids) and can_see_post(auth.uid(), p.id);
 $$;
 grant execute on function public.post_view_counts(uuid[]) to authenticated;

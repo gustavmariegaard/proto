@@ -35,15 +35,14 @@ export function PostCard({ post, onRemoved, onComments }: Props) {
   const me = useMe();
   // Analytics: opslaget er vist
   useEffect(() => trackView(post.id, post.author_id, me.id), [post.id, post.author_id, me.id]);
-  const [views, setViews] = useState<number | null>(() => (post.kind === 'debat' ? (cachedViewCount(post.id) ?? null) : null));
+  const [views, setViews] = useState<number | null>(() => cachedViewCount(post.id) ?? null);
   useEffect(() => {
-    if (post.kind !== 'debat') return;
     let alive = true;
     viewCount(post.id).then((n) => alive && setViews(n));
     return () => {
       alive = false;
     };
-  }, [post.id, post.kind]);
+  }, [post.id]);
   const [liked, setLiked] = useState(post.liked);
   const [likes, setLikes] = useState(post.likes);
   const [comments, setComments] = useState(post.comments);
@@ -194,7 +193,7 @@ export function PostCard({ post, onRemoved, onComments }: Props) {
 
       <View style={s.actions}>
         {/* Hjerter overalt. Kun Offentlig debat har enig/uenig (ovenfor). */}
-        {!debate && <ActionPill showZero icon={liked ? 'heart-filled' : 'heart'} label="Synes godt om" count={likes} on={liked} tint={liked ? color.ink700 : undefined} onPress={toggleLike} />}
+        {!debate && <ActionPill icon={liked ? 'heart-filled' : 'heart'} label="Synes godt om" count={likes} on={liked} tint={liked ? color.ink700 : undefined} onPress={toggleLike} />}
         <ActionPill icon="chat" label="Kommentarer" count={comments} onPress={onComments ?? (() => setSheet(true))} />
         <ActionPill icon="send" label="Del" onPress={() => router.push(`/opslag/${post.id}/del`)} />
         <ActionPill
@@ -207,8 +206,8 @@ export function PostCard({ post, onRemoved, onComments }: Props) {
             setSaved(post.id, me.id, !saved);
           }}
         />
-        {/* Debat: hvor mange der har set opslaget */}
-        {debate && views !== null && (
+        {/* Hvor mange der har set opslaget */}
+        {views !== null && (
           <View style={s.views} accessible accessibilityLabel={`Set af ${fmtNumber(views)}`}>
             <Icon name="eye" size={18} color={color.textSecondary} />
             <T v="captionStrong" c={color.textSecondary} style={{ fontVariant: ['tabular-nums'] }}>
