@@ -64,7 +64,7 @@ export default function CreateProfile() {
         onPress={choose}
       >
         <View style={s.ring}>
-          <Avatar name={name || '?'} uri={photo ?? undefined} size={96} />
+          <Avatar name={name || '?'} uri={photo ?? undefined} size={96} tone="sand" />
         </View>
       </Pressable>
       <View style={{ alignItems: 'center' }}>

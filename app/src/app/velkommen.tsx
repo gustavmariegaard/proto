@@ -56,7 +56,7 @@ export default function Welcome() {
       </T>
       <Pressable accessibilityRole="button" accessibilityLabel="Vælg profilbillede" onPress={choose} style={s.photo}>
         <View style={s.ring}>
-          <Avatar name={profile?.name ?? '?'} uri={photo ?? undefined} size={96} />
+          <Avatar name={profile?.name ?? '?'} uri={photo ?? undefined} size={96} tone="sand" />
         </View>
         <T v="headingS" c={color.textPrimary}>
           {profile?.name}
