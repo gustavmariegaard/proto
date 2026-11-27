@@ -57,6 +57,7 @@ export function ProfilePosts({ userId, posts, own = false, name, locked = false,
     <>
       {!locked && <HighlightsRow userId={userId} own={own} />}
 
+      <View style={s.tabsRow}>
       <View style={s.tabs} accessibilityRole="tablist" accessibilityLabel="Vis på profilen">
         {tabs.map((t) => {
           const on = tab === t.value;
@@ -67,9 +68,9 @@ export function ProfilePosts({ userId, posts, own = false, name, locked = false,
               accessibilityRole="tab"
               accessibilityState={{ selected: on }}
               onPress={() => router.setParams({ fane: t.value === (locked ? 'debat' : 'opslag') ? undefined : t.value })}
-              style={s.tab}
+              style={[s.tab, on && s.tabOn]}
             >
-              <Icon name={lockedTab ? 'lock' : t.icon} size={18} color={on ? color.textPrimary : color.textSecondary} />
+              <Icon name={lockedTab ? 'lock' : t.icon} size={16} color={on ? color.textPrimary : color.textSecondary} />
               <T v="label" c={on ? color.textPrimary : color.textSecondary} numberOfLines={1}>
                 {t.label}
               </T>
@@ -80,10 +81,10 @@ export function ProfilePosts({ userId, posts, own = false, name, locked = false,
                   </T>
                 </View>
               )}
-              {on && <View style={s.underline} />}
             </Pressable>
           );
         })}
+      </View>
         {/* Gitter eller liste – kun på Opslag, i samme række som fanerne */}
         {!locked && tab === 'opslag' && feed.length > 0 && (
           <Pressable
@@ -153,10 +154,10 @@ export function ProfilePosts({ userId, posts, own = false, name, locked = false,
   );
 }
 
-/** Flicks som Reels: tre kolonner i 9:16 med 3 px mellemrum, fra kant til kant */
+/** Flicks: tre kolonner i 9:16 som afrundede fliser med luft imellem */
 function FlickTiles({ flicks }: { flicks: Post[] }) {
   const [w, setW] = useState(0);
-  const cellW = w ? Math.floor(((w - 6) / 3) * 100) / 100 : 0;
+  const cellW = w ? Math.floor(((w - 12) / 3) * 100) / 100 : 0;
   return (
     <View style={s.flicks} onLayout={(e) => setW(e.nativeEvent.layout.width)}>
       {flicks.map((f) => (
@@ -196,16 +197,18 @@ function Empty({ text, action }: { text: string; action?: { label: string; to: H
 }
 
 const s = StyleSheet.create({
-  tabs: { flexDirection: 'row', borderBottomWidth: 1, borderBottomColor: color.borderDefault },
-  tab: { flex: 1, minWidth: 0, flexDirection: 'row', alignItems: 'center', justifyContent: 'center', gap: 6, minHeight: 48 },
-  underline: { position: 'absolute', left: '16%', right: '16%', bottom: -1, height: 2.5, borderRadius: 2, backgroundColor: color.textPrimary },
-  count: { paddingHorizontal: 6, borderRadius: radius.pill, backgroundColor: color.bgSubtle },
+  /* Fanerne som en rolig pille (samme udtryk som Brugere/Interesser på Hjem) */
+  tabsRow: { flexDirection: 'row', alignItems: 'center', gap: 6 },
+  tabs: { flex: 1, minWidth: 0, flexDirection: 'row', gap: 2, padding: 3, borderRadius: radius.pill, backgroundColor: color.bgSubtle },
+  tab: { flex: 1, minWidth: 0, flexDirection: 'row', alignItems: 'center', justifyContent: 'center', gap: 5, minHeight: 40, borderRadius: radius.pill },
+  tabOn: { backgroundColor: color.bgSurface, shadowColor: '#000', shadowOpacity: 0.08, shadowRadius: 6, shadowOffset: { width: 0, height: 1 } },
+  count: { paddingHorizontal: 5 },
   countTxt: { fontFamily: font.bodySemi, fontSize: 12, lineHeight: 18 },
-  viewBtn: { width: TAP, height: TAP, flexShrink: 0, alignSelf: 'center', alignItems: 'center', justifyContent: 'center', borderRadius: 10 },
+  viewBtn: { width: TAP, height: TAP, flexShrink: 0, alignItems: 'center', justifyContent: 'center', borderRadius: TAP / 2, backgroundColor: color.bgSubtle },
   panel: { gap: 14 },
   more: { alignSelf: 'center', minHeight: TAP, paddingHorizontal: 12, justifyContent: 'center' },
-  flicks: { flexDirection: 'row', flexWrap: 'wrap', gap: 3, marginHorizontal: -20 },
-  flick: { aspectRatio: 9 / 16, overflow: 'hidden', backgroundColor: color.ink900 },
+  flicks: { flexDirection: 'row', flexWrap: 'wrap', gap: 6 },
+  flick: { aspectRatio: 9 / 16, overflow: 'hidden', borderRadius: radius.md, backgroundColor: color.ink900 },
   flickViews: { position: 'absolute', left: 6, bottom: 6, flexDirection: 'row', alignItems: 'center', gap: 3 },
   empty: {
     alignItems: 'center',

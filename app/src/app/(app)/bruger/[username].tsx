@@ -2,9 +2,8 @@ import { router, useFocusEffect, useLocalSearchParams } from 'expo-router';
 import { useCallback, useEffect, useState } from 'react';
 import { ActivityIndicator, Pressable, ScrollView, StyleSheet, View } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
-import { Avatar } from '@/components/Avatar';
+import { ProfileBadge, ProfileCard } from '@/components/ProfileCard';
 import { Button } from '@/components/Button';
-import { Icon } from '@/components/Icon';
 import { IconButton } from '@/components/IconButton';
 import { PageHeader } from '@/components/PageHeader';
 import { profilePosts, ProfilePosts } from '@/components/ProfilePosts';
@@ -14,7 +13,6 @@ import { activeMoments } from '@/lib/moments';
 import { follow, postsBy, profileView, unfollow, type ProfileView } from '@/lib/profiles';
 import { useMe } from '@/lib/session';
 import { supabase } from '@/lib/supabase';
-import { fmtNumber } from '@/lib/time';
 import type { PostCard } from '@/lib/types';
 import { color, radius } from '@/theme/tokens';
 
@@ -120,77 +118,51 @@ export default function UserProfile() {
     await supabase.from('reports').insert({ reporter_id: me.id, profile_id: p.id, reason });
   };
 
-  const avatar = <Avatar name={p.name} path={p.avatar_path} size={74} />;
-
   return (
     <View style={s.root}>
       <PageHeader title={p.public_kind === 'side' ? 'Side' : 'Profil'} fallback="/">
         <IconButton icon="dots" label="Mere" onPress={() => setMenuOpen(true)} />
       </PageHeader>
       <ScrollView contentContainerStyle={[s.content, { paddingBottom: 32 + insets.bottom }]}>
-        <View style={s.identity}>
-          {moments.any && !blocked ? (
-            <Pressable
-              accessibilityRole="button"
-              accessibilityLabel={`Se moments fra ${p.name}`}
-              onPress={() => router.push({ pathname: '/moment/[id]', params: { id: p.id } })}
-              style={[s.ring, moments.seen ? s.ringSeen : s.ringNew]}
-            >
-              {avatar}
-            </Pressable>
-          ) : (
-            <View style={s.ring}>{avatar}</View>
-          )}
-          <View style={s.name}>
-            <T v="titleL" accessibilityRole="header">
-              {p.name}
-            </T>
-            <T v="caption" c={color.textSecondary}>
-              @{p.username}
-            </T>
-            {p.is_private && (
-              <View style={s.pill}>
-                <Icon name="lock" size={12} color={color.textSecondary} />
-                <T v="captionStrong" c={color.textSecondary}>
-                  Privat profil
-                </T>
-              </View>
-            )}
-            {p.public_kind && (
-              <View style={[s.pill, p.public_kind === 'side' ? s.pillSide : s.pillNote]}>
-                <Icon name={p.public_kind === 'person' ? 'globe' : 'building'} size={14} color={p.public_kind === 'side' ? color.textPrimary : color.accentNoteText} />
-                <T v="captionStrong" c={p.public_kind === 'side' ? color.textPrimary : color.accentNoteText}>
-                  {publicLabel[p.public_kind]}
-                </T>
-              </View>
-            )}
-            {p.follows_me && !blocked && (
-              <View style={[s.pill, following && s.pillNote]}>
-                <T v="captionStrong" c={following ? color.accentNoteText : color.textSecondary}>
-                  {following ? 'I følger hinanden' : 'Følger dig'}
-                </T>
-              </View>
-            )}
-          </View>
-        </View>
-
-        {blocked ? (
-          <View style={s.blocked}>
-            <T v="headingS">Du har blokeret {first}</T>
-            <Button variant="secondary" onPress={unblock}>
-              Fjern blokering
-            </Button>
-          </View>
-        ) : (
-          <>
-            {!!p.bio && <T v="bodyS">{p.bio}</T>}
-
-            <View style={s.stats}>
-              <Stat n={postCount} label="Opslag" />
-              <Stat n={p.followers} label="Følgere" />
-              {p.public_kind !== 'side' && <Stat n={p.following} label="Følger" />}
+        <ProfileCard
+          name={p.name}
+          username={p.username}
+          avatarPath={p.avatar_path}
+          ring={moments.any && !blocked ? (moments.seen ? 'seen' : 'new') : 'none'}
+          onRing={moments.any && !blocked ? () => router.push({ pathname: '/moment/[id]', params: { id: p.id } }) : undefined}
+          ringLabel={`Se moments fra ${p.name}`}
+          badges={
+            p.is_private || p.public_kind || (p.follows_me && !blocked) ? (
+              <>
+                {p.is_private && <ProfileBadge icon="lock">Privat profil</ProfileBadge>}
+                {p.public_kind && (
+                  <ProfileBadge icon={p.public_kind === 'person' ? 'globe' : 'building'} tone={p.public_kind === 'side' ? 'plain' : 'note'}>
+                    {publicLabel[p.public_kind]}
+                  </ProfileBadge>
+                )}
+                {p.follows_me && !blocked && <ProfileBadge tone={following ? 'note' : 'plain'}>{following ? 'I følger hinanden' : 'Følger dig'}</ProfileBadge>}
+              </>
+            ) : undefined
+          }
+          bio={blocked ? null : p.bio}
+          stats={
+            blocked
+              ? []
+              : [
+                  { n: postCount, label: 'Opslag' },
+                  { n: p.followers, label: 'Følgere' },
+                  ...(p.public_kind !== 'side' ? [{ n: p.following, label: 'Følger' }] : []),
+                ]
+          }
+        >
+          {blocked ? (
+            <View style={s.blocked}>
+              <T v="headingS">Du har blokeret {first}</T>
+              <Button variant="secondary" onPress={unblock}>
+                Fjern blokering
+              </Button>
             </View>
-
+          ) : (
             <View style={s.actions}>
               <Button
                 variant={p.my_follow ? 'secondary' : 'primary'}
@@ -206,7 +178,11 @@ export default function UserProfile() {
                 Besked
               </Button>
             </View>
+          )}
+        </ProfileCard>
 
+        {!blocked && (
+          <>
             <ProfilePosts userId={p.id} name={first} posts={posts} locked={!p.can_see} onChanged={load} />
           </>
         )}
@@ -235,40 +211,10 @@ export default function UserProfile() {
   );
 }
 
-function Stat({ n, label }: { n: number; label: string }) {
-  return (
-    <View style={s.stat} accessible accessibilityLabel={`${fmtNumber(n)} ${label}`}>
-      <T v="headingM">{fmtNumber(n)}</T>
-      <T v="caption" c={color.textSecondary}>
-        {label}
-      </T>
-    </View>
-  );
-}
-
 const s = StyleSheet.create({
   root: { flex: 1, backgroundColor: color.bgApp },
   content: { gap: 16, paddingTop: 4, paddingHorizontal: 20 },
-  identity: { flexDirection: 'row', alignItems: 'center', gap: 16 },
-  ring: { width: 84, height: 84, flexShrink: 0, borderRadius: 42, alignItems: 'center', justifyContent: 'center' },
-  ringNew: { borderWidth: 3, borderColor: color.accentHighlight },
-  ringSeen: { borderWidth: 3, borderColor: color.borderStrong },
-  name: { flex: 1, minWidth: 0, gap: 2, alignItems: 'flex-start' },
-  pill: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: 4,
-    marginTop: 6,
-    paddingVertical: 3,
-    paddingHorizontal: 10,
-    borderRadius: radius.pill,
-    backgroundColor: color.bgSubtle,
-  },
-  pillNote: { backgroundColor: color.accentNoteBg },
-  pillSide: { backgroundColor: color.bgSubtle },
-  blocked: { alignItems: 'flex-start', gap: 12, padding: 16, borderWidth: 1, borderColor: color.borderDefault, borderRadius: radius.lg },
-  stats: { flexDirection: 'row', justifyContent: 'space-around', padding: 12, borderWidth: 1, borderColor: color.borderDefault, borderRadius: radius.lg },
-  stat: { alignItems: 'center' },
+  blocked: { alignItems: 'flex-start', gap: 12 },
   actions: { flexDirection: 'row', gap: 8 },
   toast: {
     position: 'absolute',

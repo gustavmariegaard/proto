@@ -4,18 +4,18 @@ import { useState } from 'react';
 import { Pressable, StyleSheet, View } from 'react-native';
 import { imageSource } from '@/lib/media';
 import type { PostCard } from '@/lib/types';
-import { color, font } from '@/theme/tokens';
+import { color, font, radius } from '@/theme/tokens';
 import { Icon } from './Icon';
 import { T } from './T';
 
 /**
- * Opslag som gitter (prototypens .pc-grid): tre kolonner i 4:5, 2 px mellemrum,
- * ingen runde hjørner og fra kant til kant (margin -20). Tekstopslag er en rolig tekstflise.
+ * Opslag som gitter: tre kolonner i 4:5 som afrundede fliser med luft imellem
+ * (samme udtryk som kortene i resten af appen). Tekstopslag er en rolig tekstflise.
  */
 export function PostGrid({ posts }: { posts: PostCard[] }) {
   const [w, setW] = useState(0);
-  // Tre lige brede kolonner med 2 px imellem
-  const cellW = w ? Math.floor(((w - 4) / 3) * 100) / 100 : 0;
+  // Tre lige brede kolonner med 6 px imellem
+  const cellW = w ? Math.floor(((w - 12) / 3) * 100) / 100 : 0;
   return (
     <View style={s.grid} onLayout={(e) => setW(e.nativeEvent.layout.width)}>
       {posts.map((p) => {
@@ -48,9 +48,9 @@ export function PostGrid({ posts }: { posts: PostCard[] }) {
 }
 
 const s = StyleSheet.create({
-  grid: { flexDirection: 'row', flexWrap: 'wrap', gap: 2, marginHorizontal: -20 },
-  cell: { width: '32.8%' },
-  tile: { aspectRatio: 4 / 5, overflow: 'hidden', backgroundColor: color.bgSubtle },
+  grid: { flexDirection: 'row', flexWrap: 'wrap', gap: 6 },
+  cell: { width: '32%' },
+  tile: { aspectRatio: 4 / 5, overflow: 'hidden', borderRadius: radius.md, backgroundColor: color.bgSubtle },
   pressed: { opacity: 0.92 },
   // Tekstopslag: hvid flise med 1 px indvendig kant, teksten i bunden
   text: { justifyContent: 'flex-end', padding: 10, backgroundColor: color.bgSurface, borderWidth: 1, borderColor: color.borderDefault },
