@@ -4,14 +4,17 @@ import { useEffect, useState } from 'react';
 import { Pressable, StyleSheet, View } from 'react-native';
 import { imageSource } from '@/lib/media';
 import { formatPrice, listingSummary } from '@/lib/market';
-import { color, radius, TAP } from '@/theme/tokens';
+import { color, radius } from '@/theme/tokens';
 import { Icon } from './Icon';
 import { T } from './T';
 
 type Summary = Awaited<ReturnType<typeof listingSummary>>;
 const cache = new Map<string, Summary>();
 
-/** Annonce som kontekst i en samtale (øverst og på beskeder om annoncen). Tryk åbner annoncen. */
+/**
+ * Lille annoncekort i en samtale fra Torvet (prototypens ListingContext): billede, titel og pris.
+ * inBubble = inde i en beskedboble (mine = din egen, mørk boble). Tryk åbner annoncen.
+ */
 export function ListingContext({ listingId, inBubble, mine }: { listingId: string; inBubble?: boolean; mine?: boolean }) {
   const [l, setL] = useState<Summary | undefined>(cache.get(listingId));
   useEffect(() => {
@@ -23,46 +26,49 @@ export function ListingContext({ listingId, inBubble, mine }: { listingId: strin
   }, [listingId]);
 
   const gone = l === null || (l && l.sold);
-  const fg = inBubble && mine ? color.textOnAction : color.textPrimary;
-  const sub = inBubble && mine ? 'rgba(255,255,255,0.7)' : color.textSecondary;
-
+  const dark = inBubble && mine;
   return (
     <Pressable
       accessibilityRole="link"
       accessibilityLabel={l && !gone ? `Annonce: ${l.title}, ${formatPrice(l.price)}` : 'Annonce'}
       disabled={!l || !!gone}
       onPress={() => l && router.push(`/torvet/${l.id}`)}
-      style={[s.card, inBubble ? (mine ? s.inMine : s.inTheirs) : s.top]}
+      style={[s.card, inBubble ? [s.inBubble, dark && s.dark] : s.top]}
     >
-      <View style={s.thumb}>
-        {l && !gone ? (
-          <Image source={imageSource(l.image_paths[0])} style={StyleSheet.absoluteFill} contentFit="cover" />
-        ) : (
-          <Icon name="shop" size={18} color={color.textSecondary} />
-        )}
+      <View style={s.img}>
+        {l && !gone ? <Image source={imageSource(l.image_paths[0])} style={StyleSheet.absoluteFill} contentFit="cover" /> : <Icon name="shop" size={18} color={color.textSecondary} />}
       </View>
-      <View style={{ flex: 1 }}>
-        <T v="captionStrong" c={sub}>
-          Torvet
-        </T>
-        <T v="label" c={fg} numberOfLines={1}>
+      <View style={{ flex: 1, minWidth: 0 }}>
+        <T v="label" c={dark ? color.textOnAction : color.textPrimary} numberOfLines={1}>
           {gone ? 'Annoncen er ikke længere til salg' : l ? l.title : ' '}
         </T>
         {l && !gone && (
-          <T v="caption" c={sub}>
+          <T v="caption" c={dark ? 'rgba(255,255,255,0.7)' : color.textSecondary}>
             {formatPrice(l.price)}
           </T>
         )}
       </View>
-      {l && !gone && !inBubble && <Icon name="chevron-right" size={18} />}
     </Pressable>
   );
 }
 
 const s = StyleSheet.create({
-  card: { flexDirection: 'row', alignItems: 'center', gap: 10, minHeight: TAP, padding: 8, borderRadius: radius.md },
-  top: { marginHorizontal: 16, marginBottom: 4, backgroundColor: color.bgSubtle },
-  inMine: { backgroundColor: 'rgba(255,255,255,0.12)', marginBottom: 6 },
-  inTheirs: { backgroundColor: color.bgSurface, marginBottom: 6 },
-  thumb: { width: 44, height: 44, borderRadius: 10, overflow: 'hidden', backgroundColor: color.gray200, alignItems: 'center', justifyContent: 'center' },
+  /* .listing-ctx */
+  card: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 12,
+    minHeight: 56,
+    paddingVertical: 6,
+    paddingLeft: 6,
+    paddingRight: 14,
+    borderWidth: 1,
+    borderColor: color.borderDefault,
+    borderRadius: radius.lg,
+    backgroundColor: color.bgSurface,
+  },
+  top: { marginHorizontal: 12, marginBottom: 8 },
+  inBubble: { marginBottom: 8, marginHorizontal: -8 },
+  dark: { backgroundColor: 'rgba(255,255,255,0.12)', borderColor: 'rgba(255,255,255,0.18)' },
+  img: { width: 44, height: 44, borderRadius: 10, overflow: 'hidden', backgroundColor: color.bgSubtle, alignItems: 'center', justifyContent: 'center' },
 });

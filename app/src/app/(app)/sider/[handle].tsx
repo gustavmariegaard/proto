@@ -1,27 +1,39 @@
 import { router, useFocusEffect, useLocalSearchParams } from 'expo-router';
 import { useCallback, useState } from 'react';
-import { StyleSheet, View } from 'react-native';
+import { ScrollView, StyleSheet, View } from 'react-native';
+import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { Avatar } from '@/components/Avatar';
 import { Button } from '@/components/Button';
-import { PostCard } from '@/components/PostCard';
-import { Screen } from '@/components/Screen';
+import { Icon } from '@/components/Icon';
+import { PageHeader } from '@/components/PageHeader';
+import { ProfilePosts } from '@/components/ProfilePosts';
 import { T } from '@/components/T';
 import { getPage, postsWhere, setFollowPage, type PageCard } from '@/lib/community';
+import { markSeen } from '@/lib/moreActivity';
 import { useMe } from '@/lib/session';
+import { supabase } from '@/lib/supabase';
+import { fmtNumber } from '@/lib/time';
 import type { PostCard as Post } from '@/lib/types';
-import { color } from '@/theme/tokens';
+import { color, radius } from '@/theme/tokens';
 
-/** En side: billede, navn, kategori, beskrivelse, følg og sidens opslag */
+/**
+ * En side (prototypens UserProfile for en side, /bruger/:handle):
+ * billede, navn, @adresse, "Side"-mærke, beskrivelse, tal, Følg/Besked og sidens opslag.
+ */
 export default function PageView() {
   const { handle } = useLocalSearchParams<{ handle: string }>();
   const me = useMe();
+  const insets = useSafeAreaInsets();
   const [page, setPage] = useState<PageCard | null | undefined>(undefined);
   const [posts, setPosts] = useState<Post[]>([]);
 
   const load = useCallback(async () => {
     const p = await getPage(handle);
     setPage(p);
-    if (p) setPosts(await postsWhere('page_id', p.id));
+    if (p) {
+      markSeen(p.id);
+      setPosts(await postsWhere('page_id', p.id));
+    }
   }, [handle]);
   useFocusEffect(
     useCallback(() => {
@@ -29,59 +41,112 @@ export default function PageView() {
     }, [load]),
   );
 
-  if (page === undefined) return <Screen title="Side">{null}</Screen>;
-  if (page === null)
-    return (
-      <Screen title="Side">
-        <T v="bodyS" c={color.textSecondary}>
-          Siden findes ikke.
-        </T>
-      </Screen>
-    );
-
   const toggle = async () => {
+    if (!page) return;
     setPage({ ...page, i_follow: !page.i_follow, followers: page.followers + (page.i_follow ? -1 : 1) });
     await setFollowPage(page.id, me.id, !page.i_follow);
   };
+  // Beskeder til en side går til den, der har oprettet den
+  const message = async () => {
+    if (!page) return;
+    const { data, error } = await supabase.rpc('start_conversation', { member_ids: [page.created_by] });
+    if (!error && data) router.push(`/samtale/${data}`);
+  };
 
   return (
-    <Screen title="Side">
-      <View style={s.head}>
-        <Avatar name={page.name} path={page.avatar_path} size={96} />
-        <T v="titleL" accessibilityRole="header" style={{ textAlign: 'center' }}>
-          {page.name}
-        </T>
-        <T v="caption" c={color.textSecondary}>
-          {[page.category, `@${page.handle}`].filter(Boolean).join(' · ')}
-        </T>
-        {!!page.bio && (
-          <T v="bodyS" style={{ textAlign: 'center' }}>
-            {page.bio}
+    <View style={s.screen}>
+      <PageHeader title="Side" fallback="/sider" />
+      <ScrollView style={{ flex: 1 }} contentContainerStyle={[s.content, { paddingBottom: 32 + insets.bottom }]}>
+        {page === null && (
+          <T v="bodyS" c={color.textSecondary}>
+            Siden findes ikke.
           </T>
         )}
-        <T v="label">
-          {page.followers} {page.followers === 1 ? 'følger' : 'følgere'}
-        </T>
-      </View>
-      {page.i_admin ? (
-        <Button title="Skriv som siden" icon="edit" block onPress={() => router.push(`/opret?side=${page.id}`)} />
-      ) : (
-        <Button title={page.i_follow ? 'Følger' : 'Følg'} variant={page.i_follow ? 'secondary' : 'primary'} icon={page.i_follow ? 'check' : undefined} block onPress={toggle} />
-      )}
-      <View style={{ gap: 12 }}>
-        <T v="headingM" accessibilityRole="header">
-          Opslag
-        </T>
-        {posts.length ? (
-          posts.map((p) => <PostCard key={p.id} post={p} onRemoved={() => setPosts((l) => l.filter((x) => x.id !== p.id))} />)
-        ) : (
-          <T v="caption" c={color.textSecondary}>
-            Ingen opslag endnu.
-          </T>
+        {page && (
+          <>
+            <View style={s.identity}>
+              <View style={s.ring}>
+                <Avatar name={page.name} path={page.avatar_path} size="XL" />
+              </View>
+              <View style={s.name}>
+                <T v="titleL" accessibilityRole="header">
+                  {page.name}
+                </T>
+                <T v="caption" c={color.textSecondary}>
+                  @{page.handle}
+                </T>
+                <View style={s.badge}>
+                  <Icon name="building" size={14} />
+                  <T v="captionStrong">Side</T>
+                </View>
+              </View>
+            </View>
+
+            {!!page.bio.trim() && <T v="bodyS">{page.bio.trim()}</T>}
+
+            <View style={s.stats}>
+              <View style={s.stat} accessible accessibilityLabel={`${fmtNumber(posts.length)} Opslag`}>
+                <T v="headingM">{fmtNumber(posts.length)}</T>
+                <T v="caption" c={color.textSecondary}>
+                  Opslag
+                </T>
+              </View>
+              <View style={s.stat} accessible accessibilityLabel={`${fmtNumber(page.followers)} Følgere`}>
+                <T v="headingM">{fmtNumber(page.followers)}</T>
+                <T v="caption" c={color.textSecondary}>
+                  Følgere
+                </T>
+              </View>
+            </View>
+
+            <View style={s.actions}>
+              {page.i_admin ? (
+                <Button block style={{ flex: 1 }} onPress={() => router.push(`/opret?side=${page.id}`)}>
+                  Skriv som siden
+                </Button>
+              ) : (
+                <>
+                  <Button
+                    variant={page.i_follow ? 'secondary' : 'primary'}
+                    block
+                    style={{ flex: 1 }}
+                    accessibilityState={{ selected: page.i_follow }}
+                    onPress={toggle}
+                  >
+                    {page.i_follow ? 'Følger' : 'Følg'}
+                  </Button>
+                  <Button variant="secondary" block style={{ flex: 1 }} onPress={message}>
+                    Besked
+                  </Button>
+                </>
+              )}
+            </View>
+
+            <ProfilePosts userId={page.id} posts={posts} name={page.name} onChanged={load} />
+          </>
         )}
-      </View>
-    </Screen>
+      </ScrollView>
+    </View>
   );
 }
 
-const s = StyleSheet.create({ head: { alignItems: 'center', gap: 6, paddingTop: 4 } });
+const s = StyleSheet.create({
+  screen: { flex: 1, backgroundColor: color.bgApp },
+  content: { gap: 16, paddingTop: 4, paddingHorizontal: 20 },
+  identity: { flexDirection: 'row', alignItems: 'center', gap: 16 },
+  ring: { width: 86, height: 86, borderRadius: 43, alignItems: 'center', justifyContent: 'center' },
+  name: { flex: 1, minWidth: 0, gap: 2, alignItems: 'flex-start' },
+  badge: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 4,
+    marginTop: 6,
+    paddingVertical: 3,
+    paddingHorizontal: 10,
+    borderRadius: radius.pill,
+    backgroundColor: color.bgSubtle,
+  },
+  stats: { flexDirection: 'row', justifyContent: 'space-around', padding: 12, borderWidth: 1, borderColor: color.borderDefault, borderRadius: radius.lg },
+  stat: { alignItems: 'center' },
+  actions: { flexDirection: 'row', gap: 8 },
+});

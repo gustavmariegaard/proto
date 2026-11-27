@@ -1,11 +1,10 @@
 import { router, useFocusEffect, useLocalSearchParams } from 'expo-router';
 import { useCallback, useRef, useState } from 'react';
-import { ActivityIndicator, FlatList, RefreshControl, ScrollView, StyleSheet, View } from 'react-native';
-import { Button } from '@/components/Button';
-import { MomentRing } from '@/components/MomentRing';
+import { ActivityIndicator, Animated, FlatList, RefreshControl, ScrollView, StyleSheet, View, type NativeScrollEvent, type NativeSyntheticEvent } from 'react-native';
+import { Chip } from '@/components/Chip';
+import { MomentBubble } from '@/components/MomentBubble';
 import { PostCard } from '@/components/PostCard';
-import { Screen } from '@/components/Screen';
-import { Segmented } from '@/components/Segmented';
+import { SegmentedControl } from '@/components/SegmentedControl';
 import { T } from '@/components/T';
 import { TopBar } from '@/components/TopBar';
 import { pageRings, personRings, type Ring } from '@/lib/moments';
@@ -16,22 +15,36 @@ import type { PostCard as Post } from '@/lib/types';
 import { color, TAB_SPACE } from '@/theme/tokens';
 
 const PAGE = 20;
-type Feed = 'brugere' | 'interesser';
+type Feed = 'venner' | 'interesser';
+/** Brugere/Interesser-vælgeren: 52 høj + 8 luft under (prototypens .home__switch) */
+const SWITCH_H = 60;
 
-/**
- * Hjem (som i prototypen): Brugere = dig, dem du følger og dine grupper.
- * Interesser = sider, du følger. Øverst moments: personers under Brugere, siders under Interesser.
- */
+/** Hjem: feed fra dem, du følger, eller fra dine interesser (prototypens Home). */
 export default function Home() {
   const me = useMe();
   const params = useLocalSearchParams<{ feed?: string }>();
-  const [feed, setFeed] = useState<Feed>(params.feed === 'interesser' ? 'interesser' : 'brugere');
+  const [feed, setFeed] = useState<Feed>(params.feed === 'interesser' ? 'interesser' : 'venner');
   const [posts, setPosts] = useState<Post[] | null>(null);
   const [rings, setRings] = useState<Ring[]>([]);
   const [refreshing, setRefreshing] = useState(false);
   const [more, setMore] = useState(true);
   const loadingMore = useRef(false);
   const rpc = feed === 'interesser' ? 'feed_interests' : 'feed_home';
+
+  // Vælgeren glider væk, når man ruller ned, og kommer igen, når man ruller op
+  const hide = useRef(new Animated.Value(0)).current;
+  const hidden = useRef(false);
+  const last = useRef(0);
+  const onScroll = (e: NativeSyntheticEvent<NativeScrollEvent>) => {
+    const top = e.nativeEvent.contentOffset.y;
+    const delta = top - last.current;
+    if (Math.abs(delta) < 6) return;
+    const h = delta > 0 && top > 120;
+    last.current = top;
+    if (h === hidden.current) return;
+    hidden.current = h;
+    Animated.timing(hide, { toValue: h ? 1 : 0, duration: 250, useNativeDriver: false }).start();
+  };
 
   const load = useCallback(async () => {
     const [{ data }, r] = await Promise.all([
@@ -55,6 +68,7 @@ export default function Home() {
     setPosts(null);
     setRings([]);
     setFeed(f);
+    router.setParams({ feed: f === 'interesser' ? 'interesser' : undefined });
   };
 
   const loadMore = async () => {
@@ -73,86 +87,116 @@ export default function Home() {
     setRefreshing(false);
   };
 
-  // Rækken, viseren går igennem: dig (hvis du har moments) og så de andre i samme rækkefølge
+  // Nye moments først, sete bagefter
   const myRing = rings.find((r) => r.mine);
-  const others = rings.filter((r) => !r.mine);
-  const queue = rings.map((r) => `${r.kind}:${r.id}`).join(',');
+  const others = rings.filter((r) => !r.mine).sort((a, b) => Number(!a.unseen) - Number(!b.unseen));
+  const queue = (myRing ? [myRing, ...others] : others).map((r) => `${r.kind}:${r.id}`).join(',');
   const open = (r: Ring) => router.push({ pathname: '/moment/[id]', params: { id: r.id, type: r.kind, raekke: queue } });
 
   const header = (
-    <View style={{ gap: 12 }}>
-      <Segmented
-        label="Vælg feed"
-        value={feed}
-        onChange={switchFeed}
-        options={[
-          { value: 'brugere', label: 'Brugere' },
-          { value: 'interesser', label: 'Interesser' },
-        ]}
-      />
-      {(feed === 'brugere' || others.length > 0) && (
-        <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={s.rings} accessibilityLabel={feed === 'interesser' ? 'Moments fra sider' : 'Moments'}>
-          {feed === 'brugere' && (
-            <MomentRing
-              name={me.name}
-              label="Dig"
-              avatarPath={me.avatar_path}
-              state={myRing ? 'seen' : 'none'}
-              plus
-              onPress={() => (myRing ? open(myRing) : router.push('/ny-moment'))}
-              onPlus={() => router.push('/ny-moment')}
-            />
-          )}
-          {others.map((r) => (
-            <MomentRing key={r.id} name={r.name} label={r.kind === 'side' ? r.name : r.handle} avatarPath={r.avatar_path} state={r.unseen ? 'unseen' : 'seen'} onPress={() => open(r)} />
-          ))}
-        </ScrollView>
+    <View style={s.header}>
+      {feed === 'interesser' && (
+        <View style={s.pages}>
+          <T v="caption" c={color.textSecondary}>
+            Nyt fra de sider, du følger
+          </T>
+          <Chip icon="layout-grid" style={s.edit} onPress={() => router.push('/sider')}>
+            Dine sider
+          </Chip>
+        </View>
       )}
+      {/* Brugere: personers moments med "Dig" først. Interesser: moments fra sider, man følger. */}
+      <ScrollView
+        horizontal
+        showsHorizontalScrollIndicator={false}
+        style={s.moments}
+        contentContainerStyle={s.momentsContent}
+        accessibilityLabel={feed === 'interesser' ? 'Moments fra sider' : 'Moments'}
+      >
+        {feed === 'venner' && (
+          <MomentBubble
+            name="Dig"
+            fullName={me.name || 'Dig'}
+            state="add"
+            path={me.avatar_path}
+            onPress={() => (myRing ? open(myRing) : router.push('/ny-moment'))}
+            onPlus={() => router.push('/ny-moment')}
+          />
+        )}
+        {others.map((r) => (
+          <MomentBubble
+            key={r.id}
+            name={r.handle}
+            fullName={r.name}
+            path={r.avatar_path}
+            state={r.unseen ? 'new' : 'seen'}
+            onPress={() => open(r)}
+          />
+        ))}
+      </ScrollView>
     </View>
   );
 
   return (
-    <Screen scroll={false} edges={[]}>
+    <View style={s.root}>
       <TopBar />
-      <FlatList
-        data={posts ?? []}
-        keyExtractor={(p) => p.id}
-        renderItem={({ item }) => <PostCard post={item} onRemoved={() => setPosts((l) => l?.filter((x) => x.id !== item.id) ?? null)} />}
-        ListHeaderComponent={header}
-        ListHeaderComponentStyle={{ marginBottom: 14 }}
-        contentContainerStyle={s.list}
-        ItemSeparatorComponent={() => <View style={{ height: 14 }} />}
-        refreshControl={<RefreshControl refreshing={refreshing} onRefresh={refresh} />}
-        onEndReached={loadMore}
-        onEndReachedThreshold={0.5}
-        ListEmptyComponent={
-          posts === null ? (
-            <ActivityIndicator style={{ marginTop: 40 }} color={color.textPrimary} />
-          ) : feed === 'interesser' ? (
-            <View style={s.empty}>
-              <T v="headingM">Ingen sider endnu</T>
-              <T v="bodyS" c={color.textSecondary}>
-                Følg sider for at se deres opslag.
+      <View style={{ flex: 1 }}>
+        <FlatList
+          data={posts ?? []}
+          keyExtractor={(p) => p.id}
+          renderItem={({ item }) => <PostCard post={item} onRemoved={() => setPosts((l) => l?.filter((x) => x.id !== item.id) ?? null)} />}
+          ListHeaderComponent={header}
+          ListHeaderComponentStyle={{ marginBottom: 14 }}
+          contentContainerStyle={s.list}
+          ItemSeparatorComponent={() => <View style={{ height: 14 }} />}
+          refreshControl={<RefreshControl refreshing={refreshing} onRefresh={refresh} />}
+          onScroll={onScroll}
+          scrollEventThrottle={16}
+          onEndReached={loadMore}
+          onEndReachedThreshold={0.5}
+          ListEmptyComponent={
+            posts === null ? (
+              <ActivityIndicator style={{ marginTop: 40 }} color={color.textPrimary} />
+            ) : (
+              <T v="bodyS" c={color.textSecondary} style={s.empty}>
+                {feed === 'interesser' ? 'Ingen opslag fra dine sider endnu.' : 'Ingen opslag endnu.'}
               </T>
-              <Button title="Find sider" onPress={() => router.push('/sider')} />
-            </View>
-          ) : (
-            <View style={s.empty}>
-              <T v="headingM">Her er stille</T>
-              <T v="bodyS" c={color.textSecondary}>
-                Følg folk for at se deres opslag.
-              </T>
-              <Button title="Find folk" onPress={() => router.push('/soeg')} />
-            </View>
-          )
-        }
-      />
-    </Screen>
+            )
+          }
+        />
+        <Animated.View
+          pointerEvents="box-none"
+          style={[
+            s.switch,
+            {
+              opacity: hide.interpolate({ inputRange: [0, 1], outputRange: [1, 0] }),
+              transform: [{ translateY: hide.interpolate({ inputRange: [0, 1], outputRange: [0, -SWITCH_H * 1.1] }) }],
+            },
+          ]}
+        >
+          <SegmentedControl
+            label="Vis opslag fra"
+            value={feed}
+            onChange={switchFeed}
+            options={[
+              { value: 'venner', label: 'Brugere' },
+              { value: 'interesser', label: 'Interesser' },
+            ]}
+          />
+        </Animated.View>
+      </View>
+    </View>
   );
 }
 
 const s = StyleSheet.create({
-  list: { padding: 20, paddingTop: 8, paddingBottom: TAB_SPACE },
-  rings: { gap: 6, paddingRight: 8 },
-  empty: { alignItems: 'center', gap: 10, paddingTop: 40 },
+  root: { flex: 1, backgroundColor: color.bgApp },
+  list: { paddingHorizontal: 20, paddingTop: SWITCH_H + 14, paddingBottom: TAB_SPACE },
+  header: { gap: 14 },
+  switch: { position: 'absolute', top: 0, left: 0, right: 0, paddingHorizontal: 20, paddingBottom: 8, backgroundColor: color.bgApp, zIndex: 5 },
+  pages: { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', gap: 12 },
+  edit: { gap: 6, paddingHorizontal: 14 },
+  moments: { marginHorizontal: -20 },
+  momentsContent: { gap: 12, paddingHorizontal: 20, paddingBottom: 2 },
+  empty: { textAlign: 'center', paddingTop: 24 },
 });

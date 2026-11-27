@@ -1,35 +1,38 @@
 import { Image } from 'expo-image';
+import * as Linking from 'expo-linking';
 import { router, useLocalSearchParams } from 'expo-router';
 import { useCallback, useEffect, useRef, useState } from 'react';
-import { ActivityIndicator, Pressable, ScrollView, Share, StyleSheet, TextInput, useWindowDimensions, View } from 'react-native';
+import { Platform, Pressable, ScrollView, Share, StyleSheet, useWindowDimensions, View } from 'react-native';
+import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { Avatar } from '@/components/Avatar';
 import { Button } from '@/components/Button';
 import { Chip } from '@/components/Chip';
 import { Icon, type IconName } from '@/components/Icon';
 import { IconButton } from '@/components/IconButton';
-import { MenuItem } from '@/components/MenuItem';
-import { Screen } from '@/components/Screen';
+import { PageHeader } from '@/components/PageHeader';
 import { Sheet } from '@/components/Sheet';
 import { T } from '@/components/T';
+import { TextField } from '@/components/TextField';
 import { imageSource } from '@/lib/media';
-import { fmtKm, formatPrice, getListing, getMyLocation, kmBetween, listedText, markViewed, messageSeller, setListingSaved, type ListingRow } from '@/lib/market';
+import { fmtKm, formatPrice, getListing, kmBetween, listedText, locationOrDefault, markViewed, messageSeller, setListingSaved, type ListingRow } from '@/lib/market';
 import { useMe } from '@/lib/session';
 import { supabase } from '@/lib/supabase';
-import { color, font, radius, TAP } from '@/theme/tokens';
+import { color, radius, TAP } from '@/theme/tokens';
 
 type Full = ListingRow & { lat: number; lng: number; seller_since: string };
 const reportReasons = ['Svindel eller snyd', 'Forbudt vare', 'Vildledende annonce', 'Allerede solgt', 'Andet'];
 
-/** Annonce på Torvet. Rute: /torvet/[id] */
+/** Annonce på Torvet (fuld skærm, prototypens ListingDetail). Rute: /torvet/[id] */
 export default function ListingDetail() {
   const { id } = useLocalSearchParams<{ id: string }>();
   const me = useMe();
+  const insets = useSafeAreaInsets();
   const [l, setL] = useState<Full | null | undefined>(undefined);
   const [distance, setDistance] = useState<number | null>(null);
   const [saved, setSaved] = useState(false);
-  const [sheet, setSheet] = useState<null | 'mere' | 'bud' | 'pris' | 'slet' | 'rapporter' | 'solgt'>(null);
+  const [sheet, setSheet] = useState<null | 'mere' | 'bud' | 'pris' | 'slet' | 'rapporter'>(null);
   const [busy, setBusy] = useState(false);
-  const [note, setNote] = useState('');
+  const [toast, setToast] = useState('');
 
   const load = useCallback(async () => {
     const data = (await getListing(id, me.id)) as Full | null;
@@ -38,8 +41,8 @@ export default function ListingDetail() {
       setSaved(data.saved);
       if (data.seller_id !== me.id) {
         markViewed(data.id, me.id);
-        const loc = await getMyLocation(me.id);
-        if (loc) setDistance(kmBetween(loc.lat, loc.lng, data.lat, data.lng));
+        const loc = await locationOrDefault(me.id);
+        setDistance(kmBetween(loc.lat, loc.lng, data.lat, data.lng));
       }
     }
   }, [id, me.id]);
@@ -49,47 +52,68 @@ export default function ListingDetail() {
   }, [load]);
 
   useEffect(() => {
-    if (!note) return;
-    const t = setTimeout(() => setNote(''), 2200);
+    if (!toast) return;
+    const t = setTimeout(() => setToast(''), 2200);
     return () => clearTimeout(t);
-  }, [note]);
+  }, [toast]);
 
-  if (l === undefined) {
-    return (
-      <Screen title="Torvet">
-        <ActivityIndicator color={color.textPrimary} />
-      </Screen>
-    );
-  }
+  if (l === undefined) return <View style={s.screen}><PageHeader title="Torvet" fallback="/torvet" /></View>;
   if (!l || (l.sold && l.seller_id !== me.id)) {
     return (
-      <Screen title="Torvet">
-        <T v="bodyS" c={color.textSecondary}>
-          Annoncen findes ikke længere.
-        </T>
-        <Button title="Tilbage til Torvet" variant="secondary" onPress={() => router.replace('/torvet')} />
-      </Screen>
+      <View style={s.screen}>
+        <PageHeader title="Torvet" fallback="/torvet" />
+        <View style={s.padded}>
+          <T v="bodyS" c={color.textSecondary}>
+            Annoncen findes ikke længere.
+          </T>
+          <Pressable accessibilityRole="link" onPress={() => router.replace('/torvet')} style={s.link}>
+            <T v="label" style={{ textDecorationLine: 'underline' }}>
+              Tilbage til Torvet
+            </T>
+          </Pressable>
+        </View>
+      </View>
     );
   }
 
   const mine = l.seller_id === me.id;
+  const close = () => setSheet(null);
 
   const write = async (text?: string) => {
+    if (busy) return;
     setBusy(true);
     try {
       const conv = await messageSeller(l, me.id, text);
       router.push(`/samtale/${conv}`);
     } catch {
-      setNote('Beskeden kunne ikke sendes');
+      setToast('Beskeden kunne ikke sendes');
     }
     setBusy(false);
   };
 
-  const share = () => Share.share({ message: `${l.title} – ${formatPrice(l.price)} på Torvet` });
+  const share = async () => {
+    const url = Platform.OS === 'web' && typeof window !== 'undefined' ? `${window.location.origin}/torvet/${l.id}` : Linking.createURL(`/torvet/${l.id}`);
+    try {
+      if (Platform.OS === 'web') {
+        const nav = navigator as Navigator & { share?: (d: object) => Promise<void> };
+        if (nav.share) {
+          await nav.share({ title: l.title, text: `${l.title} – ${formatPrice(l.price)} på Torvet`, url });
+          return;
+        }
+        await navigator.clipboard.writeText(url);
+        setToast('Linket er kopieret');
+      } else {
+        await Share.share({ message: `${l.title} – ${formatPrice(l.price)} på Torvet ${url}` });
+      }
+    } catch (e) {
+      if ((e as Error)?.name !== 'AbortError') setToast('Linket kunne ikke deles');
+    }
+  };
 
   const toggleSave = () => {
     setSaved(!saved);
     setListingSaved(l.id, me.id, !saved);
+    setToast(saved ? 'Fjernet fra Gemte' : 'Gemt – find den under Gemte');
   };
 
   const facts: [string, string][] = [
@@ -97,201 +121,246 @@ export default function ListingDetail() {
     ['Afhentning', l.city],
     ['Forsendelse', l.shipping ? 'Kan sendes' : 'Kun afhentning'],
   ];
+  const since = new Date(l.seller_since ?? l.created_at).getFullYear();
 
   return (
-    <Screen
-      title="Torvet"
-      right={
-        <>
-          <IconButton icon="send" label="Del annonce" onPress={share} />
-          <IconButton icon="dots" label="Flere muligheder" onPress={() => setSheet('mere')} />
-        </>
-      }
-      contentStyle={{ paddingHorizontal: 0, paddingTop: 0 }}
-    >
-      <Gallery paths={l.image_paths} title={l.title} />
+    <View style={s.screen}>
+      <PageHeader title="Torvet" fallback="/torvet">
+        <IconButton icon="send" label="Del annonce" onPress={share} />
+        <IconButton icon="dots" label="Flere muligheder" onPress={() => setSheet('mere')} />
+      </PageHeader>
 
-      <View style={s.body}>
-        <View style={{ gap: 4 }}>
-          <T v="titleL">{l.title}</T>
-          <T v="titleL">{formatPrice(l.price)}</T>
-          <T v="caption" c={color.textSecondary}>
-            {mine ? l.city : `${distance !== null ? fmtKm(distance) + ' · ' : ''}${l.city}`} · Sat til salg {listedText(l.created_at).toLowerCase()}
-          </T>
-        </View>
+      <ScrollView style={{ flex: 1 }} contentContainerStyle={{ paddingBottom: 32 + insets.bottom }}>
+        <Gallery paths={l.image_paths} title={l.title} />
 
-        {mine ? (
-          <View style={{ gap: 10 }}>
-            <Button title="Marker som solgt" icon="check" block onPress={() => setSheet('solgt')} />
-            <View style={s.row2}>
-              <Button title="Rediger pris" variant="secondary" style={{ flex: 1 }} onPress={() => setSheet('pris')} />
-              <Button title="Slet" variant="secondary" style={{ flex: 1 }} onPress={() => setSheet('slet')} />
-            </View>
+        <View style={s.body}>
+          <View style={s.head}>
+            <T v="titleL" accessibilityRole="header">
+              {l.title}
+            </T>
+            <T v="titleL">{formatPrice(l.price)}</T>
+            <T v="caption" c={color.textSecondary}>
+              {mine ? l.city : `${distance !== null ? fmtKm(distance) + ' · ' : ''}${l.city}`} · Sat til salg {listedText(l.created_at).toLowerCase()}
+            </T>
           </View>
-        ) : (
-          <>
-            <View style={s.actions}>
-              <Action icon="bookmark" label={saved ? 'Gemt' : 'Gem'} on={saved} onPress={toggleSave} />
-              <Action icon="send" label="Del" onPress={share} />
-              <Action icon="shop" label="Giv et bud" onPress={() => setSheet('bud')} />
-            </View>
-            <Button title="Skriv til sælger" icon="chat" block loading={busy} onPress={() => write()} />
-          </>
-        )}
 
-        <View style={s.facts}>
-          {facts.map(([k, v]) => (
-            <View key={k} style={s.fact}>
-              <T v="bodyS" c={color.textSecondary}>
-                {k}
-              </T>
-              <T v="label">{v}</T>
+          {mine ? (
+            <View style={s.owner} accessibilityLabel="Din annonce">
+              <Button
+                title="Marker som solgt"
+                icon="check"
+                block
+                onPress={async () => {
+                  // Solgt = fjernet fra Torvet
+                  await supabase.from('listings').update({ sold: true }).eq('id', l.id);
+                  router.replace('/torvet?vis=dine');
+                }}
+              />
+              <View style={s.ownerRow}>
+                <Button title="Rediger pris" icon="edit" variant="secondary" style={{ flex: 1, minWidth: 0 }} onPress={() => setSheet('pris')} />
+                <Button title="Slet" icon="close" variant="secondary" style={{ flex: 1, minWidth: 0 }} onPress={() => setSheet('slet')} />
+              </View>
             </View>
-          ))}
+          ) : (
+            <>
+              <View style={s.actions}>
+                <Action icon="bookmark" label={saved ? 'Gemt' : 'Gem'} on={saved} onPress={toggleSave} />
+                <Action icon="send" label="Del" onPress={share} />
+                <Action icon="shop" label="Giv et bud" onPress={() => setSheet('bud')} />
+              </View>
+              <Button title={`Skriv til ${l.seller_name.split(' ')[0]}`} icon="chat" block loading={busy} onPress={() => write()} />
+            </>
+          )}
+
+          <View style={s.section}>
+            <T v="headingM" accessibilityRole="header">
+              Detaljer
+            </T>
+            <View>
+              {facts.map(([k, v], i) => (
+                <View key={k} style={[s.fact, i > 0 && s.factLine]}>
+                  <T v="bodyS" c={color.textSecondary}>
+                    {k}
+                  </T>
+                  <T v="label" style={{ textAlign: 'right', flexShrink: 1 }}>
+                    {v}
+                  </T>
+                </View>
+              ))}
+            </View>
+            {!!l.description && <T v="body">{l.description}</T>}
+          </View>
+
+          <View style={s.section}>
+            <T v="headingM" accessibilityRole="header">
+              Om sælgeren
+            </T>
+            {mine ? (
+              <View style={s.seller}>
+                <Avatar name={me.name} path={me.avatar_path} />
+                <View style={s.sellerText}>
+                  <T v="headingS">{me.name} (dig)</T>
+                  <T v="caption" c={color.textSecondary}>
+                    Sælger på Torvet siden {since}
+                  </T>
+                </View>
+              </View>
+            ) : (
+              <Pressable accessibilityRole="link" onPress={() => router.push(`/bruger/${l.seller_username}`)} style={s.seller}>
+                <Avatar name={l.seller_name} path={l.seller_avatar_path} />
+                <View style={s.sellerText}>
+                  <T v="headingS">{l.seller_name}</T>
+                  <T v="caption" c={color.textSecondary}>
+                    Sælger på Torvet siden {since}
+                  </T>
+                </View>
+                <View style={s.more}>
+                  <T v="captionStrong" c={color.textSecondary}>
+                    Se profil
+                  </T>
+                  <Icon name="chevron-right" size={18} color={color.textSecondary} />
+                </View>
+              </Pressable>
+            )}
+          </View>
         </View>
+      </ScrollView>
 
-        {!!l.description && <T v="body">{l.description}</T>}
-
-        {!mine && (
-          <Pressable accessibilityRole="link" onPress={() => router.push(`/bruger/${l.seller_username}`)} style={s.seller}>
-            <Avatar name={l.seller_name} path={l.seller_avatar_path} />
-            <View style={{ flex: 1 }}>
-              <T v="headingS">{l.seller_name}</T>
-              <T v="caption" c={color.textSecondary}>
-                På ciircle siden {new Date(l.seller_since).getFullYear()}
-              </T>
-            </View>
-            <Icon name="chevron-right" size={18} />
-          </Pressable>
-        )}
-      </View>
-
-      {!!note && (
-        <View style={s.toast} accessibilityLiveRegion="polite">
-          <T v="captionStrong" c={color.white}>
-            {note}
+      {!!toast && (
+        <View style={[s.toast, { bottom: 24 + insets.bottom }]} accessibilityLiveRegion="polite">
+          <T v="captionStrong" c={color.textOnAction} numberOfLines={1}>
+            {toast}
           </T>
         </View>
       )}
 
-      <Sheet open={sheet === 'mere'} onClose={() => setSheet(null)} title="Annonce">
-        {mine ? (
-          <MenuItem icon="close" label="Slet annonce" danger onPress={() => setSheet('slet')} />
-        ) : (
-          <MenuItem icon="flag" label="Rapportér annonce" danger onPress={() => setSheet('rapporter')} />
-        )}
-      </Sheet>
-
       <PriceSheet
         open={sheet === 'bud'}
-        onClose={() => setSheet(null)}
+        onClose={close}
         title="Giv et bud"
+        hint={`Sælgeren beder om ${formatPrice(l.price).replace(/\.$/, '')}. Dit bud sendes som en besked til sælgeren.`}
         initial=""
         submit="Send bud"
         onSubmit={async (kr) => {
-          setSheet(null);
-          await write(`Bud: ${formatPrice(kr)} for ${l.title}`);
+          close();
+          await write(`Jeg byder ${formatPrice(kr)}`);
         }}
       />
       <PriceSheet
         open={sheet === 'pris'}
-        onClose={() => setSheet(null)}
+        onClose={close}
         title="Rediger pris"
+        hint="Den nye pris vises med det samme i annoncen."
         initial={String(l.price)}
         submit="Gem pris"
-        allowZero
         onSubmit={async (kr) => {
-          setSheet(null);
+          close();
           await supabase.from('listings').update({ price: kr }).eq('id', l.id);
           setL({ ...l, price: kr });
-          setNote('Prisen er opdateret');
+          setToast('Prisen er opdateret');
         }}
       />
 
-      <Sheet open={sheet === 'solgt'} onClose={() => setSheet(null)} title="Marker som solgt?">
-        <View style={s.sheetBody}>
+      <Sheet open={sheet === 'slet'} onClose={close} title="Slet annoncen?" initialSize="auto" dim>
+        <View style={s.sheet}>
           <T v="bodyS" c={color.textSecondary}>
-            Annoncen fjernes fra Torvet.
+            Annoncen forsvinder fra Torvet. Det kan ikke fortrydes.
           </T>
-          <Button
-            title="Marker som solgt"
-            block
-            onPress={async () => {
-              await supabase.from('listings').update({ sold: true }).eq('id', l.id);
-              setSheet(null);
-              router.replace('/torvet?vis=dine');
-            }}
-          />
-          <Button title="Annuller" variant="secondary" block onPress={() => setSheet(null)} />
-        </View>
-      </Sheet>
-
-      <Sheet open={sheet === 'slet'} onClose={() => setSheet(null)} title="Slet annonce?">
-        <View style={s.sheetBody}>
           <Button
             title="Slet annonce"
             block
             onPress={async () => {
               await supabase.from('listings').delete().eq('id', l.id);
-              setSheet(null);
+              close();
               router.replace('/torvet?vis=dine');
             }}
           />
-          <Button title="Annuller" variant="secondary" block onPress={() => setSheet(null)} />
+          <Button title="Annuller" variant="secondary" block onPress={close} />
+        </View>
+      </Sheet>
+
+      <Sheet open={sheet === 'mere'} onClose={close} title="Annonce" initialSize="auto" dim>
+        <View style={s.menu}>
+          {!mine && (
+            <MenuRow
+              icon="bookmark"
+              label={saved ? 'Fjern fra Gemte' : 'Gem annonce'}
+              onPress={() => {
+                close();
+                toggleSave();
+              }}
+            />
+          )}
+          <MenuRow
+            icon="link"
+            label="Del eller kopiér link"
+            onPress={() => {
+              close();
+              share();
+            }}
+          />
+          {!mine && <MenuRow icon="flag" label="Rapportér annonce" onPress={() => setSheet('rapporter')} />}
         </View>
       </Sheet>
 
       <ReportSheet
         open={sheet === 'rapporter'}
-        onClose={() => setSheet(null)}
+        onClose={close}
         onSend={async (reason) => {
           await supabase.from('reports').insert({ reporter_id: me.id, listing_id: l.id, reason: 'andet', details: reason });
         }}
       />
-    </Screen>
+    </View>
   );
 }
 
+/** Har browseren en mus? (prototypen: @media (hover: hover) and (pointer: fine)) */
+const fineMouse = Platform.OS === 'web' && typeof window !== 'undefined' && !!window.matchMedia?.('(hover: hover) and (pointer: fine)').matches;
+
 /** Billeder, man kan swipe igennem, med prikker og tæller */
 function Gallery({ paths, title }: { paths: string[]; title: string }) {
-  const { width } = useWindowDimensions();
+  const { width, height } = useWindowDimensions();
   const w = Math.min(width, 600);
+  const h = Math.min(w, height * 0.52);
   const ref = useRef<React.ComponentRef<typeof ScrollView>>(null);
   const [index, setIndex] = useState(0);
   const count = paths.length;
   const go = (i: number) => ref.current?.scrollTo({ x: i * w, animated: true });
   return (
-    <View style={{ width: w, height: w, backgroundColor: color.bgSubtle }} accessibilityLabel={`Billeder af ${title}`}>
+    <View style={{ width: w, height: h, backgroundColor: color.bgSubtle }} accessibilityLabel={`Billeder af ${title}`}>
       <ScrollView
         ref={ref}
         horizontal
         pagingEnabled
         showsHorizontalScrollIndicator={false}
-        onScroll={(e) => setIndex(Math.round(e.nativeEvent.contentOffset.x / w))}
+        onScroll={(e) => setIndex(Math.min(count - 1, Math.max(0, Math.round(e.nativeEvent.contentOffset.x / w))))}
         scrollEventThrottle={32}
       >
         {paths.map((p, i) => (
-          <Image key={p} source={imageSource(p)} style={{ width: w, height: w }} contentFit="cover" accessibilityLabel={`Billede ${i + 1} af ${count}`} />
+          <Image key={`${i}-${p}`} source={imageSource(p)} style={{ width: w, height: h }} contentFit="cover" accessibilityLabel={`Billede ${i + 1} af ${count}`} />
         ))}
       </ScrollView>
       {count > 1 && (
         <>
-          <View style={g.counter}>
+          <View style={g.counter} accessibilityLiveRegion="polite">
             <T v="captionStrong" c={color.white}>
               {index + 1}/{count}
             </T>
           </View>
-          <View style={g.dots}>
-            {paths.map((_, i) => (
-              <View key={i} style={[g.dot, i === index && g.dotOn]} />
-            ))}
+          <View style={g.dotsWrap} pointerEvents="none">
+            <View style={g.dots}>
+              {paths.map((_, i) => (
+                <View key={i} style={[g.dot, i === index && g.dotOn]} />
+              ))}
+            </View>
           </View>
-          {index > 0 && (
+          {/* Pile kun med mus; på telefonen swiper man */}
+          {fineMouse && index > 0 && (
             <Pressable accessibilityRole="button" accessibilityLabel="Forrige billede" onPress={() => go(index - 1)} style={[g.nav, { left: 10 }]}>
               <Icon name="chevron-left" size={20} />
             </Pressable>
           )}
-          {index < count - 1 && (
+          {fineMouse && index < count - 1 && (
             <Pressable accessibilityRole="button" accessibilityLabel="Næste billede" onPress={() => go(index + 1)} style={[g.nav, { right: 10 }]}>
               <Icon name="chevron-right" size={20} />
             </Pressable>
@@ -302,59 +371,78 @@ function Gallery({ paths, title }: { paths: string[]; title: string }) {
   );
 }
 
+/** Rund knap med tekst under (Gem, Del, Giv et bud) */
 function Action({ icon, label, on, onPress }: { icon: IconName; label: string; on?: boolean; onPress: () => void }) {
   return (
     <Pressable accessibilityRole="button" accessibilityState={on !== undefined ? { selected: on } : undefined} onPress={onPress} style={s.action}>
-      <View style={[s.actionIcon, on && { backgroundColor: color.actionPrimary }]}>
-        <Icon name={icon} size={22} color={on ? color.white : color.textPrimary} filled={on} />
-      </View>
-      <T v="captionStrong">{label}</T>
+      {({ pressed }) => (
+        <>
+          <View style={[s.actionIcon, on && { backgroundColor: color.accentHighlight }, pressed && { transform: [{ scale: 0.94 }] }]}>
+            <Icon name={icon} size={22} filled={on} />
+          </View>
+          <T v="captionStrong">{label}</T>
+        </>
+      )}
     </Pressable>
   );
 }
 
+function MenuRow({ icon, label, onPress }: { icon: IconName; label: string; onPress: () => void }) {
+  return (
+    <Pressable accessibilityRole="button" onPress={onPress} style={({ pressed }) => [s.menuItem, pressed && { backgroundColor: color.bgSubtle }]}>
+      <Icon name={icon} />
+      <T v="label">{label}</T>
+    </Pressable>
+  );
+}
+
+/** Ark med et prisfelt (Giv et bud / Rediger pris) */
 function PriceSheet({
   open,
   onClose,
   title,
+  hint,
   initial,
   submit,
-  allowZero,
   onSubmit,
 }: {
   open: boolean;
   onClose: () => void;
   title: string;
+  hint: string;
   initial: string;
   submit: string;
-  allowZero?: boolean;
   onSubmit: (kr: number) => void;
 }) {
   const [v, setV] = useState(initial);
   useEffect(() => {
     if (open) setV(initial);
   }, [open, initial]);
-  const kr = Number(v.replace(/\D/g, '') || 'NaN');
-  const ok = Number.isFinite(kr) && (allowZero ? kr >= 0 : kr > 0);
+  const kr = Number(v.replace(/\D/g, '') || '0');
   return (
-    <Sheet open={open} onClose={onClose} title={title}>
-      <View style={s.sheetBody}>
-        <View style={s.priceField}>
-          <TextInput
-            accessibilityLabel="Beløb i kroner"
+    <Sheet open={open} onClose={onClose} title={title} initialSize="auto" dim>
+      <View style={s.sheet}>
+        <T v="bodyS" c={color.textSecondary}>
+          {hint}
+        </T>
+        <View>
+          <TextField
+            label="Beløb i kroner"
+            showLabel={false}
             keyboardType="number-pad"
             value={v}
             onChangeText={(t) => setV(t.replace(/\D/g, ''))}
-            placeholder="0"
-            placeholderTextColor={color.textSecondary}
-            style={s.priceInput}
             autoFocus
+            onSubmitEditing={() => kr > 0 && onSubmit(kr)}
+            style={{ paddingRight: 48 }}
           />
-          <T v="label" c={color.textSecondary}>
-            kr.
-          </T>
+          <View style={s.unit} pointerEvents="none">
+            <T v="label" c={color.textSecondary}>
+              kr.
+            </T>
+          </View>
         </View>
-        <Button title={submit} block disabled={!ok} onPress={() => onSubmit(kr)} />
+        <Button title={submit} block disabled={kr <= 0} onPress={() => onSubmit(kr)} />
       </View>
     </Sheet>
   );
@@ -370,20 +458,23 @@ function ReportSheet({ open, onClose, onSend }: { open: boolean; onClose: () => 
     }
   }, [open]);
   return (
-    <Sheet open={open} onClose={onClose} title={sent ? 'Tak for din rapport' : 'Rapportér annonce'}>
-      <View style={s.sheetBody}>
+    <Sheet open={open} onClose={onClose} title="Rapportér annonce" initialSize="auto" dim>
+      <View style={s.sheet}>
         {sent ? (
           <>
-            <T v="bodyS" c={color.textSecondary}>
-              Vi kigger på annoncen. Din rapport er anonym.
-            </T>
+            <T v="bodyS">Tak. Vi kigger på annoncen. Sælgeren får ikke at vide, at det er dig, der har rapporteret den.</T>
             <Button title="Færdig" block onPress={onClose} />
           </>
         ) : (
           <>
-            <View style={s.reasons}>
+            <T v="bodyS" c={color.textSecondary}>
+              Hvad er der galt med annoncen?
+            </T>
+            <View style={s.reasons} accessibilityRole="radiogroup" accessibilityLabel="Grund">
               {reportReasons.map((r) => (
-                <Chip key={r} label={r} selected={reason === r} onPress={() => setReason(r)} />
+                <Chip key={r} selected={reason === r} onPress={() => setReason(r)}>
+                  {r}
+                </Chip>
               ))}
             </View>
             <Button
@@ -403,10 +494,11 @@ function ReportSheet({ open, onClose, onSend }: { open: boolean; onClose: () => 
 }
 
 const g = StyleSheet.create({
-  counter: { position: 'absolute', top: 12, right: 12, paddingHorizontal: 9, paddingVertical: 4, borderRadius: radius.pill, backgroundColor: 'rgba(0,0,0,0.55)' },
-  dots: { position: 'absolute', bottom: 12, left: 0, right: 0, flexDirection: 'row', justifyContent: 'center', gap: 6 },
-  dot: { width: 6, height: 6, borderRadius: 3, backgroundColor: 'rgba(255,255,255,0.55)' },
-  dotOn: { backgroundColor: color.white },
+  counter: { position: 'absolute', top: 12, right: 12, paddingHorizontal: 10, paddingVertical: 4, borderRadius: radius.pill, backgroundColor: 'rgba(0,0,0,0.55)' },
+  dotsWrap: { position: 'absolute', bottom: 12, left: 0, right: 0, alignItems: 'center' },
+  dots: { flexDirection: 'row', gap: 6, paddingVertical: 5, paddingHorizontal: 8, borderRadius: radius.pill, backgroundColor: 'rgba(0,0,0,0.35)' },
+  dot: { width: 7, height: 7, borderRadius: 3.5, backgroundColor: 'rgba(255,255,255,0.55)' },
+  dotOn: { backgroundColor: color.white, transform: [{ scale: 1.15 }] },
   nav: {
     position: 'absolute',
     top: '50%',
@@ -417,21 +509,34 @@ const g = StyleSheet.create({
     alignItems: 'center',
     justifyContent: 'center',
     backgroundColor: 'rgba(255,255,255,0.9)',
+    shadowColor: '#000',
+    shadowOpacity: 0.18,
+    shadowRadius: 8,
+    shadowOffset: { width: 0, height: 2 },
   },
 });
 
 const s = StyleSheet.create({
-  body: { paddingHorizontal: 20, gap: 18, paddingTop: 16 },
-  row2: { flexDirection: 'row', gap: 10 },
-  actions: { flexDirection: 'row', justifyContent: 'space-around' },
-  action: { alignItems: 'center', gap: 6, minWidth: 80, minHeight: TAP },
-  actionIcon: { width: 52, height: 52, borderRadius: 26, borderWidth: 1, borderColor: color.borderDefault, alignItems: 'center', justifyContent: 'center', backgroundColor: color.bgSurface },
-  facts: { borderRadius: radius.lg, borderWidth: 1, borderColor: color.borderDefault, backgroundColor: color.bgSurface },
-  fact: { flexDirection: 'row', justifyContent: 'space-between', paddingHorizontal: 16, paddingVertical: 12, borderBottomWidth: 1, borderBottomColor: color.borderDefault },
-  seller: { flexDirection: 'row', alignItems: 'center', gap: 12, padding: 14, borderRadius: radius.lg, backgroundColor: color.bgSubtle, minHeight: TAP },
-  toast: { position: 'absolute', bottom: 30, alignSelf: 'center', paddingHorizontal: 16, paddingVertical: 10, borderRadius: radius.pill, backgroundColor: color.actionPrimary },
-  sheetBody: { padding: 20, gap: 12 },
-  priceField: { flexDirection: 'row', alignItems: 'center', gap: 8, borderWidth: 1, borderColor: color.borderDefault, borderRadius: radius.pill, paddingHorizontal: 18, minHeight: 56 },
-  priceInput: { flex: 1, minHeight: 52, fontFamily: font.bodySemi, fontSize: 22, color: color.textPrimary },
+  screen: { flex: 1, backgroundColor: color.bgApp },
+  padded: { alignItems: 'flex-start', gap: 12, paddingTop: 4, paddingHorizontal: 20 },
+  link: { minHeight: TAP, justifyContent: 'center' },
+  body: { gap: 20, paddingTop: 16, paddingHorizontal: 20 },
+  head: { gap: 4 },
+  owner: { gap: 10 },
+  ownerRow: { flexDirection: 'row', gap: 8 },
+  actions: { flexDirection: 'row', gap: 4 },
+  action: { flex: 1, alignItems: 'center', gap: 6, minHeight: TAP, paddingVertical: 4, borderRadius: radius.md },
+  actionIcon: { width: 48, height: 48, borderRadius: 24, alignItems: 'center', justifyContent: 'center', backgroundColor: color.bgSubtle },
+  section: { gap: 10, paddingTop: 20, borderTopWidth: 1, borderTopColor: color.borderDefault },
+  fact: { flexDirection: 'row', justifyContent: 'space-between', gap: 16, paddingVertical: 8 },
+  factLine: { borderTopWidth: 1, borderTopColor: color.borderDefault },
+  seller: { flexDirection: 'row', alignItems: 'center', gap: 12, minHeight: 56, borderRadius: radius.md },
+  sellerText: { flex: 1, minWidth: 0, gap: 2 },
+  more: { flexDirection: 'row', alignItems: 'center' },
+  toast: { position: 'absolute', alignSelf: 'center', zIndex: 40, maxWidth: '90%', paddingVertical: 10, paddingHorizontal: 16, borderRadius: radius.pill, backgroundColor: color.actionPrimary },
+  sheet: { gap: 12, paddingTop: 4, paddingHorizontal: 20, paddingBottom: 24 },
+  unit: { position: 'absolute', right: 18, top: 0, bottom: 0, justifyContent: 'center' },
   reasons: { flexDirection: 'row', flexWrap: 'wrap', gap: 8 },
+  menu: { paddingHorizontal: 8, paddingBottom: 16 },
+  menuItem: { flexDirection: 'row', alignItems: 'center', gap: 14, minHeight: 52, paddingHorizontal: 12, borderRadius: radius.md },
 });

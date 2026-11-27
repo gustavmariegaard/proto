@@ -1,79 +1,72 @@
 import { router, useFocusEffect } from 'expo-router';
 import { useCallback, useState } from 'react';
-import { ActivityIndicator, ScrollView, StyleSheet, View } from 'react-native';
-import { Button } from '@/components/Button';
+import { StyleSheet, View } from 'react-native';
+import { matches, MoreScreen } from '@/components/MoreParts';
 import { PageRow } from '@/components/PageRow';
-import { Screen } from '@/components/Screen';
-import { Segmented } from '@/components/Segmented';
-import { SmallButton } from '@/components/SmallButton';
 import { T } from '@/components/T';
 import { TextField } from '@/components/TextField';
-import { listPages, setFollowPage, type PageCard } from '@/lib/community';
+import { listPages, type PageCard } from '@/lib/community';
+import { isUnread, latestPosts, seenTimes, type Latest } from '@/lib/moreActivity';
 import { useMe } from '@/lib/session';
-import { color, TAP } from '@/theme/tokens';
+import { color } from '@/theme/tokens';
 
-type Tab = 'fulgte' | 'find' | 'dine';
-
-/** Sider: dem du følger, find nye og dem du administrerer */
+/** Sider: fulgte sider (og dem, du selv har oprettet) – prototypens Pages */
 export default function Pages() {
   const me = useMe();
-  const [tab, setTab] = useState<Tab>('fulgte');
   const [pages, setPages] = useState<PageCard[] | null>(null);
-  const [q, setQ] = useState('');
+  const [latest, setLatest] = useState<Record<string, Latest>>({});
+  const [seen, setSeen] = useState<Record<string, number>>({});
+  const [query, setQuery] = useState('');
 
-  const load = useCallback(async () => setPages(await listPages()), []);
+  const load = useCallback(async () => {
+    const mine = (await listPages()).filter((p) => p.i_follow || p.i_admin);
+    const ids = mine.map((p) => p.id);
+    const [l, sn] = await Promise.all([latestPosts('page_id', ids), seenTimes(ids)]);
+    setPages(mine);
+    setLatest(l);
+    setSeen(sn);
+  }, []);
   useFocusEffect(
     useCallback(() => {
       load();
     }, [load]),
   );
 
-  const words = q.trim().toLocaleLowerCase('da').split(/\s+/).filter(Boolean);
-  const match = (p: PageCard) => words.every((w) => `${p.name} ${p.handle} ${p.category} ${p.bio}`.toLocaleLowerCase('da').includes(w));
-  const shown = (pages ?? []).filter(match).filter((p) => (tab === 'fulgte' ? p.i_follow : tab === 'dine' ? p.i_admin : !p.i_follow && !p.i_admin));
-
-  const toggle = async (p: PageCard) => {
-    setPages((l) => l?.map((x) => (x.id === p.id ? { ...x, i_follow: !p.i_follow, followers: x.followers + (p.i_follow ? -1 : 1) } : x)) ?? null);
-    await setFollowPage(p.id, me.id, !p.i_follow);
-  };
-
-  const empty = { fulgte: 'Du følger ingen sider endnu.', find: 'Ingen sider at vise.', dine: 'Du har ingen sider endnu.' }[tab];
+  const lastAt = (p: PageCard) => latest[p.id]?.at ?? p.created_at;
+  const shown = (pages ?? []).filter((p) => matches(p.name, query)).sort((a, b) => lastAt(b).localeCompare(lastAt(a)));
+  const count = shown.length;
 
   return (
-    <Screen title="Sider" right={<Button title="Opret" onPress={() => router.push('/sider/ny')} style={{ minHeight: TAP, paddingHorizontal: 18 }} />} scroll={false}>
-      <ScrollView contentContainerStyle={s.content} keyboardShouldPersistTaps="handled">
-        <Segmented
-          label="Vis sider"
-          value={tab}
-          onChange={setTab}
-          options={[
-            { value: 'fulgte', label: 'Fulgte' },
-            { value: 'find', label: 'Find' },
-            { value: 'dine', label: 'Dine' },
-          ]}
-        />
-        <TextField label="Søg efter sider" showLabel={false} placeholder="Søg efter sider" value={q} onChangeText={setQ} />
-        {pages === null ? (
-          <ActivityIndicator color={color.textPrimary} style={{ marginTop: 24 }} />
-        ) : shown.length ? (
-          <View style={s.list}>
-            {shown.map((p) => (
-              <PageRow key={p.id} page={p}>
-                {!p.i_admin && <SmallButton title={p.i_follow ? 'Følger' : 'Følg'} dark={!p.i_follow} onPress={() => toggle(p)} />}
-              </PageRow>
-            ))}
-          </View>
-        ) : (
-          <T v="bodyS" c={color.textSecondary}>
-            {words.length ? `Ingen sider matcher “${q.trim()}”.` : empty}
-          </T>
-        )}
-      </ScrollView>
-    </Screen>
+    <MoreScreen title="Sider" action={{ label: 'Opret side', onPress: () => router.push('/sider/ny') }}>
+      <T v="headingM" accessibilityRole="header">
+        Fulgte sider
+      </T>
+      <TextField label="Søg i fulgte sider" showLabel={false} value={query} onChangeText={setQuery} />
+      <T v="caption" c={color.textSecondary} accessibilityLiveRegion="polite">
+        {`${count} ${count === 1 ? 'side' : 'sider'}`}
+      </T>
+      {pages === null ? null : shown.length === 0 ? (
+        <T v="bodyS" c={color.textSecondary} style={s.empty}>
+          {query.trim() ? `Ingen sider matcher “${query.trim()}”.` : 'Du følger ingen sider endnu.'}
+        </T>
+      ) : (
+        <View style={s.list}>
+          {shown.map((p) => (
+            <PageRow
+              key={p.id}
+              page={p}
+              lastPost={latest[p.id]?.at ?? null}
+              unread={isUnread(latest[p.id], seen[p.id], me.id)}
+              onOpen={() => setSeen((m) => ({ ...m, [p.id]: Date.now() }))}
+            />
+          ))}
+        </View>
+      )}
+    </MoreScreen>
   );
 }
 
 const s = StyleSheet.create({
-  content: { padding: 20, paddingTop: 4, gap: 14, paddingBottom: 40 },
-  list: { gap: 8 },
+  list: { gap: 16 },
+  empty: { textAlign: 'center', paddingVertical: 24 },
 });

@@ -1,33 +1,45 @@
 import { router, useFocusEffect, useLocalSearchParams } from 'expo-router';
-import { useCallback, useState } from 'react';
-import { ActivityIndicator, StyleSheet, View } from 'react-native';
+import { useCallback, useEffect, useState } from 'react';
+import { ActivityIndicator, Pressable, ScrollView, StyleSheet, View } from 'react-native';
+import { useSafeAreaInsets } from 'react-native-safe-area-context';
+import { Avatar } from '@/components/Avatar';
 import { Button } from '@/components/Button';
-import { Chip } from '@/components/Chip';
+import { Icon } from '@/components/Icon';
 import { IconButton } from '@/components/IconButton';
-import { MenuItem } from '@/components/MenuItem';
-import { HighlightsRow } from '@/components/HighlightsRow';
-import { ProfileHeader } from '@/components/ProfileHeader';
-import { ProfilePosts } from '@/components/ProfilePosts';
-import { Screen } from '@/components/Screen';
-import { Sheet } from '@/components/Sheet';
+import { PageHeader } from '@/components/PageHeader';
+import { profilePosts, ProfilePosts } from '@/components/ProfilePosts';
 import { T } from '@/components/T';
-import { follow, postsBy, profileView, reportReasons, unfollow, type ProfileView } from '@/lib/profiles';
+import { UserMenu } from '@/components/UserMenu';
+import { activeMoments } from '@/lib/moments';
+import { follow, postsBy, profileView, unfollow, type ProfileView } from '@/lib/profiles';
 import { useMe } from '@/lib/session';
 import { supabase } from '@/lib/supabase';
+import { fmtNumber } from '@/lib/time';
 import type { PostCard } from '@/lib/types';
-import { color } from '@/theme/tokens';
+import { color, radius } from '@/theme/tokens';
 
-type Step = 'closed' | 'menu' | 'bloker' | 'anmeld' | 'anmeldt' | 'fjern';
+const publicLabel = { person: 'Offentlig person', side: 'Side' } as const;
 
-/** En andens profil */
+/**
+ * En andens profil (prototypens UserProfile): billede, navn, @brugernavn,
+ * følg-knap og hele deres historik af opslag. Rute: /bruger/:username
+ */
 export default function UserProfile() {
   const { username } = useLocalSearchParams<{ username: string }>();
   const me = useMe();
+  const insets = useSafeAreaInsets();
   const [p, setP] = useState<ProfileView | null | undefined>(undefined);
   const [posts, setPosts] = useState<PostCard[]>([]);
-  const [step, setStep] = useState<Step>('closed');
-  const [reason, setReason] = useState<string | null>(null);
+  const [moments, setMoments] = useState<{ any: boolean; seen: boolean }>({ any: false, seen: true });
+  const [menuOpen, setMenuOpen] = useState(false);
   const [busy, setBusy] = useState(false);
+  const [toast, setToast] = useState<string | null>(null);
+
+  useEffect(() => {
+    if (!toast) return;
+    const t = setTimeout(() => setToast(null), 2400);
+    return () => clearTimeout(t);
+  }, [toast]);
 
   const load = useCallback(async () => {
     if (username === me.username) {
@@ -36,7 +48,14 @@ export default function UserProfile() {
     }
     const v = await profileView(username);
     setP(v);
-    setPosts(v && !v.i_blocked ? await postsBy(v.id) : []);
+    if (!v || v.i_blocked) {
+      setPosts([]);
+      setMoments({ any: false, seen: true });
+      return;
+    }
+    const [list, ms] = await Promise.all([postsBy(v.id), activeMoments(v.id, 'person')]);
+    setPosts(list);
+    setMoments({ any: ms.length > 0, seen: ms.every((m) => m.seen) });
   }, [username, me.username]);
 
   useFocusEffect(
@@ -45,28 +64,28 @@ export default function UserProfile() {
     }, [load]),
   );
 
-  if (p === undefined) {
+  if (!p) {
     return (
-      <Screen title="">
-        <ActivityIndicator color={color.textPrimary} />
-      </Screen>
-    );
-  }
-  if (p === null) {
-    return (
-      <Screen title="Profil">
-        <T v="body" c={color.textSecondary}>
-          Profilen findes ikke.
-        </T>
-      </Screen>
+      <View style={s.root}>
+        <PageHeader title="Profil" fallback="/" />
+        <View style={s.content}>
+          {p === undefined ? (
+            <ActivityIndicator color={color.textPrimary} />
+          ) : (
+            <T v="bodyS" c={color.textSecondary}>
+              Profilen findes ikke.
+            </T>
+          )}
+        </View>
+      </View>
     );
   }
 
-  const first = p.name.split(' ')[0];
-  const close = () => {
-    setStep('closed');
-    setReason(null);
-  };
+  const first = p.name.split(' ')[0] ?? p.name;
+  const following = p.my_follow === 'accepted';
+  const blocked = p.i_blocked;
+  // Privat profil, du ikke følger: kun tallet fra databasen (opslagene kan ikke ses)
+  const postCount = p.can_see ? profilePosts(posts).length : p.posts + p.debate_posts;
 
   const toggleFollow = async () => {
     setBusy(true);
@@ -77,122 +96,188 @@ export default function UserProfile() {
   };
 
   const message = async () => {
-    setBusy(true);
     const { data, error } = await supabase.rpc('start_conversation', { member_ids: [p.id] });
-    setBusy(false);
     if (!error && data) router.push(`/samtale/${data}`);
   };
 
   const block = async () => {
     await supabase.from('blocks').insert({ blocker_id: me.id, blocked_id: p.id });
-    close();
+    if (p.my_follow) await unfollow(me.id, p.id);
+    setToast(`${first} er blokeret`);
     load();
   };
   const unblock = async () => {
     await supabase.from('blocks').delete().eq('blocker_id', me.id).eq('blocked_id', p.id);
-    close();
+    setToast(`${first} er ikke længere blokeret`);
     load();
   };
   const removeFollower = async () => {
     await supabase.from('follows').delete().eq('follower_id', p.id).eq('followee_id', me.id);
-    close();
+    setToast(`${first} følger dig ikke længere`);
     load();
   };
-  const report = async () => {
+  const report = async (reason: string) => {
     await supabase.from('reports').insert({ reporter_id: me.id, profile_id: p.id, reason });
-    setStep('anmeldt');
   };
 
-  const title =
-    step === 'bloker' ? `Bloker ${first}?` : step === 'fjern' ? `Fjern ${first} som følger?` : step === 'anmeld' ? `Anmeld ${first}` : step === 'anmeldt' ? 'Tak for din anmeldelse' : first;
+  const avatar = <Avatar name={p.name} path={p.avatar_path} size="XL" />;
 
   return (
-    <Screen title=" " right={<IconButton icon="dots" label="Flere muligheder" onPress={() => setStep('menu')} />}>
-      {p.i_blocked ? (
-        <View style={s.blocked}>
-          <T v="titleL">{p.name}</T>
-          <T v="bodyS" c={color.textSecondary}>
-            @{p.username} · Blokeret
-          </T>
-          <Button title="Fjern blokering" variant="secondary" onPress={unblock} />
+    <View style={s.root}>
+      <PageHeader title={p.public_kind === 'side' ? 'Side' : 'Profil'} fallback="/">
+        <IconButton icon="dots" label="Mere" onPress={() => setMenuOpen(true)} />
+      </PageHeader>
+      <ScrollView contentContainerStyle={[s.content, { paddingBottom: 32 + insets.bottom }]}>
+        <View style={s.identity}>
+          {moments.any && !blocked ? (
+            <Pressable
+              accessibilityRole="button"
+              accessibilityLabel={`Se moments fra ${p.name}`}
+              onPress={() => router.push({ pathname: '/moment/[id]', params: { id: p.id } })}
+              style={[s.ring, moments.seen ? s.ringSeen : s.ringNew]}
+            >
+              {avatar}
+            </Pressable>
+          ) : (
+            <View style={s.ring}>{avatar}</View>
+          )}
+          <View style={s.name}>
+            <T v="titleL" accessibilityRole="header">
+              {p.name}
+            </T>
+            <T v="caption" c={color.textSecondary}>
+              @{p.username}
+            </T>
+            {p.is_private && (
+              <View style={s.pill}>
+                <Icon name="lock" size={12} color={color.textSecondary} />
+                <T v="captionStrong" c={color.textSecondary}>
+                  Privat profil
+                </T>
+              </View>
+            )}
+            {p.public_kind && (
+              <View style={[s.pill, p.public_kind === 'side' ? s.pillSide : s.pillNote]}>
+                <Icon name={p.public_kind === 'person' ? 'globe' : 'building'} size={14} color={p.public_kind === 'side' ? color.textPrimary : color.accentNoteText} />
+                <T v="captionStrong" c={p.public_kind === 'side' ? color.textPrimary : color.accentNoteText}>
+                  {publicLabel[p.public_kind]}
+                </T>
+              </View>
+            )}
+            {p.follows_me && !blocked && (
+              <View style={[s.pill, following && s.pillNote]}>
+                <T v="captionStrong" c={following ? color.accentNoteText : color.textSecondary}>
+                  {following ? 'I følger hinanden' : 'Følger dig'}
+                </T>
+              </View>
+            )}
+          </View>
         </View>
-      ) : (
-        <>
-          <ProfileHeader p={{ ...p, posts: p.posts }}>
-            <View style={s.buttons}>
-              <Button
-                title={p.my_follow === 'accepted' ? 'Følger' : p.my_follow === 'pending' ? 'Anmodet' : 'Følg'}
-                variant={p.my_follow ? 'secondary' : 'primary'}
-                style={{ flex: 1 }}
-                loading={busy}
-                onPress={toggleFollow}
-              />
-              <Button title="Besked" variant="secondary" style={{ flex: 1 }} onPress={message} />
+
+        {blocked ? (
+          <View style={s.blocked}>
+            <T v="headingS">Du har blokeret {first}</T>
+            <Button variant="secondary" onPress={unblock}>
+              Fjern blokering
+            </Button>
+          </View>
+        ) : (
+          <>
+            {!!p.bio && <T v="bodyS">{p.bio}</T>}
+
+            <View style={s.stats}>
+              <Stat n={postCount} label="Opslag" />
+              <Stat n={p.followers} label="Følgere" />
+              {p.public_kind !== 'side' && <Stat n={p.following} label="Følger" />}
             </View>
-          </ProfileHeader>
-          {p.can_see && <HighlightsRow userId={p.id} />}
-          <ProfilePosts posts={posts} locked={!p.can_see} onChanged={load} />
-        </>
+
+            <View style={s.actions}>
+              <Button
+                variant={p.my_follow ? 'secondary' : 'primary'}
+                block
+                loading={busy}
+                accessibilityState={{ selected: !!p.my_follow }}
+                onPress={toggleFollow}
+                style={{ flex: 1 }}
+              >
+                {following ? 'Følger' : p.my_follow === 'pending' ? 'Anmodet' : p.is_private ? 'Anmod om at følge' : p.follows_me ? 'Følg tilbage' : 'Følg'}
+              </Button>
+              <Button variant="secondary" block onPress={message} style={{ flex: 1 }}>
+                Besked
+              </Button>
+            </View>
+
+            <ProfilePosts userId={p.id} name={first} posts={posts} locked={!p.can_see} onChanged={load} />
+          </>
+        )}
+      </ScrollView>
+
+      {toast && (
+        <View style={[s.toast, { bottom: 24 + insets.bottom }]} accessibilityRole="alert">
+          <T v="captionStrong" c={color.textOnAction} numberOfLines={1}>
+            {toast}
+          </T>
+        </View>
       )}
 
-      <Sheet open={step !== 'closed'} onClose={close} title={title}>
-        {step === 'menu' && (
-          <View>
-            {p.i_blocked ? (
-              <MenuItem icon="ban" label="Fjern blokering" onPress={unblock} />
-            ) : (
-              <MenuItem icon="ban" label="Bloker" danger onPress={() => setStep('bloker')} />
-            )}
-            <MenuItem icon="flag" label="Anmeld" danger onPress={() => setStep('anmeld')} />
-            {p.follows_me && !p.i_blocked && <MenuItem icon="user-minus" label="Fjern følger" onPress={() => setStep('fjern')} />}
-          </View>
-        )}
-        {step === 'bloker' && (
-          <View style={s.sheet}>
-            <T v="bodyS" c={color.textSecondary}>
-              {first} kan ikke se din profil eller skrive til dig. {first} får ikke besked.
-            </T>
-            <Button title="Bloker" block onPress={block} />
-            <Button title="Annuller" variant="secondary" block onPress={() => setStep('menu')} />
-          </View>
-        )}
-        {step === 'fjern' && (
-          <View style={s.sheet}>
-            <T v="bodyS" c={color.textSecondary}>
-              {first} får ikke besked.
-            </T>
-            <Button title="Fjern følger" block onPress={removeFollower} />
-            <Button title="Annuller" variant="secondary" block onPress={() => setStep('menu')} />
-          </View>
-        )}
-        {step === 'anmeld' && (
-          <View style={s.sheet}>
-            <View style={s.reasons}>
-              {reportReasons.map((r) => (
-                <Chip key={r.id} label={r.title} selected={reason === r.id} onPress={() => setReason(r.id)} />
-              ))}
-            </View>
-            <Button title="Send anmeldelse" block disabled={!reason} onPress={report} />
-            <Button title="Annuller" variant="secondary" block onPress={() => setStep('menu')} />
-          </View>
-        )}
-        {step === 'anmeldt' && (
-          <View style={s.sheet}>
-            <T v="bodyS" c={color.textSecondary}>
-              Vi kigger på profilen. Din anmeldelse er anonym.
-            </T>
-            {!p.i_blocked && <Button title={`Bloker ${first}`} variant="secondary" block onPress={block} />}
-            <Button title="Færdig" block onPress={close} />
-          </View>
-        )}
-      </Sheet>
-    </Screen>
+      <UserMenu
+        open={menuOpen}
+        onClose={() => setMenuOpen(false)}
+        name={first}
+        blocked={blocked}
+        followsMe={p.follows_me}
+        onBlock={block}
+        onUnblock={unblock}
+        onRemoveFollower={removeFollower}
+        onReport={report}
+      />
+    </View>
+  );
+}
+
+function Stat({ n, label }: { n: number; label: string }) {
+  return (
+    <View style={s.stat} accessible accessibilityLabel={`${fmtNumber(n)} ${label}`}>
+      <T v="headingM">{fmtNumber(n)}</T>
+      <T v="caption" c={color.textSecondary}>
+        {label}
+      </T>
+    </View>
   );
 }
 
 const s = StyleSheet.create({
-  buttons: { flexDirection: 'row', gap: 8, alignSelf: 'stretch' },
-  blocked: { alignItems: 'center', gap: 8, paddingVertical: 32 },
-  sheet: { padding: 20, gap: 12 },
-  reasons: { flexDirection: 'row', flexWrap: 'wrap', gap: 8 },
+  root: { flex: 1, backgroundColor: color.bgApp },
+  content: { gap: 16, paddingTop: 4, paddingHorizontal: 20 },
+  identity: { flexDirection: 'row', alignItems: 'center', gap: 16 },
+  ring: { width: 86, height: 86, flexShrink: 0, borderRadius: 43, alignItems: 'center', justifyContent: 'center' },
+  ringNew: { borderWidth: 3, borderColor: color.accentHighlight },
+  ringSeen: { borderWidth: 2, borderColor: color.borderStrong },
+  name: { flex: 1, minWidth: 0, gap: 2, alignItems: 'flex-start' },
+  pill: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 4,
+    marginTop: 6,
+    paddingVertical: 3,
+    paddingHorizontal: 10,
+    borderRadius: radius.pill,
+    backgroundColor: color.bgSubtle,
+  },
+  pillNote: { backgroundColor: color.accentNoteBg },
+  pillSide: { backgroundColor: color.bgSubtle },
+  blocked: { alignItems: 'flex-start', gap: 12, padding: 16, borderWidth: 1, borderColor: color.borderDefault, borderRadius: radius.lg },
+  stats: { flexDirection: 'row', justifyContent: 'space-around', padding: 12, borderWidth: 1, borderColor: color.borderDefault, borderRadius: radius.lg },
+  stat: { alignItems: 'center' },
+  actions: { flexDirection: 'row', gap: 8 },
+  toast: {
+    position: 'absolute',
+    alignSelf: 'center',
+    zIndex: 40,
+    maxWidth: '90%',
+    paddingVertical: 10,
+    paddingHorizontal: 16,
+    borderRadius: radius.pill,
+    backgroundColor: color.actionPrimary,
+  },
 });

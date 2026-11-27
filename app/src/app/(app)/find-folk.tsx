@@ -1,12 +1,10 @@
-import { useFocusEffect } from 'expo-router';
-import { useCallback, useEffect, useState } from 'react';
-import { Platform, Share, StyleSheet, View } from 'react-native';
+import { router, useFocusEffect } from 'expo-router';
+import { useCallback, useState } from 'react';
+import { Platform, Pressable, Share, StyleSheet, View } from 'react-native';
+import { Avatar } from '@/components/Avatar';
 import { Button } from '@/components/Button';
-import { PersonRow } from '@/components/PersonRow';
-import { Screen } from '@/components/Screen';
-import { SmallButton } from '@/components/SmallButton';
+import { MoreCard, MoreScreen } from '@/components/MoreParts';
 import { T } from '@/components/T';
-import { TextField } from '@/components/TextField';
 import { follow, unfollow } from '@/lib/profiles';
 import { useMe } from '@/lib/session';
 import { supabase } from '@/lib/supabase';
@@ -14,15 +12,13 @@ import { color, radius } from '@/theme/tokens';
 
 type Person = { id: string; username: string; name: string; avatar_path: string | null; reason?: string };
 
-/** Udvid cirkel: anmodninger om at følge dig, forslag (venners venner og folk fra dine grupper) og søg */
+/** Udvid cirkel: anmodninger om at følge dig og forslag (prototypens FindFolk) */
 export default function FindFolk() {
   const me = useMe();
   const [requests, setRequests] = useState<Person[]>([]);
   const [accepted, setAccepted] = useState<string[]>([]);
   const [suggestions, setSuggestions] = useState<Person[] | null>(null);
   const [sent, setSent] = useState<Record<string, boolean>>({});
-  const [query, setQuery] = useState('');
-  const [results, setResults] = useState<Person[]>([]);
 
   const load = useCallback(async () => {
     const [r, sg] = await Promise.all([
@@ -38,29 +34,13 @@ export default function FindFolk() {
     }, [load]),
   );
 
-  // Søg efter navn eller brugernavn
-  useEffect(() => {
-    const q = query.trim().replace(/^@/, '').replace(/[,()%*]/g, '');
-    if (q.length < 2) return setResults([]);
-    const t = setTimeout(async () => {
-      const { data } = await supabase
-        .from('profiles')
-        .select('id, username, name, avatar_path')
-        .or(`name.ilike.%${q}%,username.ilike.%${q}%`)
-        .neq('id', me.id)
-        .limit(20);
-      setResults((data ?? []) as Person[]);
-    }, 250);
-    return () => clearTimeout(t);
-  }, [query, me.id]);
-
   const answer = async (id: string, ok: boolean) => {
     if (ok) {
-      await supabase.from('follows').update({ status: 'accepted' }).eq('follower_id', id).eq('followee_id', me.id);
       setAccepted((a) => [...a, id]);
+      await supabase.from('follows').update({ status: 'accepted' }).eq('follower_id', id).eq('followee_id', me.id);
     } else {
-      await supabase.from('follows').delete().eq('follower_id', id).eq('followee_id', me.id);
       setRequests((l) => l.filter((x) => x.id !== id));
+      await supabase.from('follows').delete().eq('follower_id', id).eq('followee_id', me.id);
     }
   };
 
@@ -71,83 +51,108 @@ export default function FindFolk() {
     else await unfollow(me.id, id);
   };
 
+  // Telefonens del-ark: vælg en kontakt og send en invitation
   const invite = () => {
     const url = Platform.OS === 'web' ? window.location.origin + window.location.pathname.replace(/find-folk\/?$/, '') : 'https://gustavmariegaard.github.io/proto/app/';
     Share.share({ message: `Kom med på ciircle: ${url}` });
   };
 
-  const followBtn = (p: Person) => <SmallButton title={sent[p.id] ? 'Sendt' : 'Følg'} dark={!sent[p.id]} onPress={() => toggle(p.id)} />;
+  const who = (p: Person, context: string) => (
+    <Pressable accessibilityRole="link" onPress={() => router.push(`/bruger/${p.username}`)} style={s.who}>
+      <Avatar name={p.name} path={p.avatar_path} size="L" />
+      <View style={s.text}>
+        <T v="headingS" numberOfLines={1}>
+          {p.name}
+        </T>
+        <T v="caption" c={color.textSecondary} numberOfLines={1}>
+          {context}
+        </T>
+      </View>
+    </Pressable>
+  );
 
   return (
-    <Screen title="Udvid cirkel">
-      <TextField label="Søg efter navn eller brugernavn" showLabel={false} placeholder="Søg efter navn eller brugernavn" autoCapitalize="none" autoCorrect={false} value={query} onChangeText={setQuery} />
-
-      {query.trim().length >= 2 ? (
-        <View style={{ gap: 8 }}>
-          {results.length === 0 && (
-            <T v="bodyS" c={color.textSecondary}>
-              Ingen fundet.
-            </T>
-          )}
-          {results.map((p) => (
-            <PersonRow key={p.id} name={p.name} username={p.username} avatar={p.avatar_path}>
-              {followBtn(p)}
-            </PersonRow>
-          ))}
-        </View>
-      ) : (
-        <>
-          <T v="headingM">Vil følge dig</T>
-          {requests.length === 0 ? (
-            <T v="caption" c={color.textSecondary}>
-              Ingen nye anmodninger.
-            </T>
-          ) : (
-            requests.map((r) => (
-              <PersonRow key={r.id} name={r.name} username={r.username} avatar={r.avatar_path}>
-                {accepted.includes(r.id) ? (
-                  <T v="captionStrong" c={color.textSecondary}>
-                    Følger dig nu
-                  </T>
-                ) : (
-                  <>
-                    <SmallButton title="Accepter" dark onPress={() => answer(r.id, true)} />
-                    <SmallButton title="Slet" onPress={() => answer(r.id, false)} />
-                  </>
-                )}
-              </PersonRow>
-            ))
-          )}
-
-          <T v="headingM">Forslag til dig</T>
-          {suggestions?.length === 0 && (
-            <T v="caption" c={color.textSecondary}>
-              Ingen forslag lige nu. Følg flere eller bliv medlem af en gruppe.
-            </T>
-          )}
-          {suggestions?.map((p) => (
-            <View key={p.id} style={{ gap: 2 }}>
-              <PersonRow name={p.name} username={p.username} avatar={p.avatar_path}>
-                {followBtn(p)}
-              </PersonRow>
-              {!!p.reason && (
-                <T v="caption" c={color.textSecondary} style={{ paddingLeft: 66 }}>
-                  {p.reason}
-                </T>
-              )}
-            </View>
-          ))}
-
-          <View style={s.invite}>
-            <T v="headingS">Inviter venner</T>
-            <Button title="Del invitation" variant="secondary" icon="send" onPress={invite} />
-          </View>
-        </>
+    <MoreScreen title="Udvid cirkel" tight>
+      <T v="headingM" accessibilityRole="header">
+        Vil følge dig
+      </T>
+      {requests.length === 0 && (
+        <T v="caption" c={color.textSecondary}>
+          Ingen nye anmodninger.
+        </T>
       )}
-    </Screen>
+      {requests.map((r) => (
+        <MoreCard key={r.id} label={r.name}>
+          {who(r, `@${r.username}`)}
+          <View style={s.buttons} accessibilityLiveRegion="polite">
+            {accepted.includes(r.id) ? (
+              <Button variant="secondary" disabled style={s.half}>
+                Følger dig nu
+              </Button>
+            ) : (
+              <>
+                <Button style={s.half} onPress={() => answer(r.id, true)}>
+                  Accepter
+                </Button>
+                <Button variant="secondary" style={s.half} onPress={() => answer(r.id, false)}>
+                  Slet
+                </Button>
+              </>
+            )}
+          </View>
+        </MoreCard>
+      ))}
+
+      <T v="headingM" accessibilityRole="header">
+        Forslag til dig
+      </T>
+      {suggestions?.length === 0 && (
+        <T v="caption" c={color.textSecondary}>
+          Ingen forslag lige nu.
+        </T>
+      )}
+      {suggestions?.map((p) => {
+        const isSent = !!sent[p.id];
+        return (
+          <View key={p.id} style={s.suggest}>
+            {who(p, p.reason ?? `@${p.username}`)}
+            <Button
+              variant={isSent ? 'secondary' : 'primary'}
+              accessibilityState={{ selected: isSent }}
+              accessibilityLabel={isSent ? `Anmodning sendt til ${p.name}. Tryk for at fortryde` : `Følg ${p.name}`}
+              onPress={() => toggle(p.id)}
+            >
+              {isSent ? 'Sendt' : 'Følg'}
+            </Button>
+          </View>
+        );
+      })}
+
+      <View style={s.note}>
+        <T v="headingS" c={color.accentNoteText}>
+          Find venner via dine kontakter
+        </T>
+        <Button onPress={invite}>Vælg kontakter</Button>
+      </View>
+    </MoreScreen>
   );
 }
 
 const s = StyleSheet.create({
-  invite: { gap: 10, padding: 16, borderRadius: radius.xl, backgroundColor: color.bgSubtle, alignItems: 'flex-start' },
+  who: { flex: 1, minWidth: 0, flexDirection: 'row', alignItems: 'center', gap: 12 },
+  text: { flex: 1, minWidth: 0, gap: 2 },
+  buttons: { flexDirection: 'row', gap: 8 },
+  half: { flex: 1, minWidth: 0 },
+  suggest: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 12,
+    paddingVertical: 12,
+    paddingHorizontal: 14,
+    borderWidth: 1,
+    borderColor: color.borderDefault,
+    borderRadius: radius.lg,
+    backgroundColor: color.bgSurface,
+  },
+  note: { alignItems: 'flex-start', gap: 10, padding: 16, borderRadius: radius.lg, backgroundColor: color.accentNoteBg },
 });

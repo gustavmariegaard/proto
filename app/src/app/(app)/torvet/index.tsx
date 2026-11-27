@@ -1,24 +1,22 @@
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import { router, useFocusEffect, useLocalSearchParams } from 'expo-router';
 import { useCallback, useEffect, useState } from 'react';
-import { ActivityIndicator, Pressable, StyleSheet, useWindowDimensions, View } from 'react-native';
+import { Pressable, StyleSheet, View } from 'react-native';
 import { Button } from '@/components/Button';
 import { Icon } from '@/components/Icon';
-import { ListingCard } from '@/components/ListingCard';
-import { ListingLocationSheet } from '@/components/ListingLocationSheet';
+import { ListingGrid } from '@/components/ListingCard';
 import { ListingRadiusSheet } from '@/components/ListingRadiusSheet';
-import { Screen } from '@/components/Screen';
-import { Segmented } from '@/components/Segmented';
+import { MarketEventsShell } from '@/components/MarketEventsShell';
+import { SegmentedControl } from '@/components/SegmentedControl';
 import { T } from '@/components/T';
 import { TextField } from '@/components/TextField';
 import {
-  getMyLocation,
   listingsNear,
+  locationOrDefault,
   myListings,
   radiusText,
   recentCategories,
   relatedFirst,
-  saveMyLocation,
   savedListings,
   type Category,
   type ListingRow,
@@ -36,20 +34,17 @@ const views: { value: View_; label: string }[] = [
 
 const RADIUS_KEY = 'ciircle.torvet.radius';
 
-/** Torvet: køb og sælg i nærheden (som prototypen) */
+/** Torvet: køb og sælg i nærheden (prototypens Market) */
 export default function Market() {
   const me = useMe();
   const params = useLocalSearchParams<{ vis?: string }>();
   const [view, setView] = useState<View_>(views.find((v) => v.value === params.vis)?.value ?? 'salg');
-  const [loc, setLoc] = useState<MyLocation | null | undefined>(undefined);
+  const [loc, setLoc] = useState<MyLocation | null>(null);
   const [km, setKm] = useState<number | null>(25);
   const [all, setAll] = useState<ListingRow[] | null>(null);
   const [recent, setRecent] = useState<Category[]>([]);
   const [query, setQuery] = useState('');
   const [radiusOpen, setRadiusOpen] = useState(false);
-  const [locOpen, setLocOpen] = useState(false);
-  const { width } = useWindowDimensions();
-  const cardW = Math.floor((Math.min(width, 600) - 40 - 12) / 2);
 
   useEffect(() => {
     if (params.vis === 'dine' || params.vis === 'gemte' || params.vis === 'salg') setView(params.vis);
@@ -58,136 +53,124 @@ export default function Market() {
   // Husk den valgte afstand på telefonen
   useEffect(() => {
     AsyncStorage.getItem(RADIUS_KEY).then((v) => v !== null && setKm(v === 'alle' ? null : Number(v)));
-    getMyLocation(me.id).then(setLoc);
+    locationOrDefault(me.id).then(setLoc);
   }, [me.id]);
 
   const load = useCallback(async () => {
     if (view === 'dine') return setAll(await myListings(me.id));
     if (view === 'gemte') return setAll(await savedListings(me.id));
-    if (!loc) return setAll([]);
+    if (!loc) return;
     const [rows, cats] = await Promise.all([listingsNear(loc, km), recentCategories()]);
-    setAll(rows);
+    // Dine egne annoncer ligger under "Dine annoncer"
+    setAll(rows.filter((l) => l.seller_id !== me.id));
     setRecent(cats);
   }, [view, loc, km, me.id]);
 
   useFocusEffect(
     useCallback(() => {
-      if (loc !== undefined) load();
-    }, [load, loc]),
+      load();
+    }, [load]),
   );
 
-  const pickLocation = async (l: MyLocation) => setLoc(await saveMyLocation(me.id, l));
   const applyKm = (v: number | null) => {
     setKm(v);
     AsyncStorage.setItem(RADIUS_KEY, v === null ? 'alle' : String(v));
   };
 
   const q = query.trim().toLowerCase();
-  const shown = (all ?? []).filter((l) => !q || l.title.toLowerCase().includes(q) || l.description.toLowerCase().includes(q) || l.category.toLowerCase().includes(q));
+  const shown = (all ?? []).filter((l) => view !== 'salg' || !q || l.title.toLowerCase().includes(q) || l.description.toLowerCase().includes(q) || l.category.toLowerCase().includes(q));
+  // Uden søgning: annoncer i det, du senest har kigget på, først
   const { forYou, rest } = view === 'salg' && !q ? relatedFirst(shown, recent) : { forYou: [] as ListingRow[], rest: shown };
-
-  const grid = (items: ListingRow[]) => (
-    <View style={s.grid}>
-      {items.map((l) => (
-        <ListingCard key={l.id} listing={l} mine={view === 'dine'} width={cardW} />
-      ))}
-    </View>
-  );
+  const city = loc?.city ?? '';
 
   const empty =
     view === 'dine'
-      ? 'Du har ingen annoncer endnu.'
+      ? 'Du har ingen annoncer endnu. Har du noget, du vil sælge?'
       : view === 'gemte'
-        ? 'Du har ikke gemt nogen annoncer.'
-        : q
-          ? 'Ingen annoncer matcher din søgning.'
-          : 'Ingen annoncer i nærheden lige nu.';
+        ? 'Du har ikke gemt nogen annoncer. Tryk på Gem på en annonce for at finde den her.'
+        : 'Ingen annoncer matcher din søgning.';
 
   return (
-    <Screen
-      title="Torvet"
-      right={<Button title="Sælg" icon="plus" onPress={() => router.push('/torvet/saelg')} style={{ minHeight: TAP, paddingHorizontal: 16 }} />}
-    >
-      <Segmented label="Vis annoncer" options={views} value={view} onChange={setView} />
+    <MarketEventsShell onRefresh={load}>
+      <View style={s.market}>
+        <View style={s.header}>
+          <T v="titleXl" accessibilityRole="header">
+            Torvet
+          </T>
+          <Button title="Sælg noget" icon="plus" onPress={() => router.push('/torvet/saelg')} style={s.sell} />
+        </View>
 
-      {view === 'salg' && (
-        <>
-          <TextField label="Søg på Torvet" showLabel={false} placeholder="Søg på Torvet" value={query} onChangeText={setQuery} />
+        <SegmentedControl label="Vis annoncer" options={views} value={view} onChange={(v) => (setAll(null), setView(v))} />
+
+        {view === 'salg' && (
           <View style={s.filters}>
-            <Pressable accessibilityRole="button" accessibilityLabel={`Placering: ${loc?.city ?? 'ikke valgt'}. Skift`} onPress={() => setLocOpen(true)} style={s.chip}>
-              <Icon name="pin" size={16} />
-              <T v="label">{loc?.city || 'Vælg placering'}</T>
+            <View style={{ alignSelf: 'stretch' }}>
+              <TextField label="Søg på Torvet" showLabel={false} value={query} onChangeText={setQuery} />
+            </View>
+            <Pressable
+              accessibilityRole="button"
+              accessibilityLabel={`Afstand: ${km === null ? 'hele landet' : `inden for ${km} km`} fra ${city}. Skift`}
+              onPress={() => setRadiusOpen(true)}
+              style={({ pressed }) => [s.radius, pressed && { transform: [{ scale: 0.97 }] }]}
+            >
+              <Icon name="pin" size={18} />
+              <T v="label">{radiusText(km)}</T>
+              <Icon name="chevron-down" size={16} color={color.textSecondary} />
             </Pressable>
-            {loc && (
-              <Pressable
-                accessibilityRole="button"
-                accessibilityLabel={`Afstand: ${km === null ? 'hele landet' : `inden for ${km} km`}. Skift`}
-                onPress={() => setRadiusOpen(true)}
-                style={s.chip}
-              >
-                <T v="label">{radiusText(km)}</T>
-                <Icon name="chevron-down" size={16} />
-              </Pressable>
-            )}
           </View>
-        </>
-      )}
+        )}
 
-      {view === 'salg' && loc === null ? (
-        <View style={s.empty}>
-          <T v="headingM">Hvor er du?</T>
-          <T v="bodyS" c={color.textSecondary} style={{ textAlign: 'center' }}>
-            Torvet viser annoncer i nærheden af dig.
-          </T>
-          <Button title="Vælg placering" icon="pin" onPress={() => setLocOpen(true)} />
-        </View>
-      ) : all === null || loc === undefined ? (
-        <ActivityIndicator style={{ marginTop: 30 }} color={color.textPrimary} />
-      ) : shown.length === 0 ? (
-        <View style={s.empty}>
-          <T v="bodyS" c={color.textSecondary}>
-            {empty}
-          </T>
-          {view === 'dine' && <Button title="Sælg noget" variant="secondary" onPress={() => router.push('/torvet/saelg')} />}
-        </View>
-      ) : forYou.length > 0 ? (
-        <>
-          <T v="headingM" accessibilityRole="header">
-            Til dig
-          </T>
-          {grid(forYou)}
-          {rest.length > 0 && (
-            <>
+        {all === null ? null : shown.length === 0 ? (
+          <View style={s.empty}>
+            <T v="bodyS" c={color.textSecondary}>
+              {empty}
+            </T>
+            {view === 'dine' && <Button title="Sælg noget" variant="secondary" onPress={() => router.push('/torvet/saelg')} />}
+          </View>
+        ) : forYou.length > 0 ? (
+          <>
+            <View style={s.section}>
               <T v="headingM" accessibilityRole="header">
-                Mere på Torvet
+                Til dig
               </T>
-              {grid(rest)}
-            </>
-          )}
-        </>
-      ) : (
-        grid(rest)
-      )}
+              <ListingGrid items={forYou} />
+            </View>
+            {rest.length > 0 && (
+              <View style={s.section}>
+                <T v="headingM" accessibilityRole="header">
+                  Mere på Torvet
+                </T>
+                <ListingGrid items={rest} />
+              </View>
+            )}
+          </>
+        ) : (
+          <ListingGrid items={rest} mine={view === 'dine'} />
+        )}
+      </View>
 
-      <ListingRadiusSheet open={radiusOpen} value={km} city={loc?.city ?? ''} onClose={() => setRadiusOpen(false)} onApply={applyKm} />
-      <ListingLocationSheet open={locOpen} onClose={() => setLocOpen(false)} onPick={pickLocation} />
-    </Screen>
+      <ListingRadiusSheet open={radiusOpen} value={km} city={city} onClose={() => setRadiusOpen(false)} onApply={applyKm} />
+    </MarketEventsShell>
   );
 }
 
 const s = StyleSheet.create({
-  filters: { flexDirection: 'row', gap: 8, flexWrap: 'wrap' },
-  chip: {
+  market: { gap: 14, paddingHorizontal: 20 },
+  header: { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', gap: 12 },
+  sell: { gap: 6, paddingLeft: 14 },
+  filters: { alignItems: 'flex-start', gap: 10 },
+  /* Afstand som pille: 📍 25 km ⌄ */
+  radius: {
     minHeight: TAP,
-    paddingHorizontal: 14,
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 6,
+    paddingHorizontal: 12,
     borderRadius: radius.pill,
     borderWidth: 1,
     borderColor: color.borderStrong,
     backgroundColor: color.bgSurface,
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: 6,
   },
-  grid: { flexDirection: 'row', flexWrap: 'wrap', gap: 12, rowGap: 18 },
-  empty: { alignItems: 'center', gap: 12, paddingVertical: 32 },
+  section: { gap: 10 },
+  empty: { alignItems: 'flex-start', gap: 12, paddingTop: 8, paddingBottom: 24 },
 });

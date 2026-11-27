@@ -1,71 +1,102 @@
-import { router } from 'expo-router';
-import { useState } from 'react';
-import { View } from 'react-native';
+import { router, useFocusEffect } from 'expo-router';
+import { useCallback, useState } from 'react';
+import { StyleSheet, View } from 'react-native';
+import { AccScreen, SetRow } from '@/components/AccountParts';
 import { Button } from '@/components/Button';
-import { Screen } from '@/components/Screen';
-import { SettingsRow } from '@/components/SettingsRow';
 import { T } from '@/components/T';
-import { useSession } from '@/lib/session';
+import { useMe, useSession } from '@/lib/session';
+import { languageByCode } from '@/lib/settings';
 import { supabase } from '@/lib/supabase';
-import { color, radius } from '@/theme/tokens';
+import { color } from '@/theme/tokens';
 
-/** Indstillinger */
+type Status = 'ingen' | 'behandles' | 'godkendt' | 'afvist';
+
+const publicFigureHint: Record<Status, string> = {
+  ingen: 'Ansøg om globus ved dit navn',
+  behandles: 'Ansøgning under behandling',
+  godkendt: 'Godkendt · globus ved dit navn',
+  afvist: 'Ansøgning afvist · du kan søge igen',
+};
+
+/** Indstillinger: én oversigt (prototypens Settings) */
 export default function Settings() {
+  const me = useMe();
   const { signOut } = useSession();
-  const [deleting, setDeleting] = useState(false);
-  const [busy, setBusy] = useState(false);
+  const [language, setLanguage] = useState('da');
+  const [status, setStatus] = useState<Status>('ingen');
+  const [children, setChildren] = useState<string[]>([]);
 
-  const deleteAccount = async () => {
-    setBusy(true);
-    const { error } = await supabase.rpc('delete_my_account');
-    setBusy(false);
-    if (!error) await signOut();
-  };
+  const load = useCallback(async () => {
+    const [lang, pf, kids] = await Promise.all([
+      supabase.from('user_settings').select('language').eq('user_id', me.id).maybeSingle(),
+      supabase.from('public_figure_applications').select('status').eq('user_id', me.id).order('created_at', { ascending: false }).limit(1).maybeSingle(),
+      supabase.rpc('my_children'),
+    ]);
+    setLanguage((lang.data as { language: string } | null)?.language ?? 'da');
+    setStatus(((pf.data as { status: Status } | null)?.status ?? 'ingen') as Status);
+    setChildren(((kids.data ?? []) as { name: string }[]).map((c) => c.name.split(' ')[0]!));
+  }, [me.id]);
+  useFocusEffect(
+    useCallback(() => {
+      load();
+    }, [load]),
+  );
 
   return (
-    <Screen title="Indstillinger">
-      <T v="headingS" c={color.textSecondary}>
-        Generelt
-      </T>
-      <View style={{ gap: 10 }}>
-        <SettingsRow icon="lock" title="Privatliv" hint="Profil, følgeanmodninger, blokerede" onPress={() => router.push('/indstillinger/privatliv')} />
-        <SettingsRow icon="globe" title="Sprog og oversættelse" hint="Standardsprog og automatisk oversættelse" onPress={() => router.push('/indstillinger/sprog')} />
-        <SettingsRow icon="compass" title="Interesser" hint="Det, du ser i Offentlig debat" onPress={() => router.push('/interesser')} />
-        <SettingsRow icon="bookmark" title="Gemt" onPress={() => router.push('/gemt')} />
-      </View>
+    <AccScreen title="Indstillinger" fallback="/profil">
+      <Group title="Konto">
+        <SetRow
+          icon="lock"
+          title="Privatliv og data"
+          hint={`${me.is_private ? 'Privat' : 'Offentlig'} profil · aktivitet, blokerede`}
+          onPress={() => router.push('/indstillinger/privatliv')}
+        />
+        <SetRow icon="globe" title="Offentlig person" hint={publicFigureHint[status]} onPress={() => router.push('/indstillinger/offentlig-person')} />
+      </Group>
 
-      <T v="headingS" c={color.textSecondary}>
-        Profil
-      </T>
-      <View style={{ gap: 10 }}>
-        <SettingsRow icon="megaphone" title="Offentlig person" hint="Ansøg om globus ved dit navn" onPress={() => router.push('/indstillinger/offentlig-person')} />
-        <SettingsRow icon="star" title="Skaber" hint="Dit publikum i tal" onPress={() => router.push('/skaber')} />
-        <SettingsRow icon="user-plus" title="Udvid cirkel" hint="Forslag og anmodninger" onPress={() => router.push('/find-folk')} />
-        <SettingsRow icon="user" title="Forældrekontrol" hint="Tilknyt dine børn eller din forælder" onPress={() => router.push('/foraeldrekontrol')} />
-      </View>
+      <Group title="Sprog">
+        <SetRow
+          icon="chat"
+          title="Sprog og oversættelse"
+          hint={`${languageByCode(language).native} · oversæt opslag og beskeder`}
+          onPress={() => router.push('/indstillinger/sprog')}
+        />
+      </Group>
 
-      <T v="headingS" c={color.textSecondary}>
-        Om og jura
-      </T>
-      <View style={{ gap: 10 }}>
-        <SettingsRow icon="info" title="Privatlivspolitik" hint="Hvilke data vi behandler, og dine rettigheder" onPress={() => router.push('/indstillinger/jura/privatlivspolitik')} />
-        <SettingsRow icon="info" title="Databehandleraftale" hint="For sider, grupper og virksomheder" onPress={() => router.push('/indstillinger/jura/databehandleraftale')} />
-        <SettingsRow icon="info" title="Privatlivserklæring for testen" onPress={() => router.push('/indstillinger/privatlivserklaering')} />
-      </View>
+      <Group title="Familie">
+        <SetRow
+          icon="user"
+          title="Forældrekontrol"
+          hint={children.length ? `${children.join(' og ')} er tilknyttet` : 'Tilknyt dine børn, og bestem hvad de kan se'}
+          onPress={() => router.push('/foraeldrekontrol')}
+        />
+      </Group>
 
-      <Button title="Log ud" variant="secondary" icon="logout" block onPress={signOut} />
+      <Group title="Om og jura">
+        <SetRow icon="info" title="Privatlivspolitik" hint="Hvilke data vi behandler, og dine rettigheder" onPress={() => router.push('/indstillinger/jura/privatlivspolitik')} />
+        <SetRow icon="info" title="Databehandleraftale" hint="For sider, grupper og virksomheder" onPress={() => router.push('/indstillinger/jura/databehandleraftale')} />
+      </Group>
 
-      {deleting ? (
-        <View style={{ gap: 12, padding: 16, borderRadius: radius.xl, borderWidth: 1, borderColor: color.borderDefault, backgroundColor: color.bgSurface }}>
-          <T v="bodyS">Slet din konto? Din profil, dine opslag, billeder og beskeder slettes med det samme.</T>
-          <View style={{ flexDirection: 'row', gap: 8 }}>
-            <Button title="Annuller" variant="secondary" style={{ flex: 1 }} onPress={() => setDeleting(false)} />
-            <Button title="Slet konto" style={{ flex: 1 }} loading={busy} onPress={deleteAccount} />
-          </View>
-        </View>
-      ) : (
-        <Button title="Slet konto" variant="danger" onPress={() => setDeleting(true)} />
-      )}
-    </Screen>
+      <Button variant="secondary" style={s.logout} onPress={signOut}>
+        Log ud
+      </Button>
+    </AccScreen>
   );
 }
+
+function Group({ title, children }: { title: string; children: React.ReactNode }) {
+  return (
+    <>
+      <T v="headingS" c={color.textSecondary} accessibilityRole="header" style={s.group}>
+        {title}
+      </T>
+      <View style={s.list}>{children}</View>
+    </>
+  );
+}
+
+const s = StyleSheet.create({
+  group: { marginTop: 6 },
+  list: { gap: 8 },
+  logout: { alignSelf: 'flex-start', marginTop: 10 },
+});

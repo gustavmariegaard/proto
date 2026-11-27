@@ -9,8 +9,8 @@ import { Icon } from './Icon';
 import { T } from './T';
 
 /**
- * Highlights under profilen: moments, man har gemt (som prototypens samlinger).
- * Egen profil: "Ny" først og langt tryk for at redigere. Andres profil: skjult, hvis der ingen er.
+ * Highlights som runde bobler (prototypens .pc-highlights): moments, man har gemt.
+ * Egen profil: "Ny" først. Andres profil: skjult, hvis der ingen er.
  */
 export function HighlightsRow({ userId, own }: { userId: string; own?: boolean }) {
   const [list, setList] = useState<Highlight[] | null>(null);
@@ -21,48 +21,58 @@ export function HighlightsRow({ userId, own }: { userId: string; own?: boolean }
   );
   if (!list || (!own && list.length === 0)) return null;
   return (
-    <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={s.row} accessibilityLabel="Highlights">
+    <ScrollView
+      horizontal
+      showsHorizontalScrollIndicator={false}
+      style={s.scroll}
+      contentContainerStyle={s.row}
+      accessibilityLabel="Highlights"
+    >
       {own && (
-        <Pressable accessibilityRole="button" accessibilityLabel="Ny highlight" onPress={() => router.push('/highlight/ny')} style={s.item}>
-          <View style={[s.circle, s.add]}>
-            <Icon name="plus" size={22} />
+        <Pressable accessibilityRole="link" accessibilityLabel="Ny highlight" onPress={() => router.push('/highlight/ny')} style={s.item}>
+          <View style={[s.ring, s.ringNew]}>
+            <Icon name="plus" />
           </View>
-          <T v="caption">Ny</T>
-        </Pressable>
-      )}
-      {list.map((h) => (
-        <Pressable
-          key={h.id}
-          accessibilityRole="button"
-          accessibilityLabel={`Highlight: ${h.title}`}
-          accessibilityHint={own ? 'Hold for at redigere' : undefined}
-          onPress={() => router.push(`/highlight/${h.id}`)}
-          onLongPress={own ? () => router.push({ pathname: '/highlight/ny', params: { id: h.id } }) : undefined}
-          style={s.item}
-        >
-          <View style={s.circle}>
-            {h.cover?.media_path && h.cover.media_type === 'image' ? (
-              <Image source={imageSource(h.cover.media_path)} style={s.img} contentFit="cover" />
-            ) : (
-              <View style={[s.img, s.textCover]}>
-                <Icon name={h.cover?.media_type === 'video' ? 'video' : 'star'} size={20} color={color.green700} />
-              </View>
-            )}
-          </View>
-          <T v="caption" numberOfLines={1} style={{ maxWidth: 72 }}>
-            {h.title}
+          <T v="caption" numberOfLines={1} style={s.title}>
+            Ny
           </T>
         </Pressable>
-      ))}
+      )}
+      {list.map((h) => {
+        const cover = h.cover?.media_path && h.cover.media_type === 'image' ? h.cover.media_path : null;
+        return (
+          <Pressable key={h.id} accessibilityRole="link" accessibilityLabel={`Afspil ${h.title}`} onPress={() => router.push(`/highlight/${h.id}`)} style={s.item}>
+            {/* 64 px boble med 2 px lys kant og en 1,5 px grå ring udenom */}
+            <View style={s.outer}>
+              <View style={s.ring}>{cover ? <Image source={imageSource(cover)} style={s.img} contentFit="cover" /> : <Icon name="clip" />}</View>
+            </View>
+            <T v="caption" numberOfLines={1} style={s.title}>
+              {h.title}
+            </T>
+          </Pressable>
+        );
+      })}
     </ScrollView>
   );
 }
 
 const s = StyleSheet.create({
-  row: { gap: 12, paddingVertical: 8 },
-  item: { width: 72, alignItems: 'center', gap: 4 },
-  circle: { width: 64, height: 64, borderRadius: 32, padding: 3, borderWidth: 1.5, borderColor: color.borderStrong, alignItems: 'center', justifyContent: 'center' },
-  add: { borderStyle: 'dashed', backgroundColor: color.bgSurface },
-  img: { width: 56, height: 56, borderRadius: 28 },
-  textCover: { backgroundColor: color.green200, alignItems: 'center', justifyContent: 'center' },
+  scroll: { marginHorizontal: -20, flexGrow: 0 },
+  row: { gap: 14, paddingTop: 2, paddingBottom: 4, paddingHorizontal: 20 },
+  item: { width: 68, alignItems: 'center', gap: 6 },
+  outer: { width: 67, height: 67, margin: -1.5, borderRadius: 34, borderWidth: 1.5, borderColor: color.borderStrong },
+  ring: {
+    width: 64,
+    height: 64,
+    borderRadius: 32,
+    overflow: 'hidden',
+    borderWidth: 2,
+    borderColor: color.bgApp,
+    backgroundColor: color.bgSubtle,
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  ringNew: { borderStyle: 'dashed', borderColor: color.borderStrong, backgroundColor: color.bgSurface },
+  img: { width: '100%', height: '100%' },
+  title: { maxWidth: 68 },
 });

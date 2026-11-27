@@ -1,21 +1,25 @@
 import { router, useLocalSearchParams } from 'expo-router';
-import { useEffect, useState } from 'react';
+import { useCallback, useEffect, useState } from 'react';
 import { ActivityIndicator, View } from 'react-native';
-import { MomentStory } from '@/components/MomentStory';
+import { HighlightStory, StoryAction } from '@/components/HighlightStory';
 import { highlightMoments, type MomentCard } from '@/lib/moments';
+import { useMe } from '@/lib/session';
 
-/** En highlight: moments, man har gemt på sin profil */
+/**
+ * En highlight afspillet som story (prototypens CollectionViewer / UserCollection).
+ * ?start= starter ved et bestemt billede. Din egen: "Se alle" åbner redigering.
+ */
 export default function HighlightRoute() {
-  const { id } = useLocalSearchParams<{ id: string }>();
-  const [h, setH] = useState<{ title: string; moments: MomentCard[] } | null | undefined>(undefined);
+  const { id, start } = useLocalSearchParams<{ id: string; start?: string }>();
+  const me = useMe();
+  const [h, setH] = useState<{ owner_id: string; title: string; moments: MomentCard[] } | null | undefined>(undefined);
   useEffect(() => {
     highlightMoments(id).then(setH);
   }, [id]);
-  const close = () => (router.canGoBack() ? router.back() : router.replace('/profil'));
+  const close = useCallback(() => (router.canGoBack() ? router.back() : router.replace('/profil')), []);
   useEffect(() => {
     if (h === null || (h && h.moments.length === 0)) close();
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [h]);
+  }, [h, close]);
   if (!h?.moments.length) {
     return (
       <View style={{ flex: 1, backgroundColor: '#000', alignItems: 'center', justifyContent: 'center' }}>
@@ -23,5 +27,18 @@ export default function HighlightRoute() {
       </View>
     );
   }
-  return <MomentStory moments={h.moments} title={h.title} onEnd={close} />;
+  return (
+    <HighlightStory
+      items={h.moments}
+      title={h.title}
+      startAt={Number(start) || 0}
+      onClose={close}
+      actions={
+        h.owner_id === me.id ? (
+          // "Se alle" åbner samlingen, hvor man også kan redigere den
+          <StoryAction icon="layout-grid" label="Se alle" onPress={() => router.replace(`/highlight/rediger/${id}`)} />
+        ) : undefined
+      }
+    />
+  );
 }

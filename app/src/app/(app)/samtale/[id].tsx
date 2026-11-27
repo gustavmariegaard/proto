@@ -1,51 +1,47 @@
 import { router, useLocalSearchParams } from 'expo-router';
-import { useCallback, useEffect, useState } from 'react';
-import { FlatList, KeyboardAvoidingView, Platform, Pressable, StyleSheet, TextInput, View } from 'react-native';
-import { SafeAreaView } from 'react-native-safe-area-context';
+import { useCallback, useEffect, useRef, useState } from 'react';
+import { KeyboardAvoidingView, Platform, Pressable, ScrollView, StyleSheet, View } from 'react-native';
+import { useSafeAreaInsets } from 'react-native-safe-area-context';
+import { Avatar } from '@/components/Avatar';
+import { BackButton } from '@/components/BackButton';
 import { Button } from '@/components/Button';
-import { ConversationAvatar } from '@/components/ConversationAvatar';
-import { Icon } from '@/components/Icon';
 import { IconButton } from '@/components/IconButton';
+import { ListingContext } from '@/components/ListingContext';
+import { msg } from '@/components/MessageParts';
+import { SharedPost } from '@/components/SharedPost';
 import { T } from '@/components/T';
+import { TextField } from '@/components/TextField';
 import { conversationTitle, markRead, myConversations, type ConversationRow } from '@/lib/conversations';
 import { useMe } from '@/lib/session';
 import { supabase } from '@/lib/supabase';
 import type { Message } from '@/lib/types';
-import { ListingContext } from '@/components/ListingContext';
-import { SharedPost } from '@/components/SharedPost';
-import { color, font, radius, TAP } from '@/theme/tokens';
+import { color, layout, radius } from '@/theme/tokens';
 
-const GAP = 15 * 60 * 1000;
+type Msg = Message & { listing_id?: string | null; post_id?: string | null };
 
-/** Tidsstempel over en gruppe beskeder: "14:32", "I går 09:10" eller "3. dec. 18:00" */
-function stamp(iso: string) {
-  const d = new Date(iso);
-  const now = new Date();
-  const time = d.toLocaleTimeString('da-DK', { hour: '2-digit', minute: '2-digit' });
-  const day = (x: Date) => new Date(x.getFullYear(), x.getMonth(), x.getDate()).getTime();
-  const diff = (day(now) - day(d)) / 86400000;
-  if (diff === 0) return time;
-  if (diff === 1) return `I går ${time}`;
-  return `${d.toLocaleDateString('da-DK', { day: 'numeric', month: 'short' })} ${time}`;
-}
-
-/** En samtale: beskeder live, skrivefelt nederst. Anmodninger skal accepteres først. */
+/** Samtale (1:1) eller cirkel. Skrivefeltet ligger nederst, listen starter ved den nyeste besked. */
 export default function Conversation() {
   const { id } = useLocalSearchParams<{ id: string }>();
   const me = useMe();
+  const insets = useSafeAreaInsets();
   const [conv, setConv] = useState<ConversationRow | null>(null);
   const [missing, setMissing] = useState(false);
-  const [messages, setMessages] = useState<Message[]>([]);
+  const [messages, setMessages] = useState<Msg[]>([]);
+  // Har modtageren (endnu) ikke godkendt? Så er det, du skriver, en anmodning.
+  const [theyPending, setTheyPending] = useState(false);
   const [text, setText] = useState('');
   const [sending, setSending] = useState(false);
   const [error, setError] = useState('');
+  const listRef = useRef<React.ComponentRef<typeof ScrollView>>(null);
 
   const loadConv = useCallback(async () => {
     const all = await myConversations().catch(() => []);
     const c = all.find((x) => x.id === id) ?? null;
     setConv(c);
     setMissing(!c);
-  }, [id]);
+    const { data } = await supabase.from('conversation_members').select('user_id, is_request').eq('conversation_id', id).neq('user_id', me.id);
+    setTheyPending((data ?? []).length === 1 && !!data![0]!.is_request);
+  }, [id, me.id]);
 
   useEffect(() => {
     loadConv();
@@ -53,16 +49,16 @@ export default function Conversation() {
       .from('messages')
       .select('*')
       .eq('conversation_id', id)
-      .order('created_at', { ascending: false })
+      .order('created_at', { ascending: true })
       .limit(200)
-      .then(({ data }) => setMessages((data ?? []) as Message[]));
+      .then(({ data }) => setMessages((data ?? []) as Msg[]));
     markRead(id, me.id);
 
     const ch = supabase
       .channel(`conv-${id}`)
       .on('postgres_changes', { event: 'INSERT', schema: 'public', table: 'messages', filter: `conversation_id=eq.${id}` }, (p) => {
-        const m = p.new as Message;
-        setMessages((list) => (list.some((x) => x.id === m.id) ? list : [m, ...list]));
+        const m = p.new as Msg;
+        setMessages((list) => (list.some((x) => x.id === m.id) ? list : [...list, m]));
         markRead(id, me.id);
       })
       .subscribe();
@@ -83,7 +79,7 @@ export default function Conversation() {
       return;
     }
     setText('');
-    setMessages((list) => (list.some((x) => x.id === data.id) ? list : [data as Message, ...list]));
+    setMessages((list) => (list.some((x) => x.id === data.id) ? list : [...list, data as Msg]));
     // At svare accepterer en anmodning
     if (conv?.is_request) setConv({ ...conv, is_request: false });
   };
@@ -99,17 +95,18 @@ export default function Conversation() {
   };
 
   const members = conv?.members ?? [];
-  const direct = members.length === 1 && !conv?.is_group;
+  const circle = !!conv && (conv.is_group || members.length > 1);
+  const direct = !circle && members.length === 1;
   const title = conv ? conversationTitle(conv) : '';
   const byId = new Map(members.map((m) => [m.id, m]));
   const pending = !!conv?.is_request && messages.some((m) => m.sender_id !== me.id);
-  // Torvet: seneste annonce, samtalen handler om (vises øverst)
-  const listingId = (messages.find((m) => (m as Message & { listing_id?: string | null }).listing_id) as (Message & { listing_id?: string | null }) | undefined)?.listing_id;
+  const iWrote = messages.some((m) => m.sender_id === me.id);
+  const memberLine = circle ? `${members.map((m) => m.name.split(' ')[0]).join(', ')} og dig` : '';
 
   return (
-    <SafeAreaView style={s.root} edges={['top', 'bottom']}>
-      <View style={s.header}>
-        <IconButton icon="chevron-left" label="Tilbage" outline onPress={() => (router.canGoBack() ? router.back() : router.replace('/beskeder'))} />
+    <KeyboardAvoidingView style={s.screen} behavior={Platform.OS === 'ios' ? 'padding' : undefined}>
+      <View style={[msg.header, { paddingTop: layout.topGap + insets.top }]}>
+        <BackButton fallback="/beskeder" />
         {conv && (
           <Pressable
             accessibilityRole={direct ? 'link' : undefined}
@@ -118,14 +115,16 @@ export default function Conversation() {
             onPress={() => direct && router.push(`/bruger/${members[0]!.username}`)}
             style={s.who}
           >
-            <ConversationAvatar members={members} />
-            <View style={{ flex: 1 }}>
-              <T v="headingS" numberOfLines={1}>
+            <Avatar name={title} path={direct ? members[0]!.avatar_path : null} tone={circle ? 'sage' : 'sand'} />
+            <View style={s.title}>
+              <T v="headingM" numberOfLines={1}>
                 {title}
               </T>
-              <T v="caption" c={color.textSecondary} numberOfLines={1}>
-                {direct ? `@${members[0]!.username}` : `${members.length + 1} personer`}
-              </T>
+              {circle && (
+                <T v="caption" c={color.textSecondary} numberOfLines={1}>
+                  {memberLine}
+                </T>
+              )}
             </View>
           </Pressable>
         )}
@@ -133,142 +132,111 @@ export default function Conversation() {
 
       {missing ? (
         <View style={s.center}>
-          <T v="body" c={color.textSecondary}>
+          <T v="bodyS" c={color.textSecondary}>
             Samtalen findes ikke længere.
           </T>
         </View>
       ) : (
-        <KeyboardAvoidingView style={{ flex: 1 }} behavior={Platform.OS === 'ios' ? 'padding' : undefined}>
-          {listingId && <ListingContext listingId={listingId} />}
-          <FlatList
-            inverted
-            data={messages}
-            keyExtractor={(m) => m.id}
-            contentContainerStyle={{ padding: 16, gap: 4 }}
-            keyboardShouldPersistTaps="handled"
-            ListEmptyComponent={
-              <View style={[s.center, { transform: [{ scaleY: -1 }] }]}>
-                <T v="bodyS" c={color.textSecondary}>
-                  Skriv den første besked.
-                </T>
-              </View>
-            }
-            renderItem={({ item: m, index }) => {
-              const mine = m.sender_id === me.id;
-              // Listen er vendt: index + 1 er den ældre besked
-              const older = messages[index + 1];
-              const showStamp = !older || new Date(m.created_at).getTime() - new Date(older.created_at).getTime() > GAP;
-              const showName = !mine && !direct && (!older || older.sender_id !== m.sender_id || showStamp);
-              return (
-                <View>
-                  {showStamp && (
-                    <T v="caption" c={color.textSecondary} style={s.stamp}>
-                      {stamp(m.created_at)}
-                    </T>
-                  )}
-                  {showName && (
-                    <T v="caption" c={color.textSecondary} style={s.name}>
-                      {byId.get(m.sender_id)?.name ?? 'Tidligere medlem'}
-                    </T>
-                  )}
-                  <View style={[s.bubble, mine ? s.mine : s.theirs]}>
-                    {(m as Message & { listing_id?: string | null }).listing_id && (
-                      <ListingContext listingId={(m as Message & { listing_id: string }).listing_id} inBubble mine={mine} />
-                    )}
-                    {(m as Message & { post_id?: string | null }).post_id && (
-                      <SharedPost id={(m as Message & { post_id: string }).post_id} compact onDark={mine} />
-                    )}
+        <ScrollView
+          ref={listRef}
+          style={{ flex: 1 }}
+          contentContainerStyle={[s.list, circle && { paddingTop: 8 }]}
+          keyboardShouldPersistTaps="handled"
+          onContentSizeChange={() => listRef.current?.scrollToEnd({ animated: false })}
+          accessibilityLabel={`Beskeder med ${title}`}
+        >
+          {direct && theyPending && (
+            <View style={s.centerRow}>
+              <T v="caption" c={color.textSecondary} style={s.request}>
+                {iWrote
+                  ? `Sendt som anmodning. ${title} ser din besked, når de godkender den.`
+                  : `${title} følger dig ikke, så din besked sendes som en anmodning.`}
+              </T>
+            </View>
+          )}
+          {messages.map((m) => {
+            const out = m.sender_id === me.id;
+            const who = out ? { name: me.name || 'Dig', avatar_path: me.avatar_path } : byId.get(m.sender_id) ?? { name: 'Tidligere medlem', avatar_path: null };
+            return (
+              <View key={m.id} style={[s.line, out && s.lineOut]}>
+                <Avatar name={who.name} path={who.avatar_path} size="S" tone={out ? 'blue' : 'sand'} />
+                <View style={[s.row, out && s.rowOut]}>
+                  <T v="micro" c={color.textSecondary}>
+                    {out ? 'Dig' : who.name.split(' ')[0]}
+                  </T>
+                  <View style={[s.bubble, out ? s.bubbleOut : s.bubbleIn]}>
+                    {!!m.listing_id && <ListingContext listingId={m.listing_id} inBubble mine={out} />}
+                    {!!m.post_id && <SharedPost id={m.post_id} compact onDark={out} />}
                     {!!m.body && (
-                      <T v="body" c={mine ? color.textOnAction : color.textPrimary}>
+                      <T v="bodyS" c={out ? color.textOnAction : color.textPrimary}>
                         {m.body}
                       </T>
                     )}
                   </View>
                 </View>
-              );
-            }}
-          />
-
-          {pending ? (
-            <View style={s.request}>
-              <T v="headingS" style={{ textAlign: 'center' }}>
-                {title.split(' ')[0]} vil skrive til dig
-              </T>
-              <View style={s.requestButtons}>
-                <Button title="Slet" variant="secondary" style={{ flex: 1 }} onPress={decline} />
-                <Button title="Accepter" style={{ flex: 1 }} onPress={accept} />
               </View>
+            );
+          })}
+        </ScrollView>
+      )}
+
+      {!missing &&
+        (pending ? (
+          <View style={[s.pending, { paddingBottom: Math.max(18, insets.bottom) }]}>
+            <T v="caption" c={color.textSecondary} style={{ textAlign: 'center' }}>
+              {title.split(' ')[0]} følger dig ikke. Godkend for at svare.
+            </T>
+            <View style={s.pendingButtons}>
+              <Button title="Slet" variant="secondary" style={{ flex: 1 }} onPress={decline} />
+              <Button title="Godkend" style={{ flex: 1 }} onPress={accept} />
             </View>
-          ) : (
-            <View style={s.composer}>
-              {!!error && (
-                <T v="caption" c={color.danger} style={{ position: 'absolute', top: -18, left: 24 }}>
-                  {error}
-                </T>
-              )}
-              <TextInput
-                style={s.field}
-                placeholder="Skriv en besked"
-                placeholderTextColor={color.textSecondary}
-                accessibilityLabel="Skriv en besked"
+          </View>
+        ) : (
+          <View style={[msg.composer, { paddingBottom: Math.max(18, insets.bottom) }]}>
+            {!!error && (
+              <T v="caption" c={color.danger} style={s.error}>
+                {error}
+              </T>
+            )}
+            <View style={{ flex: 1, minWidth: 0 }}>
+              <TextField
+                label={circle ? 'Skriv til cirklen' : 'Skriv en besked'}
+                showLabel={false}
                 value={text}
                 onChangeText={setText}
-                multiline
                 maxLength={4000}
                 onSubmitEditing={send}
-                blurOnSubmit={false}
-                onKeyPress={(e: any) => {
-                  // Web: Enter sender, Shift+Enter giver ny linje
-                  if (Platform.OS === 'web' && e.nativeEvent.key === 'Enter' && !e.nativeEvent.shiftKey) {
-                    e.preventDefault?.();
-                    send();
-                  }
-                }}
+                submitBehavior="submit"
+                returnKeyType="send"
+                onFocus={() => setTimeout(() => listRef.current?.scrollToEnd({ animated: true }), 300)}
               />
-              <Pressable
-                accessibilityRole="button"
-                accessibilityLabel="Send"
-                disabled={!text.trim() || sending}
-                onPress={send}
-                style={[s.send, (!text.trim() || sending) && { opacity: 0.35 }]}
-              >
-                <Icon name="send" size={20} color={color.textOnAction} />
-              </Pressable>
             </View>
-          )}
-        </KeyboardAvoidingView>
-      )}
-    </SafeAreaView>
+            <IconButton icon="send" label="Send" variant="filled" disabled={!text.trim() || sending} onPress={send} style={!text.trim() ? { opacity: 0.4 } : undefined} />
+          </View>
+        ))}
+    </KeyboardAvoidingView>
   );
 }
 
 const s = StyleSheet.create({
-  root: { flex: 1, backgroundColor: color.bgApp },
-  header: { flexDirection: 'row', alignItems: 'center', gap: 10, paddingHorizontal: 16, paddingVertical: 8, borderBottomWidth: 1, borderBottomColor: color.borderDefault },
-  who: { flex: 1, flexDirection: 'row', alignItems: 'center', gap: 10, minHeight: TAP },
+  screen: { flex: 1, backgroundColor: color.bgApp },
+  who: { flex: 1, minWidth: 0, flexDirection: 'row', alignItems: 'center', gap: 8, minHeight: 44 },
+  title: { flex: 1, minWidth: 0, gap: 2 },
   center: { flex: 1, alignItems: 'center', justifyContent: 'center', padding: 24 },
-  stamp: { textAlign: 'center', marginVertical: 10 },
-  name: { marginLeft: 12, marginBottom: 2 },
-  bubble: { maxWidth: '78%', paddingHorizontal: 14, paddingVertical: 9, borderRadius: 20 },
-  mine: { alignSelf: 'flex-end', backgroundColor: color.actionPrimary, borderBottomRightRadius: 6 },
-  theirs: { alignSelf: 'flex-start', backgroundColor: color.bgSurface, borderWidth: 1, borderColor: color.borderDefault, borderBottomLeftRadius: 6 },
-  composer: { flexDirection: 'row', alignItems: 'flex-end', gap: 8, paddingHorizontal: 16, paddingTop: 8, paddingBottom: 8 },
-  field: {
-    flex: 1,
-    minHeight: TAP + 4,
-    maxHeight: 140,
-    paddingHorizontal: 18,
-    paddingTop: 13,
-    paddingBottom: 13,
-    borderRadius: 24,
-    borderWidth: 1,
-    borderColor: color.borderDefault,
-    backgroundColor: color.bgSurface,
-    color: color.textPrimary,
-    fontFamily: font.body,
-    fontSize: 16,
-  },
-  send: { width: TAP + 4, height: TAP + 4, borderRadius: radius.pill, backgroundColor: color.actionPrimary, alignItems: 'center', justifyContent: 'center' },
-  request: { gap: 12, padding: 16, borderTopWidth: 1, borderTopColor: color.borderDefault, backgroundColor: color.bgSurface },
-  requestButtons: { flexDirection: 'row', gap: 10 },
+  /* .msg-chat__list */
+  list: { gap: 10, paddingTop: 12, paddingHorizontal: 20, paddingBottom: 16 },
+  centerRow: { flexDirection: 'row', justifyContent: 'center' },
+  request: { maxWidth: 300, paddingVertical: 8, paddingHorizontal: 14, borderRadius: radius.md, backgroundColor: color.bgSubtle, textAlign: 'center', overflow: 'hidden' },
+  /* Profilbillede ud for hver besked: til venstre for andres, til højre for dine egne */
+  line: { flexDirection: 'row', alignItems: 'flex-end', gap: 8 },
+  lineOut: { flexDirection: 'row-reverse' },
+  row: { flex: 1, minWidth: 0, alignItems: 'flex-start', gap: 3 },
+  rowOut: { alignItems: 'flex-end' },
+  /* Message bubble: 258 px bred, 85 % højst */
+  bubble: { width: 258, maxWidth: '85%', paddingVertical: 10, paddingHorizontal: 14, borderRadius: 16 },
+  bubbleIn: { backgroundColor: color.bgSubtle },
+  bubbleOut: { backgroundColor: color.actionPrimary },
+  error: { position: 'absolute', top: -20, left: 24 },
+  pending: { gap: 10, paddingTop: 10, paddingHorizontal: 12, borderTopWidth: 1, borderTopColor: color.borderDefault, backgroundColor: color.bgSurface },
+  pendingButtons: { flexDirection: 'row', gap: 8 },
 });

@@ -1,38 +1,73 @@
-import type { ReactNode } from 'react';
-import { StyleSheet, View } from 'react-native';
-import type { ProfileView } from '@/lib/profiles';
+import { router } from 'expo-router';
+import { Pressable, StyleSheet, View } from 'react-native';
 import { fmtNumber } from '@/lib/time';
-import { color } from '@/theme/tokens';
+import type { Profile } from '@/lib/types';
+import { color, radius } from '@/theme/tokens';
 import { Avatar } from './Avatar';
 import { Icon } from './Icon';
+import { IconButton } from './IconButton';
 import { T } from './T';
 
-/** Toppen af en profil: billede, navn, @brugernavn, bio og tal. Knapper sendes ind som children. */
-export function ProfileHeader({ p, children }: { p: Pick<ProfileView, 'name' | 'username' | 'bio' | 'avatar_path' | 'public_kind' | 'posts' | 'followers' | 'following'>; children?: ReactNode }) {
+type Props = {
+  me: Pick<Profile, 'name' | 'username' | 'bio' | 'avatar_path' | 'is_private'>;
+  /** Du har et aktivt moment: grøn ring, og et tryk åbner det. Ellers et plus, der laver et nyt. */
+  hasMoment: boolean;
+  onRing: () => void;
+  posts: number;
+  followers: number;
+  following: number;
+};
+
+/**
+ * Toppen af din egen profil (prototypens .pf-identity, .pf-bio og .pf-stats):
+ * billede med moment-ring, navn, @brugernavn, Indstillinger, bio og tal.
+ */
+export function ProfileHeader({ me, hasMoment, onRing, posts, followers, following }: Props) {
   return (
-    <View style={s.wrap}>
-      <Avatar name={p.name} path={p.avatar_path} size={96} />
-      <View style={s.nameRow}>
-        <T v="titleL" accessibilityRole="header">
-          {p.name}
-        </T>
-        {p.public_kind && <Icon name={p.public_kind === 'side' ? 'building' : 'globe'} size={16} color={color.green700} />}
+    <>
+      <View style={s.identity} accessibilityLabel="Din profil">
+        <Pressable
+          accessibilityRole="button"
+          accessibilityLabel={hasMoment ? 'Se dit moment' : 'Del et moment'}
+          onPress={onRing}
+          style={({ pressed }) => [s.ring, !hasMoment && s.ringNone, pressed && { transform: [{ scale: 0.97 }] }]}
+        >
+          <Avatar name={me.name} path={me.avatar_path} size={72} tone="blue" />
+          {!hasMoment && (
+            <View style={s.plus}>
+              <Icon name="plus" size={16} color={color.textOnAction} stroke={2.5} />
+            </View>
+          )}
+        </Pressable>
+        <View style={s.name}>
+          <T v="titleL" numberOfLines={1} accessibilityRole="header">
+            {me.name}
+          </T>
+          <View style={s.userRow}>
+            <T v="caption" c={color.textSecondary} numberOfLines={1} style={{ flexShrink: 1 }}>
+              @{me.username}
+            </T>
+            {me.is_private && (
+              <Pressable accessibilityRole="link" onPress={() => router.push('/indstillinger/privatliv')} style={s.private}>
+                <Icon name="lock" size={12} color={color.textSecondary} />
+                <T v="caption" c={color.textSecondary}>
+                  Privat
+                </T>
+              </Pressable>
+            )}
+          </View>
+        </View>
+        <IconButton icon="settings" label="Indstillinger" onPress={() => router.push('/indstillinger')} />
       </View>
-      <T v="bodyS" c={color.textSecondary}>
-        @{p.username}
-      </T>
-      {!!p.bio && (
-        <T v="bodyS" style={s.bio}>
-          {p.bio}
-        </T>
-      )}
+
+      {!!me.bio?.trim() && <T v="bodyS">{me.bio.trim()}</T>}
+
       <View style={s.stats}>
-        <Stat n={p.posts} label="Opslag" />
-        <Stat n={p.followers} label="Følgere" />
-        <Stat n={p.following} label="Følger" />
+        <Stat n={posts} label="Opslag" />
+        <Stat n={followers} label="Følgere" />
+        <Stat n={following} label="Følger" />
       </View>
-      {children}
-    </View>
+    </>
   );
 }
 
@@ -48,9 +83,51 @@ function Stat({ n, label }: { n: number; label: string }) {
 }
 
 const s = StyleSheet.create({
-  wrap: { alignItems: 'center', gap: 4, alignSelf: 'stretch' },
-  nameRow: { flexDirection: 'row', alignItems: 'center', gap: 6, marginTop: 8 },
-  bio: { textAlign: 'center', marginTop: 4, maxWidth: 320 },
-  stats: { flexDirection: 'row', alignSelf: 'stretch', justifyContent: 'space-around', marginTop: 12, marginBottom: 8 },
-  stat: { alignItems: 'center', minWidth: 80 },
+  identity: { flexDirection: 'row', alignItems: 'center', gap: 16 },
+  ring: {
+    width: 84,
+    height: 84,
+    flexShrink: 0,
+    borderRadius: 42,
+    borderWidth: 3,
+    borderColor: color.accentHighlight,
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  ringNone: { borderColor: 'transparent' },
+  // Plus nederst til højre (som "Dig" på forsiden)
+  plus: {
+    position: 'absolute',
+    right: 0,
+    bottom: 0,
+    width: 26,
+    height: 26,
+    borderRadius: 13,
+    borderWidth: 3,
+    borderColor: color.bgApp,
+    backgroundColor: color.actionPrimary,
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  name: { flex: 1, minWidth: 0, gap: 6 },
+  userRow: { flexDirection: 'row', alignItems: 'center' },
+  private: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 3,
+    marginLeft: 8,
+    paddingVertical: 1,
+    paddingHorizontal: 8,
+    borderRadius: radius.pill,
+    backgroundColor: color.bgSubtle,
+  },
+  stats: {
+    flexDirection: 'row',
+    paddingVertical: 12,
+    borderWidth: 1,
+    borderColor: color.borderDefault,
+    borderRadius: radius.lg,
+    backgroundColor: color.bgSurface,
+  },
+  stat: { flex: 1, minWidth: 0, alignItems: 'center', gap: 2 },
 });

@@ -1,23 +1,39 @@
-import { router, useFocusEffect } from 'expo-router';
+import { router, useFocusEffect, useLocalSearchParams } from 'expo-router';
 import { useCallback, useEffect, useState } from 'react';
-import { FlatList, Pressable, RefreshControl, StyleSheet, View } from 'react-native';
-import { ConversationAvatar } from '@/components/ConversationAvatar';
+import { Pressable, RefreshControl, ScrollView, StyleSheet, View } from 'react-native';
+import { Avatar } from '@/components/Avatar';
+import { Button } from '@/components/Button';
+import { Chip } from '@/components/Chip';
 import { IconButton } from '@/components/IconButton';
-import { Screen } from '@/components/Screen';
+import { matches, msg, threadTime } from '@/components/MessageParts';
+import { PageHeader } from '@/components/PageHeader';
 import { T } from '@/components/T';
+import { Tag } from '@/components/Tag';
+import { TextField } from '@/components/TextField';
 import { conversationTitle, isUnread, myConversations, type ConversationRow } from '@/lib/conversations';
 import { useMe } from '@/lib/session';
 import { supabase } from '@/lib/supabase';
-import { ago } from '@/lib/time';
-import { color, radius, TAB_SPACE, TAP } from '@/theme/tokens';
+import { color, TAB_SPACE } from '@/theme/tokens';
 
-type Tab = 'samtaler' | 'anmodninger';
+type Tab = 'alle' | 'personer' | 'cirkler' | 'anmodninger';
 
-/** Beskeder: dine samtaler og anmodninger fra folk, du ikke følger */
+const tabs: { value: Tab; label: string }[] = [
+  { value: 'alle', label: 'Alle' },
+  { value: 'personer', label: 'Personer' },
+  { value: 'cirkler', label: 'Cirkler' },
+  { value: 'anmodninger', label: 'Anmodninger' },
+];
+
+/** En cirkel: gruppesamtale (flere end én anden, eller med navn) */
+const isCircle = (c: ConversationRow) => c.is_group || c.members.length > 1;
+
+/** Beskeder: alle samtaler, filtreret med Alle / Personer / Cirkler / Anmodninger (som prototypen) */
 export default function Messages() {
   const me = useMe();
+  const params = useLocalSearchParams<{ vis?: string }>();
   const [rows, setRows] = useState<ConversationRow[] | null>(null);
-  const [tab, setTab] = useState<Tab>('samtaler');
+  const [tab, setTab] = useState<Tab>(tabs.find((t) => t.value === params.vis)?.value ?? 'alle');
+  const [query, setQuery] = useState('');
   const [refreshing, setRefreshing] = useState(false);
 
   const load = useCallback(async () => {
@@ -45,36 +61,34 @@ export default function Messages() {
     };
   }, [me.id, load]);
 
-  // Anmodning: jeg er markeret som anmodning, og der er skrevet noget
-  const requests = (rows ?? []).filter((c) => c.is_request && c.has_messages);
-  const convos = (rows ?? []).filter((c) => !c.is_request && c.has_messages);
-  const list = tab === 'samtaler' ? convos : requests;
+  /** Forhåndsvisning: "Du: …" for dine egne, "Mette: …" i cirkler */
+  const preview = (c: ConversationRow) => {
+    if (!c.last_body) return '';
+    if (c.last_sender_id === me.id) return `Du: ${c.last_body}`;
+    if (isCircle(c)) {
+      const who = c.members.find((m) => m.id === c.last_sender_id);
+      return who ? `${who.name.split(' ')[0]}: ${c.last_body}` : c.last_body;
+    }
+    return c.last_body;
+  };
+
+  // Kun samtaler med beskeder (og nye cirkler). Anmodning: jeg er markeret som anmodning.
+  const all = (rows ?? []).filter((c) => c.has_messages || (c.is_group && !c.is_request));
+  const shown = all.filter(
+    (c) =>
+      (tab === 'alle' || (tab === 'anmodninger' ? c.is_request : tab === 'personer' ? !isCircle(c) && !c.is_request : isCircle(c))) &&
+      (!query.trim() || matches(conversationTitle(c), query) || matches(preview(c), query)),
+  );
 
   return (
-    <Screen
-      title="Beskeder"
-      edges={['top']}
-      scroll={false}
-      right={<IconButton icon="edit" label="Ny besked" onPress={() => router.push('/ny-besked')} />}
-    >
-      <View style={s.switch} accessibilityRole="tablist">
-        {(['samtaler', 'anmodninger'] as const).map((t) => {
-          const on = tab === t;
-          const n = t === 'anmodninger' ? requests.length : 0;
-          return (
-            <Pressable key={t} accessibilityRole="tab" accessibilityState={{ selected: on }} onPress={() => setTab(t)} style={[s.seg, on && s.segOn]}>
-              <T v="label" c={on ? color.textPrimary : color.textSecondary}>
-                {t === 'samtaler' ? 'Samtaler' : n ? `Anmodninger (${n})` : 'Anmodninger'}
-              </T>
-            </Pressable>
-          );
-        })}
-      </View>
+    <View style={s.screen}>
+      <PageHeader title="Beskeder" fallback="/">
+        <IconButton icon="edit" label="Ny besked" variant="filled" onPress={() => router.push('/ny-besked')} />
+      </PageHeader>
 
-      <FlatList
-        data={list}
-        keyExtractor={(c) => c.id}
-        contentContainerStyle={{ paddingHorizontal: 20, paddingBottom: TAB_SPACE, gap: 4 }}
+      <ScrollView
+        contentContainerStyle={[msg.content, { paddingBottom: TAB_SPACE }]}
+        keyboardShouldPersistTaps="handled"
         refreshControl={
           <RefreshControl
             refreshing={refreshing}
@@ -85,51 +99,85 @@ export default function Messages() {
             }}
           />
         }
-        ListEmptyComponent={
-          rows ? (
-            <T v="bodyS" c={color.textSecondary} style={{ paddingTop: 24, textAlign: 'center' }}>
-              {tab === 'samtaler' ? 'Ingen samtaler endnu.' : 'Ingen anmodninger.'}
-            </T>
-          ) : undefined
-        }
-        renderItem={({ item: c }) => {
-          const unread = isUnread(c, me.id);
-          const snippet = c.last_body ? `${c.last_sender_id === me.id ? 'Dig: ' : ''}${c.last_body}` : 'Ingen beskeder endnu';
-          return (
-            <Pressable
-              accessibilityRole="button"
-              accessibilityLabel={`${conversationTitle(c)}${unread ? ', ulæst' : ''}`}
-              onPress={() => router.push(`/samtale/${c.id}`)}
-              style={({ pressed }) => [s.row, pressed && { backgroundColor: color.bgSubtle }]}
-            >
-              <ConversationAvatar members={c.members} />
-              <View style={{ flex: 1, gap: 2 }}>
-                <View style={s.top}>
-                  <T v="headingS" numberOfLines={1} style={{ flex: 1 }}>
-                    {conversationTitle(c)}
-                  </T>
-                  <T v="caption" c={color.textSecondary}>
-                    {ago(c.last_message_at)}
-                  </T>
-                </View>
-                <T v={unread ? 'label' : 'bodyS'} c={unread ? color.textPrimary : color.textSecondary} numberOfLines={1}>
-                  {snippet}
-                </T>
-              </View>
-              {unread && <View style={s.dot} />}
-            </Pressable>
-          );
-        }}
-      />
-    </Screen>
+      >
+        <TextField label="Søg i beskeder" showLabel={false} value={query} onChangeText={setQuery} autoCorrect={false} />
+
+        <ScrollView horizontal showsHorizontalScrollIndicator={false} style={s.tabsScroll} contentContainerStyle={s.tabs} accessibilityLabel="Vis beskeder fra">
+          {tabs.map((t) => (
+            <Chip key={t.value} selected={t.value === tab} onPress={() => setTab(t.value)}>
+              {t.label}
+            </Chip>
+          ))}
+        </ScrollView>
+
+        {tab === 'anmodninger' && (
+          <T v="bodyS" c={color.textSecondary}>
+            Beskeder fra folk, du ikke følger. Du kan svare, når du har godkendt anmodningen.
+          </T>
+        )}
+
+        {tab === 'cirkler' && (
+          <T v="bodyS" c={color.textSecondary}>
+            Cirkler er private grupper med chat. Kun medlemmer kan se dem.
+          </T>
+        )}
+
+        {rows === null ? null : shown.length > 0 ? (
+          <View style={s.list}>
+            {shown.map((c) => {
+              const unread = isUnread(c, me.id);
+              const title = conversationTitle(c);
+              const circle = isCircle(c);
+              const direct = !circle ? c.members[0] : undefined;
+              const text = preview(c);
+              return (
+                <Pressable
+                  key={c.id}
+                  accessibilityRole="link"
+                  accessibilityLabel={`${title}${unread ? ', ulæst' : ''}`}
+                  onPress={() => router.push(`/samtale/${c.id}`)}
+                  style={({ pressed }) => [msg.card, pressed && { backgroundColor: color.bgSunken }]}
+                >
+                  <Avatar name={title} path={direct?.avatar_path} size="L" tone={circle ? 'sage' : 'sand'} />
+                  <View style={[msg.cardText, circle && { gap: 3 }]}>
+                    <T v="headingS" numberOfLines={1}>
+                      {title}
+                    </T>
+                    {!!text && (
+                      <T v="caption" c={color.textSecondary} numberOfLines={1}>
+                        {text}
+                      </T>
+                    )}
+                    {c.is_request && <Tag>Anmodning</Tag>}
+                  </View>
+                  <View style={s.meta}>
+                    <T v="caption" c={color.textSecondary}>
+                      {threadTime(c.last_message_at)}
+                    </T>
+                    <View style={[s.dot, unread && s.dotOn]} />
+                  </View>
+                </Pressable>
+              );
+            })}
+          </View>
+        ) : (
+          <T v="bodyS" c={color.textSecondary} style={{ textAlign: 'center' }}>
+            Ingen beskeder fundet
+          </T>
+        )}
+
+        {tab === 'cirkler' && <Button title="Ny cirkel" block onPress={() => router.push('/ny-cirkel')} />}
+      </ScrollView>
+    </View>
   );
 }
 
 const s = StyleSheet.create({
-  switch: { flexDirection: 'row', marginHorizontal: 20, marginBottom: 8, padding: 4, borderRadius: radius.pill, backgroundColor: color.bgSubtle },
-  seg: { flex: 1, minHeight: TAP - 4, borderRadius: radius.pill, alignItems: 'center', justifyContent: 'center' },
-  segOn: { backgroundColor: color.bgSurface },
-  row: { flexDirection: 'row', alignItems: 'center', gap: 12, minHeight: 64, paddingVertical: 8, paddingHorizontal: 8, borderRadius: radius.lg },
-  top: { flexDirection: 'row', alignItems: 'center', gap: 8 },
-  dot: { width: 10, height: 10, borderRadius: 5, backgroundColor: color.accent },
+  screen: { flex: 1, backgroundColor: color.bgApp },
+  tabsScroll: { marginHorizontal: -20, flexGrow: 0 },
+  tabs: { gap: 8, paddingHorizontal: 20 },
+  list: { gap: 14 },
+  meta: { flexShrink: 0, alignItems: 'flex-end', gap: 6 },
+  dot: { width: 10, height: 10, borderRadius: 5 },
+  dotOn: { backgroundColor: color.accentHighlight },
 });

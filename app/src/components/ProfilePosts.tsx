@@ -1,98 +1,233 @@
+import { Image } from 'expo-image';
+import { router, useLocalSearchParams, type Href } from 'expo-router';
 import { useState } from 'react';
 import { Pressable, StyleSheet, View } from 'react-native';
+import { imageSource } from '@/lib/media';
 import type { PostCard as Post } from '@/lib/types';
-import { color, TAP } from '@/theme/tokens';
+import { color, font, radius, TAP } from '@/theme/tokens';
+import { HighlightsRow } from './HighlightsRow';
 import { Icon, type IconName } from './Icon';
-import { IconButton } from './IconButton';
 import { PostCard } from './PostCard';
 import { PostGrid } from './PostGrid';
-import { FlickGrid } from './FlickGrid';
 import { T } from './T';
 
 type Tab = 'opslag' | 'debat' | 'flicks';
 
+/** Opslag i grupper, begivenheder og på sider hører til der, ikke på profilen (som i prototypen) */
+export const profilePosts = (posts: Post[]) => posts.filter((p) => !p.group_id && !p.event_id && !p.page_id);
+
+type Props = {
+  /** Profilens ejer (til highlights) */
+  userId: string;
+  posts: Post[];
+  /** Din egen profil: "Ny" highlight og knapper til at lave nyt */
+  own?: boolean;
+  /** Fornavn til tomme tilstande, fx "Mette" */
+  name: string;
+  /** Privat profil, du ikke følger: kun Debat er åben */
+  locked?: boolean;
+  onChanged?: () => void;
+};
+
 /**
- * Faner under profilen: Opslag, Debat og Flicks.
- * På Opslag kan man skifte mellem gitter og liste med knappen i samme række.
- * locked = privat profil, man ikke følger: kun Debat kan ses.
+ * Fælles opbygning af profiler (prototypens ProfileContent):
+ * 1. Highlights (runde bobler)
+ * 2. Faner: Opslag · Debat · Flicks (huskes i adressen, ?fane=)
  */
-export function ProfilePosts({ posts, locked = false, onChanged }: { posts: Post[]; locked?: boolean; onChanged?: () => void }) {
-  const [tab, setTab] = useState<Tab>(locked ? 'debat' : 'opslag');
+export function ProfilePosts({ userId, posts, own = false, name, locked = false, onChanged }: Props) {
+  const { fane } = useLocalSearchParams<{ fane?: string }>();
+  const tab: Tab = fane === 'debat' || fane === 'flicks' || fane === 'opslag' ? fane : locked ? 'debat' : 'opslag';
+  const [openAll, setOpenAll] = useState(false);
+  // Opslag som gitter eller liste. Gitter er standard.
   const [view, setView] = useState<'gitter' | 'liste'>('gitter');
-  const feed = posts.filter((p) => p.kind === 'feed');
-  const debate = posts.filter((p) => p.kind === 'debat');
-  const flicks = posts.filter((p) => p.kind === 'flick');
-  const tabs: { id: Tab; label: string; icon: IconName; count: number }[] = [
-    { id: 'opslag', label: 'Opslag', icon: 'layout-list', count: feed.length },
-    { id: 'debat', label: 'Debat', icon: 'compass', count: debate.length },
-    { id: 'flicks', label: 'Flicks', icon: 'clip', count: flicks.length },
+
+  const personal = profilePosts(posts);
+  const feed = personal.filter((p) => p.kind === 'feed');
+  const debate = personal.filter((p) => p.kind === 'debat');
+  const flicks = personal.filter((p) => p.kind === 'flick');
+  const tabs: { value: Tab; label: string; icon: IconName; count: number }[] = [
+    { value: 'opslag', label: 'Opslag', icon: 'layout-list', count: feed.length },
+    { value: 'debat', label: 'Debat', icon: 'compass', count: debate.length },
+    { value: 'flicks', label: 'Flicks', icon: 'clip', count: flicks.length },
   ];
-  const shown = tab === 'opslag' ? feed : tab === 'flicks' ? flicks : debate;
+  const shownPosts = openAll ? feed : feed.slice(0, 6);
+  const card = (p: Post) => <PostCard key={p.id} post={p} onRemoved={onChanged} />;
 
   return (
-    <View style={{ gap: 12, alignSelf: 'stretch' }}>
-      <View style={s.tabs} accessibilityRole="tablist">
+    <>
+      {!locked && <HighlightsRow userId={userId} own={own} />}
+
+      <View style={s.tabs} accessibilityRole="tablist" accessibilityLabel="Vis på profilen">
         {tabs.map((t) => {
-          const on = tab === t.id;
-          const lockedTab = locked && t.id !== 'debat';
+          const on = tab === t.value;
+          const lockedTab = locked && t.value !== 'debat';
           return (
             <Pressable
-              key={t.id}
+              key={t.value}
               accessibilityRole="tab"
               accessibilityState={{ selected: on }}
-              onPress={() => setTab(t.id)}
-              style={[s.tab, on && s.tabOn]}
+              onPress={() => router.setParams({ fane: t.value === (locked ? 'debat' : 'opslag') ? undefined : t.value })}
+              style={s.tab}
             >
               <Icon name={lockedTab ? 'lock' : t.icon} size={18} color={on ? color.textPrimary : color.textSecondary} />
-              <T v="label" c={on ? color.textPrimary : color.textSecondary}>
+              <T v="label" c={on ? color.textPrimary : color.textSecondary} numberOfLines={1}>
                 {t.label}
               </T>
               {!lockedTab && (
-                <T v="captionStrong" c={color.textSecondary}>
-                  {t.count}
-                </T>
+                <View style={s.count}>
+                  <T style={s.countTxt} c={on ? color.textPrimary : color.textSecondary}>
+                    {t.count}
+                  </T>
+                </View>
               )}
+              {on && <View style={s.underline} />}
             </Pressable>
           );
         })}
-        {tab === 'opslag' && !locked && feed.length > 0 && (
-          <IconButton
-            icon={view === 'gitter' ? 'layout-rows' : 'layout-grid'}
-            label={view === 'gitter' ? 'Vis som liste' : 'Vis som gitter'}
-            size={20}
+        {/* Gitter eller liste – kun på Opslag, i samme række som fanerne */}
+        {!locked && tab === 'opslag' && feed.length > 0 && (
+          <Pressable
+            accessibilityRole="button"
+            accessibilityLabel={view === 'gitter' ? 'Vis som liste' : 'Vis som gitter'}
             onPress={() => setView(view === 'gitter' ? 'liste' : 'gitter')}
-            style={{ marginLeft: 'auto' }}
-          />
+            style={s.viewBtn}
+          >
+            <Icon name={view === 'gitter' ? 'layout-rows' : 'layout-grid'} size={20} color={color.textSecondary} />
+          </Pressable>
         )}
       </View>
 
-      {tab !== 'debat' && locked ? (
-        <View style={s.locked}>
-          <Icon name="lock" size={22} />
-          <T v="headingS">Profilen er privat</T>
-        </View>
-      ) : shown.length === 0 ? (
-        <T v="bodyS" c={color.textSecondary} style={{ textAlign: 'center', paddingVertical: 24 }}>
-          {tab === 'opslag' ? 'Ingen opslag endnu' : tab === 'flicks' ? 'Ingen flicks endnu' : 'Ingen debatopslag endnu'}
-        </T>
-      ) : tab === 'flicks' ? (
-        <FlickGrid flicks={shown} />
-      ) : tab === 'opslag' && view === 'gitter' ? (
-        <PostGrid posts={shown} />
-      ) : (
-        <View style={{ gap: 12 }}>
-          {shown.map((p) => (
-            <PostCard key={p.id} post={p} onRemoved={onChanged} />
+      <View style={s.panel}>
+        {locked && tab !== 'debat' && (
+          <View style={s.locked}>
+            <View style={s.lockedIcon}>
+              <Icon name="lock" size={22} />
+            </View>
+            <T v="headingS" style={s.center}>
+              Profilen er privat
+            </T>
+            <T v="bodyS" c={color.textSecondary} style={s.center}>
+              Følg {name} for at se {tab === 'opslag' ? 'opslag' : 'flicks'} og highlights. Indlæg i Offentlig debat er altid synlige.
+            </T>
+          </View>
+        )}
+
+        {!locked &&
+          tab === 'opslag' &&
+          (feed.length === 0 ? (
+            <Empty text={own ? 'Du har ikke delt noget endnu.' : `${name} har ikke delt noget endnu.`} action={own ? { label: 'Skriv et opslag', to: '/opret' } : undefined} />
+          ) : view === 'gitter' ? (
+            <PostGrid posts={feed} />
+          ) : (
+            <>
+              {shownPosts.map(card)}
+              {feed.length > shownPosts.length && (
+                <Pressable accessibilityRole="button" onPress={() => setOpenAll(true)} style={s.more}>
+                  <T v="label" style={{ textDecorationLine: 'underline' }}>
+                    Vis alle {feed.length} opslag
+                  </T>
+                </Pressable>
+              )}
+            </>
           ))}
-        </View>
+
+        {tab === 'debat' &&
+          (debate.length === 0 ? (
+            <Empty
+              text={own ? 'Du har ikke deltaget i debatten endnu.' : `${name} har ikke deltaget i debatten endnu.`}
+              action={own ? { label: 'Skriv i Offentlig debat', to: '/opret?sted=debat' } : undefined}
+            />
+          ) : (
+            debate.map(card)
+          ))}
+
+        {!locked &&
+          tab === 'flicks' &&
+          (flicks.length === 0 ? (
+            <Empty text={own ? 'Du har ikke lavet nogen flicks endnu.' : `${name} har ingen flicks endnu.`} action={own ? { label: 'Lav en flick', to: '/flicks/ny' } : undefined} />
+          ) : (
+            <FlickTiles flicks={flicks} />
+          ))}
+      </View>
+    </>
+  );
+}
+
+/** Flicks som Reels: tre kolonner i 9:16 med 3 px mellemrum, fra kant til kant */
+function FlickTiles({ flicks }: { flicks: Post[] }) {
+  const [w, setW] = useState(0);
+  const cellW = w ? Math.floor(((w - 6) / 3) * 100) / 100 : 0;
+  return (
+    <View style={s.flicks} onLayout={(e) => setW(e.nativeEvent.layout.width)}>
+      {flicks.map((f) => (
+        <Pressable
+          key={f.id}
+          accessibilityRole="link"
+          accessibilityLabel="Afspil flick"
+          onPress={() => router.push(`/flicks?vis=${f.id}`)}
+          style={[s.flick, cellW ? { width: cellW } : { width: '32.6%' }]}
+        >
+          {f.media_type === 'image' && f.image_paths[0] ? <Image source={imageSource(f.image_paths[0])} style={StyleSheet.absoluteFill} contentFit="cover" /> : null}
+          {/* Antal visninger findes ikke i databasen: kun ikonet */}
+          <View style={s.flickViews}>
+            <Icon name="clip" size={14} color={color.white} />
+          </View>
+        </Pressable>
+      ))}
+    </View>
+  );
+}
+
+function Empty({ text, action }: { text: string; action?: { label: string; to: Href } }) {
+  return (
+    <View style={s.empty}>
+      <T v="bodyS" c={color.textSecondary} style={s.center}>
+        {text}
+      </T>
+      {action && (
+        <Pressable accessibilityRole="link" onPress={() => router.push(action.to)} style={({ pressed }) => [s.emptyAction, pressed && { opacity: 0.85 }]}>
+          <T v="label" c={color.textOnAction}>
+            {action.label}
+          </T>
+        </Pressable>
       )}
     </View>
   );
 }
 
 const s = StyleSheet.create({
-  tabs: { flexDirection: 'row', alignItems: 'center', gap: 4, borderBottomWidth: 1, borderBottomColor: color.borderDefault },
-  tab: { flexDirection: 'row', alignItems: 'center', gap: 6, minHeight: TAP, paddingHorizontal: 10, borderBottomWidth: 2, borderBottomColor: 'transparent', marginBottom: -1 },
-  tabOn: { borderBottomColor: color.textPrimary },
-  locked: { alignItems: 'center', gap: 8, paddingVertical: 32 },
+  tabs: { flexDirection: 'row', borderBottomWidth: 1, borderBottomColor: color.borderDefault },
+  tab: { flex: 1, minWidth: 0, flexDirection: 'row', alignItems: 'center', justifyContent: 'center', gap: 6, minHeight: 48 },
+  underline: { position: 'absolute', left: '16%', right: '16%', bottom: -1, height: 2.5, borderRadius: 2, backgroundColor: color.textPrimary },
+  count: { paddingHorizontal: 6, borderRadius: radius.pill, backgroundColor: color.bgSubtle },
+  countTxt: { fontFamily: font.bodySemi, fontSize: 12, lineHeight: 18 },
+  viewBtn: { width: TAP, height: TAP, flexShrink: 0, alignSelf: 'center', alignItems: 'center', justifyContent: 'center', borderRadius: 10 },
+  panel: { gap: 14 },
+  more: { alignSelf: 'center', minHeight: TAP, paddingHorizontal: 12, justifyContent: 'center' },
+  flicks: { flexDirection: 'row', flexWrap: 'wrap', gap: 3, marginHorizontal: -20 },
+  flick: { aspectRatio: 9 / 16, overflow: 'hidden', backgroundColor: color.ink900 },
+  flickViews: { position: 'absolute', left: 6, bottom: 6, flexDirection: 'row', alignItems: 'center', gap: 3 },
+  empty: {
+    alignItems: 'center',
+    gap: 10,
+    paddingVertical: 28,
+    paddingHorizontal: 16,
+    borderWidth: 1,
+    borderStyle: 'dashed',
+    borderColor: color.borderStrong,
+    borderRadius: radius.lg,
+  },
+  emptyAction: { minHeight: TAP, paddingHorizontal: 18, justifyContent: 'center', borderRadius: radius.pill, backgroundColor: color.actionPrimary },
+  locked: {
+    alignItems: 'center',
+    gap: 6,
+    paddingVertical: 28,
+    paddingHorizontal: 20,
+    borderWidth: 1,
+    borderColor: color.borderDefault,
+    borderRadius: radius.lg,
+    backgroundColor: color.bgSurface,
+  },
+  lockedIcon: { width: 52, height: 52, marginBottom: 4, borderRadius: 26, borderWidth: 1.5, borderColor: color.textPrimary, alignItems: 'center', justifyContent: 'center' },
+  center: { textAlign: 'center' },
 });

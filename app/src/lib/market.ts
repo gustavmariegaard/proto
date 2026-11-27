@@ -108,6 +108,34 @@ export async function saveMyLocation(userId: string, loc: MyLocation) {
   return { ...loc, lat: Math.round(loc.lat * 100) / 100, lng: Math.round(loc.lng * 100) / 100 };
 }
 
+/** Bruges, når man ikke har en placering endnu (prototypen viser altid en afstand fra en by) */
+export const defaultLocation: MyLocation = { city: 'København', lat: 55.68, lng: 12.57 };
+
+/**
+ * Din placering: den gemte, ellers telefonens (kun hvis du allerede har sagt ja – vi spørger ikke),
+ * ellers København. Telefonens placering gemmes, så den bruges næste gang.
+ */
+export async function locationOrDefault(userId: string): Promise<MyLocation> {
+  const saved = await getMyLocation(userId);
+  if (saved) return saved;
+  try {
+    const perm = await Location.getForegroundPermissionsAsync();
+    if (perm.status === 'granted') {
+      const dev = await deviceLocation();
+      if (dev) return await saveMyLocation(userId, dev);
+    }
+  } catch {
+    /* ingen placering – brug standardbyen */
+  }
+  return defaultLocation;
+}
+
+/** Find en by på listen ud fra en tekst ("Afhentning: Aarhus C" → Aarhus) */
+export function cityFromText(text: string) {
+  const t = text.toLocaleLowerCase('da');
+  return cities.find((c) => t.includes(c.name.toLocaleLowerCase('da'))) ?? null;
+}
+
 /** Telefonens placering (grov nøjagtighed). null hvis man siger nej. */
 export async function deviceLocation(): Promise<MyLocation | null> {
   const perm = await Location.requestForegroundPermissionsAsync();

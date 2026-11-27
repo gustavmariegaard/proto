@@ -1,161 +1,114 @@
 import { router } from 'expo-router';
-import { useEffect, useState } from 'react';
-import { FlatList, Pressable, StyleSheet, View } from 'react-native';
-import { Avatar } from '@/components/Avatar';
-import { Button } from '@/components/Button';
+import { useState } from 'react';
+import { KeyboardAvoidingView, Platform, Pressable, ScrollView, StyleSheet, TextInput, View } from 'react-native';
+import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { Chip } from '@/components/Chip';
 import { Icon } from '@/components/Icon';
-import { Screen } from '@/components/Screen';
+import { IconButton } from '@/components/IconButton';
+import { CloseHeader, msg, PickRow, usePeople, type Person } from '@/components/MessageParts';
 import { T } from '@/components/T';
-import { TextField } from '@/components/TextField';
-import type { Member } from '@/lib/conversations';
+import { noOutline, TextField } from '@/components/TextField';
 import { useMe } from '@/lib/session';
 import { supabase } from '@/lib/supabase';
-import { color, radius } from '@/theme/tokens';
+import { color, font } from '@/theme/tokens';
 
-/** Ny besked: vælg én (direkte) eller flere (en cirkel) */
+/** Ny besked: vælg en eller flere personer, skriv evt. den første besked, og samtalen åbner */
 export default function NewMessage() {
   const me = useMe();
+  const insets = useSafeAreaInsets();
   const [q, setQ] = useState('');
-  const [results, setResults] = useState<Member[]>([]);
-  const [picked, setPicked] = useState<Member[]>([]);
-  const [groupName, setGroupName] = useState('');
+  const [picked, setPicked] = useState<Person[]>([]);
+  const [text, setText] = useState('');
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState('');
+  const people = usePeople(me.id, q);
 
-  // Uden søgning: dem, du følger. Med søgning: navn eller brugernavn.
-  useEffect(() => {
-    let alive = true;
-    const t = setTimeout(async () => {
-      const term = q.trim().replace(/^@/, '').replace(/[%_,()]/g, '');
-      let list: Member[] = [];
-      if (term) {
-        const { data } = await supabase
-          .from('profiles')
-          .select('id, username, name, avatar_path')
-          .or(`name.ilike.%${term}%,username.ilike.%${term}%`)
-          .neq('id', me.id)
-          .order('name')
-          .limit(25);
-        list = (data ?? []) as Member[];
-      } else {
-        const { data: f } = await supabase.from('follows').select('followee_id').eq('follower_id', me.id).eq('status', 'accepted').limit(100);
-        const ids = (f ?? []).map((r) => r.followee_id);
-        if (ids.length) {
-          const { data } = await supabase.from('profiles').select('id, username, name, avatar_path').in('id', ids).order('name');
-          list = (data ?? []) as Member[];
-        }
-      }
-      if (alive) setResults(list);
-    }, 200);
-    return () => {
-      alive = false;
-      clearTimeout(t);
-    };
-  }, [q, me.id]);
-
-  const toggle = (m: Member) => setPicked((p) => (p.some((x) => x.id === m.id) ? p.filter((x) => x.id !== m.id) : [...p, m]));
+  const toggle = (m: Person) => setPicked((p) => (p.some((x) => x.id === m.id) ? p.filter((x) => x.id !== m.id) : [...p, m]));
 
   const start = async () => {
-    if (!picked.length) return;
+    if (!picked.length || busy) return;
     setBusy(true);
     setError('');
     const group = picked.length > 1;
     const { data, error } = await supabase.rpc('start_conversation', {
       member_ids: picked.map((m) => m.id),
-      group_name: group && groupName.trim() ? groupName.trim() : null,
+      group_name: group ? picked.map((m) => m.name.split(' ')[0]).join(', ') : null,
     });
-    setBusy(false);
     if (error || !data) {
+      setBusy(false);
       setError('Samtalen kunne ikke startes.');
       return;
     }
+    const body = text.trim();
+    if (body) await supabase.from('messages').insert({ conversation_id: data, sender_id: me.id, body });
     router.replace(`/samtale/${data}`);
   };
 
   return (
-    <Screen
-      title={picked.length > 1 ? 'Ny cirkel' : 'Ny besked'}
-      scroll={false}
-      footer={
-        picked.length > 0 ? (
-          <View style={s.footer}>
-            {!!error && (
-              <T v="caption" c={color.danger}>
-                {error}
+    <KeyboardAvoidingView style={s.screen} behavior={Platform.OS === 'ios' ? 'padding' : undefined}>
+      <CloseHeader title="Ny besked" />
+
+      <ScrollView style={{ flex: 1 }} contentContainerStyle={msg.content} keyboardShouldPersistTaps="handled">
+        <View style={[msg.card, s.to]}>
+          <T v="captionStrong" c={color.textSecondary}>
+            Til
+          </T>
+          {picked.map((m) => (
+            <Chip key={m.id} selected onPress={() => toggle(m)}>
+              {m.name}
+            </Chip>
+          ))}
+          <TextInput
+            style={[s.toInput, noOutline]}
+            placeholder="Søg efter navn"
+            placeholderTextColor={color.textSecondary}
+            accessibilityLabel="Søg efter navn"
+            value={q}
+            onChangeText={setQ}
+            autoCapitalize="none"
+            autoCorrect={false}
+          />
+        </View>
+
+        <T v="headingS" accessibilityRole="header">
+          Forslag
+        </T>
+        <View style={s.list}>
+          {people.map((m) => (
+            <PickRow key={m.id} name={m.name} sub={m.follows ? 'Du følger' : `@${m.username}`} path={m.avatar_path} selected={picked.some((x) => x.id === m.id)} onToggle={() => toggle(m)} />
+          ))}
+          <Pressable accessibilityRole="button" onPress={() => router.push('/ny-cirkel')} style={({ pressed }) => [msg.card, pressed && { backgroundColor: color.bgSunken }]}>
+            <View style={msg.tile}>
+              <Icon name="circles" />
+            </View>
+            <View style={msg.cardText}>
+              <T v="headingS">Ny cirkel</T>
+              <T v="caption" c={color.textSecondary}>
+                Opret en gruppe med flere personer
               </T>
-            )}
-            <Button
-              block
-              loading={busy}
-              title={picked.length === 1 ? `Skriv til ${picked[0]!.name.split(' ')[0]}` : `Opret cirkel (${picked.length + 1})`}
-              onPress={start}
-            />
-          </View>
-        ) : undefined
-      }
-    >
-      <View style={s.top}>
-        <TextField label="Søg" showLabel={false} placeholder="Søg efter navn eller brugernavn" autoCapitalize="none" autoCorrect={false} value={q} onChangeText={setQ} autoFocus />
-        {picked.length > 0 && (
-          <View style={s.picked}>
-            {picked.map((m) => (
-              <Chip key={m.id} small selected label={m.name.split(' ')[0]!} trailing="close" onPress={() => toggle(m)} />
-            ))}
-          </View>
+            </View>
+          </Pressable>
+        </View>
+        {!!error && (
+          <T v="caption" c={color.danger}>
+            {error}
+          </T>
         )}
-        {picked.length > 1 && (
-          <TextField label="Navn på cirkel" showLabel={false} placeholder="Navn på cirkel (valgfrit)" maxLength={60} value={groupName} onChangeText={setGroupName} />
-        )}
+      </ScrollView>
+
+      <View style={[msg.composer, { paddingBottom: Math.max(18, insets.bottom) }]}>
+        <View style={{ flex: 1, minWidth: 0 }}>
+          <TextField label="Skriv din første besked" showLabel={false} value={text} onChangeText={setText} onSubmitEditing={start} returnKeyType="send" />
+        </View>
+        <IconButton icon="send" label="Send" variant="filled" disabled={!picked.length || busy} onPress={start} style={!picked.length ? { opacity: 0.4 } : undefined} />
       </View>
-      <FlatList
-        data={results}
-        keyExtractor={(m) => m.id}
-        keyboardShouldPersistTaps="handled"
-        contentContainerStyle={{ paddingHorizontal: 20, paddingBottom: 24 }}
-        ListHeaderComponent={
-          <T v="captionStrong" c={color.textSecondary} style={{ paddingVertical: 8 }}>
-            {q.trim() ? 'Resultater' : 'Dem, du følger'}
-          </T>
-        }
-        ListEmptyComponent={
-          <T v="bodyS" c={color.textSecondary} style={{ paddingTop: 12 }}>
-            {q.trim() ? 'Ingen fundet.' : 'Søg efter nogen at skrive til.'}
-          </T>
-        }
-        renderItem={({ item: m }) => {
-          const on = picked.some((x) => x.id === m.id);
-          return (
-            <Pressable
-              accessibilityRole="checkbox"
-              accessibilityState={{ checked: on }}
-              accessibilityLabel={m.name}
-              onPress={() => toggle(m)}
-              style={({ pressed }) => [s.row, pressed && { backgroundColor: color.bgSubtle }]}
-            >
-              <Avatar name={m.name} path={m.avatar_path} />
-              <View style={{ flex: 1 }}>
-                <T v="headingS" numberOfLines={1}>
-                  {m.name}
-                </T>
-                <T v="caption" c={color.textSecondary}>
-                  @{m.username}
-                </T>
-              </View>
-              <View style={[s.check, on && s.checkOn]}>{on && <Icon name="check" size={16} color={color.white} />}</View>
-            </Pressable>
-          );
-        }}
-      />
-    </Screen>
+    </KeyboardAvoidingView>
   );
 }
 
 const s = StyleSheet.create({
-  top: { paddingHorizontal: 20, gap: 10, paddingBottom: 4 },
-  picked: { flexDirection: 'row', flexWrap: 'wrap', gap: 6 },
-  row: { flexDirection: 'row', alignItems: 'center', gap: 12, minHeight: 60, paddingHorizontal: 8, borderRadius: radius.lg },
-  check: { width: 24, height: 24, borderRadius: 12, borderWidth: 1.5, borderColor: color.borderStrong, alignItems: 'center', justifyContent: 'center' },
-  checkOn: { backgroundColor: color.actionPrimary, borderColor: color.actionPrimary },
-  footer: { padding: 16, paddingTop: 8, gap: 6, borderTopWidth: 1, borderTopColor: color.borderDefault, backgroundColor: color.bgApp },
+  screen: { flex: 1, backgroundColor: color.bgApp },
+  to: { flexWrap: 'wrap', rowGap: 8 },
+  toInput: { flex: 1, minWidth: 120, height: 44, padding: 0, color: color.textPrimary, fontFamily: font.body, fontSize: 16 },
+  list: { gap: 14 },
 });

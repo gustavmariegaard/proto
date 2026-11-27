@@ -1,35 +1,50 @@
 import { router, useFocusEffect } from 'expo-router';
 import { useCallback, useState } from 'react';
-import { ActivityIndicator, ScrollView, StyleSheet, View } from 'react-native';
-import { Button } from '@/components/Button';
+import { StyleSheet, View } from 'react-native';
 import { GroupRow } from '@/components/GroupRow';
-import { PostCard } from '@/components/PostCard';
-import { Screen } from '@/components/Screen';
-import { Segmented } from '@/components/Segmented';
-import { SmallButton } from '@/components/SmallButton';
+import { CommunityRow, InitialsAvatar, MoreCard, MoreScreen, MoreTabs, SortRow, matches, whenText, type SortMode } from '@/components/MoreParts';
 import { T } from '@/components/T';
 import { TextField } from '@/components/TextField';
-import { joinGroup, leaveGroup, listGroups, type GroupCard } from '@/lib/community';
-import { normalize } from '@/lib/posts';
+import { listGroups, type GroupCard } from '@/lib/community';
+import { isUnread, latestPosts, markSeen, seenTimes, type Latest } from '@/lib/moreActivity';
 import { useMe } from '@/lib/session';
 import { supabase } from '@/lib/supabase';
-import type { PostCard as Post } from '@/lib/types';
-import { color, TAP } from '@/theme/tokens';
+import { color } from '@/theme/tokens';
 
-type Tab = 'dine' | 'find' | 'aktivitet';
+type Tab = 'grupper' | 'aktivitet';
+type Activity = { id: string; text: string; created_at: string; group_id: string; group_name: string | null; group_avatar_path: string | null };
 
-/** Grupper: dine, find nye og din aktivitet (dine opslag i grupper) */
+/** Grupper: Dine grupper og Din aktivitet (prototypens Groups / GroupActivity) */
 export default function Groups() {
   const me = useMe();
-  const [tab, setTab] = useState<Tab>('dine');
+  const [tab, setTab] = useState<Tab>('grupper');
   const [groups, setGroups] = useState<GroupCard[] | null>(null);
-  const [activity, setActivity] = useState<Post[]>([]);
-  const [q, setQ] = useState('');
+  const [latest, setLatest] = useState<Record<string, Latest>>({});
+  const [seen, setSeen] = useState<Record<string, number>>({});
+  const [activity, setActivity] = useState<Activity[] | null>(null);
+  const [query, setQuery] = useState('');
+  const [sort, setSort] = useState<SortMode>('seneste');
 
   const load = useCallback(async () => {
-    setGroups(await listGroups());
-    const { data } = await supabase.from('post_cards').select('*').eq('author_id', me.id).not('group_id', 'is', null).order('created_at', { ascending: false }).limit(40);
-    setActivity(((data ?? []) as Post[]).map(normalize));
+    const all = await listGroups();
+    // Dine grupper: medlem, inviteret eller anmodet
+    const mine = all.filter((g) => g.my_status);
+    const ids = mine.map((g) => g.id);
+    const [l, sn, act] = await Promise.all([
+      latestPosts('group_id', ids),
+      seenTimes(ids),
+      supabase
+        .from('post_cards')
+        .select('id, text, created_at, group_id, group_name, group_avatar_path')
+        .eq('author_id', me.id)
+        .not('group_id', 'is', null)
+        .order('created_at', { ascending: false })
+        .limit(40),
+    ]);
+    setGroups(mine);
+    setLatest(l);
+    setSeen(sn);
+    setActivity((act.data ?? []) as Activity[]);
   }, [me.id]);
   useFocusEffect(
     useCallback(() => {
@@ -37,110 +52,97 @@ export default function Groups() {
     }, [load]),
   );
 
-  const words = q.trim().toLocaleLowerCase('da').split(/\s+/).filter(Boolean);
-  const match = (g: GroupCard) => words.every((w) => `${g.name} ${g.description}`.toLocaleLowerCase('da').includes(w));
-  const mine = (groups ?? []).filter((g) => g.my_status === 'medlem' && match(g));
-  const waiting = (groups ?? []).filter((g) => g.my_status === 'anmodet' || g.my_status === 'inviteret');
-  const others = (groups ?? []).filter((g) => !g.my_status && match(g));
-
-  const join = async (g: GroupCard) => {
-    setGroups((l) => l?.map((x) => (x.id === g.id ? { ...x, my_status: g.privacy === 'offentlig' ? 'medlem' : 'anmodet', members: x.members + (g.privacy === 'offentlig' ? 1 : 0) } : x)) ?? null);
-    await joinGroup(g, me.id);
-  };
+  const lastAt = (g: GroupCard) => latest[g.id]?.at ?? g.created_at;
+  const filtered = (groups ?? []).filter((g) => matches(g.name, query));
+  const shown =
+    sort === 'navn' ? [...filtered].sort((a, b) => a.name.localeCompare(b.name, 'da')) : [...filtered].sort((a, b) => lastAt(b).localeCompare(lastAt(a)));
+  const count = shown.length;
 
   return (
-    <Screen title="Grupper" right={<Button title="Opret" onPress={() => router.push('/grupper/ny')} style={{ minHeight: TAP, paddingHorizontal: 18 }} />} scroll={false}>
-      <ScrollView contentContainerStyle={s.content} keyboardShouldPersistTaps="handled">
-        <Segmented
-          label="Vis grupper"
-          value={tab}
-          onChange={setTab}
-          options={[
-            { value: 'dine', label: 'Dine' },
-            { value: 'find', label: 'Find' },
-            { value: 'aktivitet', label: 'Aktivitet' },
-          ]}
-        />
-        {groups === null ? (
-          <ActivityIndicator color={color.textPrimary} style={{ marginTop: 24 }} />
-        ) : tab === 'aktivitet' ? (
-          <>
-            <T v="bodyS" c={color.textSecondary}>
-              Opslag, du har lavet i dine grupper
+    <MoreScreen title="Grupper" action={{ label: 'Opret gruppe', onPress: () => router.push('/grupper/ny') }}>
+      <MoreTabs
+        label="Grupper"
+        value={tab}
+        onChange={setTab}
+        tabs={[
+          { value: 'grupper', label: 'Dine grupper' },
+          { value: 'aktivitet', label: 'Din aktivitet' },
+        ]}
+      />
+      {tab === 'grupper' ? (
+        <>
+          <TextField label="Søg i dine grupper" showLabel={false} value={query} onChangeText={setQuery} />
+          <SortRow count={`${count} ${count === 1 ? 'gruppe' : 'grupper'}`} sort={sort} onSort={setSort} />
+          {groups === null ? null : shown.length === 0 ? (
+            <T v="bodyS" c={color.textSecondary} style={s.empty}>
+              {query.trim() ? `Ingen grupper matcher “${query.trim()}”.` : 'Du er ikke med i nogen grupper endnu.'}
             </T>
-            {activity.length ? (
-              activity.map((p) => <PostCard key={p.id} post={p} onRemoved={() => setActivity((l) => l.filter((x) => x.id !== p.id))} />)
-            ) : (
-              <T v="bodyS" c={color.textSecondary}>
-                Ingen opslag endnu.
-              </T>
-            )}
-          </>
-        ) : (
-          <>
-            <TextField label={tab === 'dine' ? 'Søg i dine grupper' : 'Søg efter grupper'} showLabel={false} placeholder={tab === 'dine' ? 'Søg i dine grupper' : 'Søg efter grupper'} value={q} onChangeText={setQ} />
-            {tab === 'dine' ? (
-              <>
-                {mine.length ? (
-                  <View style={s.list}>
-                    {mine.map((g) => (
-                      <GroupRow key={g.id} group={g} />
-                    ))}
-                  </View>
+          ) : (
+            <View style={s.list}>
+              {shown.map((g) =>
+                g.my_status === 'medlem' ? (
+                  <GroupRow
+                    key={g.id}
+                    group={g}
+                    lastPost={latest[g.id]?.at ?? null}
+                    unread={isUnread(latest[g.id], seen[g.id], me.id)}
+                    onOpen={() => setSeen((m) => ({ ...m, [g.id]: Date.now() }))}
+                  />
                 ) : (
-                  <T v="bodyS" c={color.textSecondary}>
-                    {words.length ? `Ingen grupper matcher “${q.trim()}”.` : 'Du er ikke med i nogen grupper endnu.'}
-                  </T>
-                )}
-                {waiting.length > 0 && (
-                  <View style={s.list}>
-                    <T v="headingS">Afventer</T>
-                    {waiting.map((g) => (
-                      <GroupRow key={g.id} group={g}>
-                        {g.my_status === 'inviteret' ? (
-                          <SmallButton
-                            title="Tak ja"
-                            dark
-                            onPress={async () => {
-                              await supabase.from('group_members').update({ status: 'medlem' }).eq('group_id', g.id).eq('user_id', me.id);
-                              load();
-                            }}
-                          />
-                        ) : (
-                          <SmallButton
-                            title="Træk tilbage"
-                            onPress={async () => {
-                              await leaveGroup(g.id, me.id);
-                              load();
-                            }}
-                          />
-                        )}
-                      </GroupRow>
-                    ))}
+                  <CommunityRow
+                    key={g.id}
+                    name={g.name}
+                    path={g.avatar_path}
+                    meta={g.my_status === 'inviteret' ? 'Du er inviteret' : 'Anmodning sendt'}
+                    unread={g.my_status === 'inviteret'}
+                    onPress={() => {
+                      markSeen(g.id);
+                      router.push(`/grupper/${g.id}`);
+                    }}
+                  />
+                ),
+              )}
+            </View>
+          )}
+        </>
+      ) : (
+        <>
+          <T v="bodyS" c={color.textSecondary}>
+            Opslag, du har lavet i dine grupper
+          </T>
+          {activity?.length === 0 && (
+            <T v="bodyS" c={color.textSecondary} style={s.empty}>
+              Du har ikke skrevet i nogen grupper endnu.
+            </T>
+          )}
+          <View style={s.cards}>
+            {activity?.map((a) => (
+              <MoreCard key={a.id} label={a.group_name ?? 'Gruppe'} onPress={() => router.push(`/opslag/${a.id}`)}>
+                <View style={s.cardRow}>
+                  <InitialsAvatar name={a.group_name ?? 'Gruppe'} path={a.group_avatar_path} size="S" />
+                  <View style={s.cardText}>
+                    <T v="headingS" numberOfLines={1}>
+                      {a.group_name}
+                    </T>
+                    <T v="caption" c={color.textSecondary} numberOfLines={1}>
+                      Du skrev {whenText(a.created_at)}
+                    </T>
                   </View>
-                )}
-              </>
-            ) : others.length ? (
-              <View style={s.list}>
-                {others.map((g) => (
-                  <GroupRow key={g.id} group={g}>
-                    <SmallButton title={g.privacy === 'offentlig' ? 'Bliv medlem' : 'Anmod'} dark onPress={() => join(g)} />
-                  </GroupRow>
-                ))}
-              </View>
-            ) : (
-              <T v="bodyS" c={color.textSecondary}>
-                Ingen grupper at vise.
-              </T>
-            )}
-          </>
-        )}
-      </ScrollView>
-    </Screen>
+                </View>
+                {!!a.text && <T v="bodyS">{a.text}</T>}
+              </MoreCard>
+            ))}
+          </View>
+        </>
+      )}
+    </MoreScreen>
   );
 }
 
 const s = StyleSheet.create({
-  content: { padding: 20, paddingTop: 4, gap: 14, paddingBottom: 40 },
-  list: { gap: 8 },
+  list: { gap: 16 },
+  cards: { gap: 14 },
+  empty: { textAlign: 'center', paddingVertical: 24 },
+  cardRow: { flexDirection: 'row', alignItems: 'center', gap: 10 },
+  cardText: { flex: 1, minWidth: 0, gap: 1 },
 });

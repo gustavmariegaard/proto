@@ -1,126 +1,182 @@
-import { useFocusEffect } from 'expo-router';
+import { router, useFocusEffect } from 'expo-router';
 import { useCallback, useState } from 'react';
-import { View } from 'react-native';
-import { PersonRow } from '@/components/PersonRow';
-import { Screen } from '@/components/Screen';
-import { Segmented } from '@/components/Segmented';
-import { SmallButton } from '@/components/SmallButton';
+import { StyleSheet, View } from 'react-native';
+import { AccPanel, AccScreen, PersonAction, useDraft } from '@/components/AccountParts';
+import { Button } from '@/components/Button';
+import { ToggleList } from '@/components/CreateParts';
+import { SaveBar, SavedToast } from '@/components/SaveBar';
+import { SegmentedControl } from '@/components/SegmentedControl';
 import { T } from '@/components/T';
 import { useMe, useSession } from '@/lib/session';
 import { supabase } from '@/lib/supabase';
-import { color, radius } from '@/theme/tokens';
+import { useUserSettings } from '@/lib/userSettings';
+import { color } from '@/theme/tokens';
 
 type Person = { id: string; username: string; name: string; avatar_path: string | null };
 
-/** Privatliv: offentlig/privat profil, følgeanmodninger, blokerede og skjulte i debatten */
+/** Privatliv og data: offentlig/privat profil, aktivitet, blokerede og sletning (prototypens PrivacySettings) */
 export default function Privacy() {
   const me = useMe();
-  const { refreshProfile } = useSession();
-  const [requests, setRequests] = useState<Person[]>([]);
+  const { refreshProfile, signOut } = useSession();
+  const { settings, update } = useUserSettings(me.id);
   const [blocked, setBlocked] = useState<Person[]>([]);
   const [muted, setMuted] = useState<Person[]>([]);
+  const [deleting, setDeleting] = useState(false);
+  const [busy, setBusy] = useState(false);
+  const [saving, setSaving] = useState(false);
+  const d = useDraft({ private: !!me.is_private, hidden: !!settings?.hide_active });
 
   const load = useCallback(async () => {
-    const [r, b, m] = await Promise.all([
-      supabase.from('follows').select('profiles!follows_follower_id_fkey(id, username, name, avatar_path)').eq('followee_id', me.id).eq('status', 'pending'),
+    const [b, m] = await Promise.all([
       supabase.rpc('my_blocked'),
       supabase.from('debate_mutes').select('profiles!debate_mutes_muted_id_fkey(id, username, name, avatar_path)').eq('user_id', me.id),
     ]);
-    setRequests(((r.data ?? []) as any[]).map((x) => x.profiles).filter(Boolean));
     setBlocked((b.data ?? []) as Person[]);
     setMuted(((m.data ?? []) as any[]).map((x) => x.profiles).filter(Boolean));
   }, [me.id]);
-
   useFocusEffect(
     useCallback(() => {
       load();
     }, [load]),
   );
 
-  const setPrivate = async (v: boolean) => {
-    await supabase.from('profiles').update({ is_private: v }).eq('id', me.id);
-    await refreshProfile();
+  const save = async () => {
+    setSaving(true);
+    if (d.draft.private !== !!me.is_private) {
+      await supabase.from('profiles').update({ is_private: d.draft.private }).eq('id', me.id);
+      await refreshProfile();
+    }
+    if (d.draft.hidden !== !!settings?.hide_active) await update({ hide_active: d.draft.hidden });
+    setSaving(false);
+    d.saved();
   };
 
-  const answer = async (id: string, ok: boolean) => {
-    if (ok) await supabase.from('follows').update({ status: 'accepted' }).eq('follower_id', id).eq('followee_id', me.id);
-    else await supabase.from('follows').delete().eq('follower_id', id).eq('followee_id', me.id);
-    load();
+  const deleteAccount = async () => {
+    setBusy(true);
+    const { error } = await supabase.rpc('delete_my_account');
+    setBusy(false);
+    if (!error) await signOut();
   };
+
+  const visibilityChanged = d.draft.private !== !!me.is_private;
 
   return (
-    <Screen title="Privatliv">
-      <T v="headingM">Hvem kan se din profil?</T>
-      <Segmented
+    <AccScreen
+      title="Privatliv og data"
+      footer={
+        <>
+          <SaveBar
+            dirty={d.dirty}
+            saving={saving}
+            onSave={save}
+            onReset={d.reset}
+            note={
+              visibilityChanged
+                ? d.draft.private
+                  ? 'Din profil bliver privat. Kun dine følgere kan se dit indhold.'
+                  : 'Din profil bliver offentlig. Alle kan se dit indhold.'
+                : undefined
+            }
+          />
+          <SavedToast show={d.toast} />
+        </>
+      }
+    >
+      <T v="headingM" accessibilityRole="header">
+        Hvem kan se din profil?
+      </T>
+      <SegmentedControl
         label="Hvem kan se din profil?"
-        value={me.is_private ? 'privat' : 'offentlig'}
-        onChange={(v) => setPrivate(v === 'privat')}
+        value={d.draft.private ? 'privat' : 'offentlig'}
+        onChange={(v) => d.patch({ private: v === 'privat' })}
         options={[
           { value: 'offentlig', label: 'Offentlig' },
           { value: 'privat', label: 'Privat' },
         ]}
       />
-      <T v="caption" c={color.textSecondary}>
-        {me.is_private ? 'Kun dine følgere kan se dine opslag. Dine debatopslag er altid offentlige.' : 'Alle kan se dine opslag.'}
+
+      <ToggleList
+        rows={[{ id: 'aktiv', title: 'Skjul hvornår jeg er aktiv', hint: 'Andre kan ikke se, om du er online.' }]}
+        values={{ aktiv: d.draft.hidden }}
+        onToggle={() => d.patch({ hidden: !d.draft.hidden })}
+      />
+
+      <T v="headingM" accessibilityRole="header">
+        Blokerede
       </T>
-
-      {requests.length > 0 && (
-        <>
-          <T v="headingM">Følgeanmodninger</T>
-          <View style={{ gap: 8 }}>
-            {requests.map((p) => (
-              <PersonRow key={p.id} name={p.name} username={p.username} avatar={p.avatar_path}>
-                <SmallButton title="Afvis" onPress={() => answer(p.id, false)} />
-                <SmallButton title="Godkend" dark onPress={() => answer(p.id, true)} />
-              </PersonRow>
-            ))}
-          </View>
-        </>
-      )}
-
-      <T v="headingM">Blokerede</T>
-      <List
+      <People
         people={blocked}
         action="Fjern blokering"
-        link={false}
         onAction={async (id) => {
+          setBlocked((l) => l.filter((p) => p.id !== id));
           await supabase.from('blocks').delete().eq('blocker_id', me.id).eq('blocked_id', id);
-          load();
         }}
         empty="Du har ikke blokeret nogen. Du blokerer en profil via ⋯ på profilen."
       />
 
-      <T v="headingM">Skjult i Offentlig debat</T>
-      <List
+      {/* Ikke en blokering: de kan stadig se dig, og du ser dem i dit feed */}
+      <T v="headingM" accessibilityRole="header">
+        Skjult i Offentlig debat
+      </T>
+      <People
         people={muted}
         action="Vis igen"
+        link
         onAction={async (id) => {
+          setMuted((l) => l.filter((p) => p.id !== id));
           await supabase.from('debate_mutes').delete().eq('user_id', me.id).eq('muted_id', id);
-          load();
         }}
         empty="Ingen. Du skjuler en afsender via ⋯ på et opslag i debatten."
       />
-    </Screen>
+
+      {deleting ? (
+        <AccPanel>
+          <T v="bodyS">Slet din konto? Din profil, dine opslag, billeder og beskeder slettes med det samme.</T>
+          <View style={s.buttons}>
+            <Button variant="secondary" style={{ flex: 1 }} onPress={() => setDeleting(false)}>
+              Annuller
+            </Button>
+            <Button style={{ flex: 1 }} loading={busy} onPress={deleteAccount}>
+              Slet konto
+            </Button>
+          </View>
+        </AccPanel>
+      ) : (
+        <Button variant="danger" style={{ alignSelf: 'center' }} onPress={() => setDeleting(true)}>
+          Slet konto
+        </Button>
+      )}
+    </AccScreen>
   );
 }
 
-function List({ people, action, onAction, empty, link = true }: { people: Person[]; action: string; onAction: (id: string) => void; empty: string; link?: boolean }) {
-  if (!people.length) {
+/** Profiler i en liste med én knap pr. række */
+function People({ people, action, onAction, empty, link = false }: { people: Person[]; action: string; onAction: (id: string) => void; empty: string; link?: boolean }) {
+  if (!people.length)
     return (
-      <View style={{ padding: 16, borderRadius: radius.xl, borderWidth: 1, borderColor: color.borderDefault, backgroundColor: color.bgSurface }}>
+      <AccPanel>
         <T v="bodyS" c={color.textSecondary}>
           {empty}
         </T>
-      </View>
+      </AccPanel>
     );
-  }
   return (
     <View style={{ gap: 8 }}>
       {people.map((p) => (
-        <PersonRow key={p.id} name={p.name} username={p.username} avatar={p.avatar_path} link={link}>
-          <SmallButton title={action} onPress={() => onAction(p.id)} />
-        </PersonRow>
+        <PersonAction
+          key={p.id}
+          name={p.name}
+          username={p.username}
+          avatar={p.avatar_path}
+          action={action}
+          onAction={() => onAction(p.id)}
+          onOpen={link ? () => router.push(`/bruger/${p.username}`) : undefined}
+        />
       ))}
     </View>
   );
 }
+
+const s = StyleSheet.create({
+  buttons: { flexDirection: 'row', gap: 8, alignSelf: 'stretch' },
+});

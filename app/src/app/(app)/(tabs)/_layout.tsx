@@ -13,7 +13,7 @@ function Bar({ state }: BottomTabBarProps) {
   const [more, setMore] = useState(false);
   const route = state.routes[state.index]?.name;
   // Profil hører under Mere
-  const current = route === 'profil' ? 'mere' : route;
+  const current = more || route === 'profil' ? 'mere' : route;
   return (
     <>
       <TabBar

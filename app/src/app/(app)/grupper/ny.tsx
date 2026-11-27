@@ -1,11 +1,8 @@
 import { router } from 'expo-router';
 import { useState } from 'react';
-import { Pressable, StyleSheet, View } from 'react-native';
-import { Avatar } from '@/components/Avatar';
 import { useAvatarPicker } from '@/components/AvatarCropper';
 import { Button } from '@/components/Button';
-import { Screen } from '@/components/Screen';
-import { Segmented } from '@/components/Segmented';
+import { ChoicePair, MoreScreen, PhotoPicker } from '@/components/MoreParts';
 import { T } from '@/components/T';
 import { TextField } from '@/components/TextField';
 import { uploadImage } from '@/lib/media';
@@ -13,29 +10,32 @@ import { useMe } from '@/lib/session';
 import { supabase } from '@/lib/supabase';
 import { color } from '@/theme/tokens';
 
-/** Opret gruppe: navn, beskrivelse, synlighed og billede */
+const visibility = [
+  { value: 'privat', label: 'Lukket' },
+  { value: 'offentlig', label: 'Åben' },
+] as const;
+
+/** Opret gruppe (prototypens NewGroup) */
 export default function NewGroup() {
   const me = useMe();
+  const [photo, setPhoto] = useState<string | null>(null);
   const [name, setName] = useState('');
   const [description, setDescription] = useState('');
-  const [privacy, setPrivacy] = useState<'offentlig' | 'privat'>('privat');
-  const [photo, setPhoto] = useState<string | null>(null);
+  const [privacy, setPrivacy] = useState<'privat' | 'offentlig'>('privat');
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState('');
   const { choose, cropper } = useAvatarPicker(setPhoto);
 
   const create = async () => {
+    const n = name.trim();
+    if (!n) return;
     setBusy(true);
     setError('');
     try {
       const avatar_path = photo ? await uploadImage(me.id, photo, 'image/jpeg', 'avatar') : null;
-      const { data, error } = await supabase
-        .from('groups')
-        .insert({ name: name.trim(), description: description.trim(), privacy, avatar_path, created_by: me.id })
-        .select('id')
-        .single();
+      const { error } = await supabase.from('groups').insert({ name: n, description: description.trim(), privacy, avatar_path, created_by: me.id });
       if (error) throw error;
-      router.replace(`/grupper/${data.id}`);
+      router.replace('/grupper');
     } catch {
       setError('Gruppen kunne ikke oprettes. Prøv igen.');
       setBusy(false);
@@ -43,41 +43,26 @@ export default function NewGroup() {
   };
 
   return (
-    <Screen title="Opret gruppe">
-      <Pressable accessibilityRole="button" accessibilityLabel="Vælg billede" onPress={choose} style={s.photo}>
-        <Avatar name={name || '?'} uri={photo ?? undefined} size={96} />
-      </Pressable>
-      <View style={{ alignItems: 'center' }}>
-        <Button title={photo ? 'Skift billede' : 'Vælg billede'} variant="secondary" icon="image" onPress={choose} style={{ minHeight: 44, paddingHorizontal: 20 }} />
-      </View>
-      <TextField label="Gruppens navn" value={name} onChangeText={setName} maxLength={80} />
-      <TextField label="Beskrivelse" multiline value={description} onChangeText={setDescription} maxLength={500} />
-      <View style={{ gap: 8 }}>
-        <T v="label" style={{ paddingLeft: 4 }}>
-          Hvem kan se den?
-        </T>
-        <Segmented
-          label="Hvem kan se den?"
-          value={privacy}
-          onChange={setPrivacy}
-          options={[
-            { value: 'privat', label: 'Privat' },
-            { value: 'offentlig', label: 'Offentlig' },
-          ]}
-        />
-        <T v="caption" c={color.textSecondary} style={{ paddingLeft: 4 }}>
-          {privacy === 'privat' ? 'Kun medlemmer ser opslag. Nye medlemmer skal godkendes.' : 'Alle kan se opslag og blive medlem.'}
-        </T>
-      </View>
+    <MoreScreen title="Opret gruppe" fallback="/grupper">
+      <PhotoPicker value={photo} onPick={choose} onRemove={() => setPhoto(null)} />
+      <TextField label="Gruppens navn" showLabel={false} value={name} onChangeText={setName} maxLength={80} />
+      <TextField label="Beskrivelse" showLabel={false} value={description} onChangeText={setDescription} maxLength={500} />
+      <T v="headingS" accessibilityRole="header">
+        Hvem kan se den?
+      </T>
+      <ChoicePair label="Hvem kan se den?" options={visibility} value={privacy} onChange={setPrivacy} />
+      <T v="caption" c={color.textSecondary} accessibilityLiveRegion="polite">
+        {privacy === 'privat' ? 'Nye medlemmer skal anmode om adgang, og du godkender dem.' : 'Alle kan finde gruppen og blive medlem med det samme.'}
+      </T>
       {!!error && (
         <T v="bodyS" c={color.danger}>
           {error}
         </T>
       )}
-      <Button title="Opret gruppe" block disabled={!name.trim()} loading={busy} onPress={create} />
+      <Button block disabled={!name.trim()} loading={busy} onPress={create}>
+        Opret gruppe
+      </Button>
       {cropper}
-    </Screen>
+    </MoreScreen>
   );
 }
-
-const s = StyleSheet.create({ photo: { alignItems: 'center', paddingTop: 8 } });

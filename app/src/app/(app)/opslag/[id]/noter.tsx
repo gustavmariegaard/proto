@@ -1,12 +1,13 @@
 import { router, useLocalSearchParams } from 'expo-router';
 import { useCallback, useEffect, useState } from 'react';
-import { ActivityIndicator, KeyboardAvoidingView, Platform, Pressable, StyleSheet, TextInput, View } from 'react-native';
+import { ActivityIndicator, KeyboardAvoidingView, Platform, Pressable, ScrollView, StyleSheet, TextInput, View } from 'react-native';
 import { Button } from '@/components/Button';
 import { Chip } from '@/components/Chip';
 import { Icon } from '@/components/Icon';
 import { IconButton } from '@/components/IconButton';
+import { PageHeader } from '@/components/PageHeader';
+import { noOutline, TextField } from '@/components/TextField';
 import { NoteSources } from '@/components/NoteSources';
-import { Screen } from '@/components/Screen';
 import { T } from '@/components/T';
 import { addNote, deleteNote, editNote, notesFor, rateNote, reasons, statusLabel } from '@/lib/notes';
 import { getPost } from '@/lib/posts';
@@ -15,7 +16,11 @@ import type { Note, NoteStatus, PostCard, Rating } from '@/lib/types';
 import { color, font, radius, TAP } from '@/theme/tokens';
 
 const MAX = 280;
-const ratingLabel: Record<Rating, string> = { ja: 'Ja', lidt: 'Lidt', nej: 'Nej' };
+const ratingLabel: Record<Rating, string> = {
+  ja: 'Ja',
+  lidt: 'Lidt',
+  nej: 'Nej',
+};
 const order: NoteStatus[] = ['vist', 'forslag', 'ikke'];
 const vurd = (n: number) => `${n} ${n === 1 ? 'vurdering' : 'vurderinger'}`;
 
@@ -81,16 +86,22 @@ export default function Notes() {
 
   if (post === undefined) {
     return (
-      <Screen title="Fællesskabsnoter">
-        <ActivityIndicator color={color.textPrimary} />
-      </Screen>
+      <View style={s.root}>
+        <PageHeader title="Fællesskabsnoter" fallback={`/opslag/${id}`} />
+        <ActivityIndicator style={{ marginTop: 24 }} color={color.textPrimary} />
+      </View>
     );
   }
   if (!post) {
     return (
-      <Screen title="Fællesskabsnoter">
-        <T v="body">Opslaget findes ikke længere.</T>
-      </Screen>
+      <View style={s.root}>
+        <PageHeader title="Fællesskabsnoter" fallback={`/opslag/${id}`} />
+        <View style={s.main}>
+          <T v="bodyS" c={color.textSecondary}>
+            Opslaget findes ikke længere.
+          </T>
+        </View>
+      </View>
     );
   }
 
@@ -106,7 +117,7 @@ export default function Notes() {
         maxLength={MAX}
         value={text}
         onChangeText={setText}
-        style={s.area}
+        style={[s.area, noOutline]}
         autoFocus
       />
       <T v="caption" c={color.textSecondary} style={{ alignSelf: 'flex-end' }}>
@@ -114,17 +125,17 @@ export default function Notes() {
       </T>
       {sources.map((src, i) => (
         <View key={i} style={s.sourceRow}>
-          <TextInput
-            accessibilityLabel={sources.length > 1 ? `Kilde ${i + 1} (link)` : 'Kilde (link)'}
-            placeholder={sources.length > 1 ? `Kilde ${i + 1} (link)` : 'Kilde (link)'}
-            placeholderTextColor={color.textSecondary}
-            autoCapitalize="none"
-            autoCorrect={false}
-            keyboardType="url"
-            value={src}
-            onChangeText={(v) => setSources((l) => l.map((x, j) => (j === i ? v : x)))}
-            style={s.field}
-          />
+          <View style={{ flex: 1, minWidth: 0 }}>
+            <TextField
+              label={sources.length > 1 ? `Kilde ${i + 1} (link)` : 'Kilde (link)'}
+              showLabel={false}
+              autoCapitalize="none"
+              autoCorrect={false}
+              keyboardType="url"
+              value={src}
+              onChangeText={(v) => setSources((l) => l.map((x, j) => (j === i ? v : x)))}
+            />
+          </View>
           {sources.length > 1 && (
             <IconButton icon="close" size={18} tint={color.textSecondary} label={`Fjern kilde ${i + 1}`} onPress={() => setSources((l) => l.filter((_, j) => j !== i))} />
           )}
@@ -152,7 +163,9 @@ export default function Notes() {
     return (
       <View key={n.id} style={s.note}>
         <View style={[s.status, n.status === 'vist' && s.statusOn]}>
-          <T v="captionStrong">{n.mine ? `Din note · ${statusLabel[n.status]}` : statusLabel[n.status]}</T>
+          <T v="captionStrong" c={n.status === 'ikke' ? color.textSecondary : color.textPrimary}>
+            {n.mine ? `Din note · ${statusLabel[n.status]}` : statusLabel[n.status]}
+          </T>
         </View>
         <T v="bodyS" c={n.status === 'ikke' ? color.textSecondary : color.textPrimary}>
           {n.text}
@@ -215,38 +228,43 @@ export default function Notes() {
 
   return (
     <KeyboardAvoidingView style={{ flex: 1 }} behavior={Platform.OS === 'ios' ? 'padding' : undefined}>
-      <Screen title="Fællesskabsnoter">
-        <View style={s.quote}>
-          <T v="headingS">{post.author_name}</T>
-          <T v="bodyS" numberOfLines={3}>
-            {post.text}
-          </T>
-        </View>
+      <View style={s.root}>
+        <PageHeader title="Fællesskabsnoter" fallback={`/opslag/${id}`} />
+        <ScrollView style={{ flex: 1 }} contentContainerStyle={s.main} keyboardShouldPersistTaps="handled">
+          <View style={s.quote}>
+            <T v="headingS">{post.author_name}</T>
+            <T v="bodyS" numberOfLines={3}>
+              {post.text}
+            </T>
+          </View>
 
-        {ownPost ? (
-          <T v="caption" c={color.textSecondary}>
-            Du kan ikke skrive en note på dit eget opslag.
-          </T>
-        ) : form === 'ny' ? (
-          noteForm
-        ) : (
-          <Button title="Skriv en note" variant="secondary" block onPress={() => open()} />
-        )}
+          {ownPost ? (
+            <T v="caption" c={color.textSecondary}>
+              Du kan ikke skrive en note på dit eget opslag.
+            </T>
+          ) : form === 'ny' ? (
+            noteForm
+          ) : (
+            <Button title="Skriv en note" variant="secondary" block onPress={() => open()} />
+          )}
 
-        {order.map((st) => notes.filter((n) => n.status === st).map(card))}
-      </Screen>
+          {order.map((st) => {
+            const list = notes.filter((n) => n.status === st);
+            return list.length > 0 ? (
+              <View key={st} style={s.list} accessibilityLabel={statusLabel[st]}>
+                {list.map(card)}
+              </View>
+            ) : null;
+          })}
+        </ScrollView>
+      </View>
     </KeyboardAvoidingView>
   );
 }
 
 function Pill({ label, on, icon, onPress }: { label: string; on?: boolean; icon?: boolean; onPress: () => void }) {
   return (
-    <Pressable
-      accessibilityRole="button"
-      accessibilityState={{ selected: !!on }}
-      onPress={onPress}
-      style={({ pressed }) => [s.pill, on && s.pillOn, pressed && { opacity: 0.7 }]}
-    >
+    <Pressable accessibilityRole="button" accessibilityState={{ selected: !!on }} onPress={onPress} style={({ pressed }) => [s.pill, on && s.pillOn, pressed && { opacity: 0.7 }]}>
       {icon && <Icon name="edit" size={16} color={on ? color.textOnAction : color.textPrimary} />}
       <T v="label" c={on ? color.textOnAction : color.textPrimary}>
         {label}
@@ -256,11 +274,40 @@ function Pill({ label, on, icon, onPress }: { label: string; on?: boolean; icon?
 }
 
 const s = StyleSheet.create({
-  quote: { gap: 4, padding: 16, borderRadius: radius.lg, backgroundColor: color.bgSubtle },
-  note: { gap: 8, padding: 16, borderRadius: radius.lg, borderWidth: 1, borderColor: color.borderDefault, backgroundColor: color.bgSurface },
-  status: { alignSelf: 'flex-start', paddingHorizontal: 10, paddingVertical: 3, borderRadius: radius.pill, backgroundColor: color.gray150 },
+  root: { flex: 1, backgroundColor: color.bgApp },
+  main: { gap: 12, paddingTop: 8, paddingHorizontal: 20, paddingBottom: 32 },
+  list: { gap: 12 },
+  quote: {
+    gap: 4,
+    paddingVertical: 14,
+    paddingHorizontal: 16,
+    borderRadius: radius.lg,
+    backgroundColor: color.bgSubtle,
+  },
+  note: {
+    gap: 6,
+    paddingVertical: 14,
+    paddingHorizontal: 16,
+    borderRadius: radius.lg,
+    borderWidth: 1,
+    borderColor: color.borderDefault,
+    backgroundColor: color.bgSurface,
+  },
+  status: {
+    alignSelf: 'flex-start',
+    paddingHorizontal: 10,
+    paddingVertical: 3,
+    borderRadius: radius.pill,
+    backgroundColor: color.gray150,
+  },
   statusOn: { backgroundColor: color.accentBg },
-  row: { flexDirection: 'row', alignItems: 'center', justifyContent: 'flex-end', gap: 8, marginTop: 4 },
+  row: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'flex-end',
+    gap: 8,
+    marginTop: 4,
+  },
   ask: { marginRight: 'auto', flexShrink: 1 },
   pill: {
     minWidth: 56,
@@ -274,31 +321,40 @@ const s = StyleSheet.create({
     justifyContent: 'center',
     gap: 4,
   },
-  pillOn: { backgroundColor: color.actionPrimary, borderColor: color.actionPrimary },
-  why: { gap: 8, paddingTop: 10, marginTop: 4, borderTopWidth: 1, borderTopColor: color.borderDefault },
+  pillOn: {
+    backgroundColor: color.actionPrimary,
+    borderColor: color.actionPrimary,
+  },
+  why: {
+    gap: 8,
+    paddingTop: 8,
+    marginTop: 4,
+    borderTopWidth: 1,
+    borderTopColor: color.borderDefault,
+  },
   wrap: { flexDirection: 'row', flexWrap: 'wrap', gap: 8 },
+  /* .edit-profile__field, 4 rækker */
   area: {
-    minHeight: 110,
-    padding: 16,
+    minHeight: 4 * 20 + 28 + 2,
+    paddingVertical: 14,
+    paddingHorizontal: 16,
     borderRadius: 20,
     borderWidth: 1,
     borderColor: color.borderDefault,
+    backgroundColor: color.bgSurface,
     color: color.textPrimary,
     fontFamily: font.body,
     fontSize: 16,
+    lineHeight: 20,
     textAlignVertical: 'top',
   },
   sourceRow: { flexDirection: 'row', alignItems: 'center', gap: 6 },
-  field: {
-    flex: 1,
-    minHeight: 48,
-    paddingHorizontal: 18,
-    borderRadius: radius.pill,
-    borderWidth: 1,
-    borderColor: color.borderDefault,
-    color: color.textPrimary,
-    fontFamily: font.body,
-    fontSize: 16,
+  add: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 6,
+    minHeight: TAP,
+    alignSelf: 'flex-start',
+    paddingHorizontal: 4,
   },
-  add: { flexDirection: 'row', alignItems: 'center', gap: 6, minHeight: TAP, alignSelf: 'flex-start', paddingHorizontal: 4 },
 });
