@@ -5,13 +5,15 @@ import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { Avatar } from '@/components/Avatar';
 import { useAvatarPicker } from '@/components/AvatarCropper';
 import { Button } from '@/components/Button';
+import { Icon } from '@/components/Icon';
+import { MentionSuggest } from '@/components/MentionSuggest';
 import { PageHeader } from '@/components/PageHeader';
 import { T } from '@/components/T';
 import { noOutline, TextField } from '@/components/TextField';
 import { uploadImage } from '@/lib/media';
 import { useMe, useSession } from '@/lib/session';
 import { supabase } from '@/lib/supabase';
-import { cleanUsername, splitName, USERNAME } from '@/lib/validate';
+import { splitName } from '@/lib/validate';
 import { color, font, TAP } from '@/theme/tokens';
 
 const BIO_MAX = 150;
@@ -24,15 +26,13 @@ export default function EditProfile() {
   const [first, setFirst] = useState(splitName(me.name).first);
   const [last, setLast] = useState(splitName(me.name).last);
   const name = `${first.trim()} ${last.trim()}`.trim();
-  const [username, setUsername] = useState(me.username);
   const [bio, setBio] = useState(me.bio ?? '');
   const [bioFocus, setBioFocus] = useState(false);
+  const [cursor, setCursor] = useState(0);
   const [photo, setPhoto] = useState<{ uri: string; mime: string } | null>(null);
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState('');
-  const clean = cleanUsername(username);
-  const usernameOk = USERNAME.test(clean);
-  const ok = first.trim().length > 0 && last.trim().length > 0 && usernameOk;
+  const ok = first.trim().length > 0 && last.trim().length > 0;
 
   const { choose, cropper } = useAvatarPicker((uri) => setPhoto({ uri, mime: 'image/jpeg' }));
 
@@ -42,12 +42,12 @@ export default function EditProfile() {
     setError('');
     try {
       const avatar_path = photo ? await uploadImage(me.id, photo.uri, photo.mime, 'avatar') : me.avatar_path;
-      const { error } = await supabase.from('profiles').update({ name, username: clean, bio: bio.trim(), avatar_path }).eq('id', me.id);
+      const { error } = await supabase.from('profiles').update({ name, bio: bio.trim(), avatar_path }).eq('id', me.id);
       if (error) throw error;
       await refreshProfile();
       router.canGoBack() ? router.back() : router.replace('/profil');
-    } catch (e: any) {
-      setError(e?.code === '23505' ? 'Brugernavnet er taget.' : 'Profilen kunne ikke gemmes. Prøv igen.');
+    } catch {
+      setError('Profilen kunne ikke gemmes. Prøv igen.');
     } finally {
       setBusy(false);
     }
@@ -73,15 +73,21 @@ export default function EditProfile() {
 
         <TextField label="Fornavn" autoComplete="given-name" value={first} onChangeText={setFirst} />
         <TextField label="Efternavn" autoComplete="family-name" value={last} onChangeText={setLast} />
-        <TextField
-          label="Brugernavn"
-          autoComplete="username"
-          autoCapitalize="none"
-          autoCorrect={false}
-          value={username}
-          onChangeText={setUsername}
-          error={username.trim() && !usernameOk ? 'Brug 2–30 tegn: bogstaver, tal, punktum eller understreg.' : undefined}
-        />
+        {/* Brugernavnet vises, men kan ikke ændres (andre bruger det til at finde og tagge dig) */}
+        <View style={s.group}>
+          <T v="label" style={s.label}>
+            Brugernavn
+          </T>
+          <View style={s.locked} accessible accessibilityLabel={`Brugernavn: ${me.username}. Kan ikke ændres.`}>
+            <T v="body" c={color.textSecondary} style={{ flex: 1 }} numberOfLines={1}>
+              @{me.username}
+            </T>
+            <Icon name="lock" size={16} color={color.textSecondary} />
+          </View>
+          <T v="caption" c={color.textSecondary} style={s.label}>
+            Dit brugernavn kan ikke ændres.
+          </T>
+        </View>
         <View style={s.group}>
           <T v="label" style={s.label}>
             Bio
@@ -95,13 +101,28 @@ export default function EditProfile() {
             maxLength={BIO_MAX}
             value={bio}
             onChangeText={setBio}
+            onSelectionChange={(e) => setCursor(e.nativeEvent.selection.end)}
             onFocus={() => setBioFocus(true)}
             onBlur={() => setBioFocus(false)}
             style={[s.bio, bioFocus && { borderColor: color.textPrimary }, noOutline]}
           />
-          <T v="caption" c={color.textSecondary} style={s.count}>
-            {bio.length}/{BIO_MAX}
-          </T>
+          <MentionSuggest
+            text={bio}
+            cursor={cursor}
+            onPick={(t) => {
+              const v = t.slice(0, BIO_MAX);
+              setBio(v);
+              setCursor(v.length);
+            }}
+          />
+          <View style={s.bioFoot}>
+            <T v="caption" c={color.textSecondary}>
+              Skriv @ for at tagge en person eller en side.
+            </T>
+            <T v="caption" c={color.textSecondary}>
+              {bio.length}/{BIO_MAX}
+            </T>
+          </View>
         </View>
 
         {!!error && (
@@ -142,5 +163,16 @@ const s = StyleSheet.create({
     lineHeight: 22,
     textAlignVertical: 'top',
   },
-  count: { alignSelf: 'flex-end' },
+  bioFoot: { flexDirection: 'row', justifyContent: 'space-between', gap: 12, paddingHorizontal: 4 },
+  locked: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 8,
+    minHeight: 44,
+    paddingHorizontal: 16,
+    borderRadius: 999,
+    borderWidth: 1,
+    borderColor: color.borderDefault,
+    backgroundColor: color.bgSubtle,
+  },
 });

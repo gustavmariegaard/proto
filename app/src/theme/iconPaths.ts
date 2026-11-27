@@ -138,6 +138,9 @@ const extra = {
   'user-minus': `<circle cx="10" cy="8" r="4" ${S}/>` + p('M3 20C3 16.7 6.1 14 10 14C11.6 14 13 14.4 14.2 15.1M16 18H22'),
   'chevron-down': p('M6 9L12 15L18 9'),
   logout: p('M9 21H5C4.4 21 4 20.6 4 20V4C4 3.4 4.4 3 5 3H9M16 17L21 12L16 7M21 12H9'),
+  /** Indsigt (søjlediagram). Ikke fra Figma. */
+  chart: p('M4 20H20') + p('M7 16V11') + p('M12 16V6') + p('M17 16V9'),
+  eye: p('M2 12C2 12 5.5 5 12 5C18.5 5 22 12 22 12C22 12 18.5 19 12 19C5.5 19 2 12 2 12Z') + p('M12 15C13.6569 15 15 13.6569 15 12C15 10.3431 13.6569 9 12 9C10.3431 9 9 10.3431 9 12C9 13.6569 10.3431 15 12 15Z'),
 } as const;
 
 export const iconPaths = { ...basePaths, ...extra };

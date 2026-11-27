@@ -7,6 +7,7 @@ import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { Avatar } from '@/components/Avatar';
 import { CommentsSheet } from '@/components/CommentsSheet';
 import { Icon, type IconName } from '@/components/Icon';
+import { MentionText } from '@/components/MentionText';
 import { T } from '@/components/T';
 import { VideoView } from '@/components/VideoView';
 import { imageSource } from '@/lib/media';
@@ -75,9 +76,9 @@ export default function MediaViewer() {
             </T>
           </Pressable>
           {!!post.text && (
-            <T v="bodyS" c="rgba(255,255,255,0.9)" numberOfLines={3} style={s.shadow}>
+            <MentionText v="bodyS" c="rgba(255,255,255,0.9)" linkColor="#fff" numberOfLines={3} style={s.shadow}>
               {post.text}
-            </T>
+            </MentionText>
           )}
           <View style={s.actions}>
             {post.kind !== 'debat' && (

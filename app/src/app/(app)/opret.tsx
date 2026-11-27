@@ -7,6 +7,7 @@ import { closeTo } from '@/components/CreateParts';
 import { AddTile, CreateButton, CreateLabel, CreateShell, createField, MediaFrame, OptionRow } from '@/components/CreateFlow';
 import { CreateTagInput } from '@/components/CreateTagInput';
 import type { IconName } from '@/components/Icon';
+import { MentionSuggest } from '@/components/MentionSuggest';
 import { SharedPost } from '@/components/SharedPost';
 import { T } from '@/components/T';
 import { noOutline, TextField } from '@/components/TextField';
@@ -46,6 +47,7 @@ export default function Create() {
   const [tags, setTags] = useState<string[]>([]);
   const [tagError, setTagError] = useState(false);
   const [focus, setFocus] = useState(false);
+  const [cursor, setCursor] = useState(0);
   const [media, setMedia] = useState<Media | null>(null);
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState('');
@@ -152,9 +154,21 @@ export default function Create() {
         maxLength={2200}
         value={text}
         onChangeText={setText}
+        onSelectionChange={(e) => setCursor(e.nativeEvent.selection.end)}
         onFocus={() => setFocus(true)}
         onBlur={() => setFocus(false)}
       />
+      <MentionSuggest
+        text={text}
+        cursor={cursor}
+        onPick={(t) => {
+          setText(t);
+          setCursor(t.length);
+        }}
+      />
+      <T v="caption" c={color.textSecondary} style={s.tip}>
+        Skriv @ for at tagge en person eller en side.
+      </T>
 
       {sharing && (
         <View style={{ alignSelf: 'stretch' }}>
@@ -321,6 +335,7 @@ function LocalVideo({ uri }: { uri: string }) {
 
 const s = StyleSheet.create({
   add: { flexDirection: 'row', gap: 10, alignSelf: 'stretch' },
+  tip: { marginTop: -8, paddingLeft: 4 },
   list: { gap: 10, alignSelf: 'stretch' },
   audience: { gap: 10, alignSelf: 'stretch' },
   destText: { flex: 1, minWidth: 0 },

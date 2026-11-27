@@ -170,7 +170,7 @@ await anna.c.from('follows').insert({ follower_id: anna.id, followee_id: lars2.i
 const { error: shareOk } = await anna.c.from('posts').insert({ author_id: anna.id, text: '', shared_post_id: open1.id });
 check('Man kan dele et opslag som opslag', !shareOk, shareOk?.message);
 const { error: shareNo } = await anna.c.from('posts').insert({ author_id: anna.id, text: 'Se her', shared_post_id: closed1.id });
-check('… men ikke, hvis deling er slået fra', !!shareNo);
+check('… også selvom det gamle "tillad deling" er slået fra (deling er altid tilladt)', !shareNo, shareNo?.message);
 
 // Notifikationer peger på den rigtige begivenhed og gruppe
 r = await lars2.c.from('notifications').select('type, event_id, group_id').eq('type', 'event_invite');

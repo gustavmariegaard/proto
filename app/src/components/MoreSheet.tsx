@@ -121,7 +121,7 @@ export function MoreSheet({ open, onClose }: { open: boolean; onClose: () => voi
         <View style={s.spacer} pointerEvents="none" />
         <ScrollView
           style={s.scroll}
-          contentContainerStyle={[s.content, { paddingBottom: tabbarBar(insets.bottom) + 28 }]}
+          contentContainerStyle={[s.content, { paddingBottom: tabbarBar(insets.bottom) + 12 }]}
           bounces={false}
         >
           <View {...pan.panHandlers} accessibilityRole="button" accessibilityLabel="Luk Mere" style={s.handle}>

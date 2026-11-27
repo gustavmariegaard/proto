@@ -78,7 +78,7 @@ export type Message = { id: string; conversation_id: string; sender_id: string; 
 
 export type NotificationRow = {
   id: string;
-  type: 'follow' | 'follow_request' | 'like' | 'comment' | 'note' | 'message' | 'group_request' | 'event_invite';
+  type: 'follow' | 'follow_request' | 'like' | 'comment' | 'note' | 'message' | 'group_request' | 'event_invite' | 'mention' | 'mention_bio';
   post_id: string | null;
   group_id?: string | null;
   event_id?: string | null;

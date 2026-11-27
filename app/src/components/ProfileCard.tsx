@@ -5,6 +5,7 @@ import { fmtNumber } from '@/lib/time';
 import { color, font, momentRing, radius } from '@/theme/tokens';
 import { Avatar } from './Avatar';
 import { Icon } from './Icon';
+import { MentionText } from './MentionText';
 import { T } from './T';
 
 const RING = 88;
@@ -31,13 +32,15 @@ type Props = {
   action?: ReactNode;
   /** Nederst i kortet (fx Følg og Besked) */
   children?: ReactNode;
+  /** Allernederst i kortet, under en streg (fx Indsigt) */
+  footer?: ReactNode;
 };
 
 /**
  * Toppen af en profil (din egen og andres): ét kort med et blødt grønt banner,
  * billedet der stikker op i banneret, navn i fuld bredde, bio og tallene i én rolig linje.
  */
-export function ProfileCard({ name, username, avatarPath, ring, onRing, ringLabel, plus, badges, bio, stats, corner, action, children }: Props) {
+export function ProfileCard({ name, username, avatarPath, ring, onRing, ringLabel, plus, badges, bio, stats, corner, action, children, footer }: Props) {
   const pic = (
     <View style={[s.ring, ring === 'new' && s.ringNew, ring === 'seen' && s.ringSeen]}>
       <Avatar name={name} path={avatarPath} size={RING - 2 * (momentRing.width + momentRing.gap)} tone="blue" />
@@ -85,7 +88,7 @@ export function ProfileCard({ name, username, avatarPath, ring, onRing, ringLabe
           {badges && <View style={s.badges}>{badges}</View>}
         </View>
 
-        {!!bio?.trim() && <T v="bodyS">{bio.trim()}</T>}
+        {!!bio?.trim() && <MentionText v="bodyS">{bio.trim()}</MentionText>}
 
         <View style={s.stats}>
           {stats.map((st) => (
@@ -99,6 +102,7 @@ export function ProfileCard({ name, username, avatarPath, ring, onRing, ringLabe
         </View>
 
         {children}
+        {footer}
       </View>
     </View>
   );

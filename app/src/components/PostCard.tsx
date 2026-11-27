@@ -1,6 +1,6 @@
 import { Image } from 'expo-image';
 import { router } from 'expo-router';
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
 import { Pressable, StyleSheet, View } from 'react-native';
 import { imageSource } from '@/lib/media';
 import { deletePost, hidePost, muteInDebate, setLike, setSaved } from '@/lib/posts';
@@ -18,6 +18,8 @@ import { PublicBadge } from './PublicBadge';
 import { SharedPost } from './SharedPost';
 import { StanceBar } from './StanceBar';
 import { VideoView } from './VideoView';
+import { MentionText } from './MentionText';
+import { trackView } from '@/lib/insights';
 import { T } from './T';
 
 type Props = {
@@ -31,6 +33,8 @@ type Props = {
 /** Opslag i feedet (prototypens PostCard). Debat: enig/uenig og fællesskabsnote. Ellers hjerter. */
 export function PostCard({ post, onRemoved, onComments }: Props) {
   const me = useMe();
+  // Analytics: opslaget er vist
+  useEffect(() => trackView(post.id, post.author_id, me.id), [post.id, post.author_id, me.id]);
   const [liked, setLiked] = useState(post.liked);
   const [likes, setLikes] = useState(post.likes);
   const [comments, setComments] = useState(post.comments);
@@ -159,7 +163,7 @@ export function PostCard({ post, onRemoved, onComments }: Props) {
 
       {!!post.text && (
         <Pressable onPress={open}>
-          <T v="body">{post.text}</T>
+          <MentionText v="body">{post.text}</MentionText>
         </Pressable>
       )}
 

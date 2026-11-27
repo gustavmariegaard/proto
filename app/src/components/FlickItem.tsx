@@ -1,6 +1,6 @@
 import { Image } from 'expo-image';
 import { router } from 'expo-router';
-import { memo, useState } from 'react';
+import { memo, useEffect, useState } from 'react';
 import { Pressable, StyleSheet, View } from 'react-native';
 import { Platform } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
@@ -13,6 +13,8 @@ import type { PostCard } from '@/lib/types';
 import { font, radius, TAP } from '@/theme/tokens';
 import { Icon, type IconName } from './Icon';
 import { PostMenu } from './PostMenu';
+import { MentionText } from './MentionText';
+import { trackView } from '@/lib/insights';
 import { T } from './T';
 import { VideoView } from './VideoView';
 
@@ -40,6 +42,10 @@ export const FlickItem = memo(function FlickItem({ flick, height, bottomInset, t
   const [menu, setMenu] = useState(false);
   const [hidden, setHidden] = useState(false);
   const mine = flick.author_id === me.id;
+  // Analytics: flicken er set, når den spiller
+  useEffect(() => {
+    if (active) trackView(flick.id, flick.author_id, me.id);
+  }, [active, flick.id, flick.author_id, me.id]);
   const path = flick.image_paths[0];
 
   return (
@@ -156,9 +162,9 @@ export const FlickItem = memo(function FlickItem({ flick, height, bottomInset, t
             @{flick.author_username}
           </T>
           {!!flick.text && (
-            <T v="bodyS" c="#f5f5f4" numberOfLines={3} style={s.textShadow}>
+            <MentionText v="bodyS" c="#f5f5f4" linkColor="#fff" numberOfLines={3} style={s.textShadow}>
               {flick.text}
-            </T>
+            </MentionText>
           )}
           {flick.tags.length > 0 && (
             <View style={s.tags}>

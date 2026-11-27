@@ -5,6 +5,7 @@ import { useState } from 'react';
 import { Platform, StyleSheet, TextInput, View } from 'react-native';
 import { CreateButton, CreateShell, createField, OptionRow } from '@/components/CreateFlow';
 import { CreateTagInput } from '@/components/CreateTagInput';
+import { MentionSuggest } from '@/components/MentionSuggest';
 import { T } from '@/components/T';
 import { noOutline } from '@/components/TextField';
 import { uploadVideo } from '@/lib/media';
@@ -29,6 +30,7 @@ export default function NewFlick() {
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState('');
   const [focus, setFocus] = useState(false);
+  const [cursor, setCursor] = useState(0);
 
   const close = () => (router.canGoBack() ? router.back() : router.replace('/flicks'));
 
@@ -108,10 +110,11 @@ export default function NewFlick() {
           </View>
           <TextInput
             accessibilityLabel="Skriv en tekst"
-            placeholder="Skriv en tekst …"
+            placeholder="Skriv en tekst … (@ for at tagge)"
             placeholderTextColor={color.textSecondary}
             value={text}
             onChangeText={setText}
+            onSelectionChange={(e) => setCursor(e.nativeEvent.selection.end)}
             onFocus={() => setFocus(true)}
             onBlur={() => setFocus(false)}
             multiline
@@ -119,6 +122,14 @@ export default function NewFlick() {
             style={[createField.box, s.text, focus && createField.focus, noOutline]}
           />
         </View>
+        <MentionSuggest
+          text={text}
+          cursor={cursor}
+          onPick={(t) => {
+            setText(t);
+            setCursor(t.length);
+          }}
+        />
         <CreateTagInput
           flow
           tags={tags}

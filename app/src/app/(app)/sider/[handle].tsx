@@ -7,6 +7,7 @@ import { Button } from '@/components/Button';
 import { Icon } from '@/components/Icon';
 import { PageHeader } from '@/components/PageHeader';
 import { ProfilePosts } from '@/components/ProfilePosts';
+import { MentionText } from '@/components/MentionText';
 import { T } from '@/components/T';
 import { getPage, postsWhere, setFollowPage, type PageCard } from '@/lib/community';
 import { markSeen } from '@/lib/moreActivity';
@@ -82,7 +83,7 @@ export default function PageView() {
               </View>
             </View>
 
-            {!!page.bio.trim() && <T v="bodyS">{page.bio.trim()}</T>}
+            {!!page.bio.trim() && <MentionText v="bodyS">{page.bio.trim()}</MentionText>}
 
             <View style={s.stats}>
               <View style={s.stat} accessible accessibilityLabel={`${fmtNumber(posts.length)} Opslag`}>

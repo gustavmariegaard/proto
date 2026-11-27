@@ -33,6 +33,10 @@ function sentence(n: Row, requestOpen: boolean, accepted: boolean) {
       return n.group?.name ? `${who} vil være med i ${n.group.name}.` : `${who} vil være med i din gruppe.`;
     case 'event_invite':
       return n.event?.title ? `${who} inviterede dig til ${n.event.title}.` : `${who} inviterede dig til en begivenhed.`;
+    case 'mention':
+      return `${who} taggede dig i et opslag.`;
+    case 'mention_bio':
+      return `${who} taggede dig i sin bio.`;
   }
 }
 

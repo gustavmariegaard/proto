@@ -10,6 +10,7 @@ import { profilePosts, ProfilePosts } from '@/components/ProfilePosts';
 import { T } from '@/components/T';
 import { UserMenu } from '@/components/UserMenu';
 import { activeMoments } from '@/lib/moments';
+import { trackVisit } from '@/lib/insights';
 import { follow, postsBy, profileView, unfollow, type ProfileView } from '@/lib/profiles';
 import { useMe } from '@/lib/session';
 import { supabase } from '@/lib/supabase';
@@ -46,6 +47,7 @@ export default function UserProfile() {
     }
     const v = await profileView(username);
     setP(v);
+    if (v) trackVisit(v.id, me.id);
     if (!v || v.i_blocked) {
       setPosts([]);
       setMoments({ any: false, seen: true });

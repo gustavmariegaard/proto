@@ -9,6 +9,7 @@ import type { PostCard } from '@/lib/types';
 import { color, radius } from '@/theme/tokens';
 import { Avatar } from './Avatar';
 import { Icon } from './Icon';
+import { MentionText } from './MentionText';
 import { T } from './T';
 
 /**
@@ -45,9 +46,9 @@ export function SharedPost({ id, compact, onDark }: { id: string; compact?: bool
         </T>
       </View>
       {!!post.text && (
-        <T v="bodyS" numberOfLines={compact ? 3 : 6}>
+        <MentionText v="bodyS" numberOfLines={compact ? 3 : 6}>
           {post.text}
-        </T>
+        </MentionText>
       )}
       {post.image_paths[0] &&
         (post.media_type === 'video' ? (
