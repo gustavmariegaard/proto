@@ -140,6 +140,8 @@ export type PageCard = {
   followers: number;
   i_follow: boolean;
   i_admin: boolean;
+  /** Din rolle på siden (admin, redaktoer, moderator) eller null */
+  my_role?: 'admin' | 'redaktoer' | 'moderator' | null;
 };
 
 const pg = (p: PageCard): PageCard => ({ ...p, followers: Number(p.followers) });
