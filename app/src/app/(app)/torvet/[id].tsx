@@ -2,11 +2,12 @@ import { Image } from 'expo-image';
 import * as Linking from 'expo-linking';
 import { router, useLocalSearchParams } from 'expo-router';
 import { useCallback, useEffect, useRef, useState } from 'react';
-import { Platform, Pressable, ScrollView, Share, StyleSheet, useWindowDimensions, View } from 'react-native';
+import { Modal, Platform, Pressable, ScrollView, Share, StyleSheet, useWindowDimensions, View } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { Avatar } from '@/components/Avatar';
 import { Button } from '@/components/Button';
 import { Chip } from '@/components/Chip';
+import { MediaViewer } from '@/components/MediaViewer';
 import { Icon, type IconName } from '@/components/Icon';
 import { IconButton } from '@/components/IconButton';
 import { PageHeader } from '@/components/PageHeader';
@@ -14,7 +15,7 @@ import { Sheet } from '@/components/Sheet';
 import { T } from '@/components/T';
 import { TextField } from '@/components/TextField';
 import { imageSource } from '@/lib/media';
-import { fmtKm, formatPrice, getListing, kmBetween, listedText, locationOrDefault, markViewed, messageSeller, setListingSaved, type ListingRow } from '@/lib/market';
+import { fmtKm, formatPrice, getListing, kmBetween, knownLocation, listedText, markViewed, messageSeller, setListingSaved, type ListingRow } from '@/lib/market';
 import { useMe } from '@/lib/session';
 import { supabase } from '@/lib/supabase';
 import { color, radius, TAP } from '@/theme/tokens';
@@ -41,8 +42,9 @@ export default function ListingDetail() {
       setSaved(data.saved);
       if (data.seller_id !== me.id) {
         markViewed(data.id, me.id);
-        const loc = await locationOrDefault(me.id);
-        setDistance(kmBetween(loc.lat, loc.lng, data.lat, data.lng));
+        // Afstand fra der, hvor du er nu (vises ikke, hvis vi ikke kender din placering)
+        const loc = await knownLocation(me.id);
+        setDistance(loc ? kmBetween(loc.lat, loc.lng, data.lat, data.lng) : null);
       }
     }
   }, [id, me.id]);
@@ -324,6 +326,8 @@ function Gallery({ paths, title }: { paths: string[]; title: string }) {
   const h = Math.min(w, height * 0.52);
   const ref = useRef<React.ComponentRef<typeof ScrollView>>(null);
   const [index, setIndex] = useState(0);
+  // Tryk på et billede: vis billederne i fuld skærm, startende ved det, man trykkede på
+  const [full, setFull] = useState<number | null>(null);
   const count = paths.length;
   const go = (i: number) => ref.current?.scrollTo({ x: i * w, animated: true });
   return (
@@ -337,9 +341,30 @@ function Gallery({ paths, title }: { paths: string[]; title: string }) {
         scrollEventThrottle={32}
       >
         {paths.map((p, i) => (
-          <Image key={`${i}-${p}`} source={imageSource(p)} style={{ width: w, height: h }} contentFit="cover" accessibilityLabel={`Billede ${i + 1} af ${count}`} />
+          <Pressable
+            key={`${i}-${p}`}
+            accessibilityRole="imagebutton"
+            accessibilityLabel={`Billede ${i + 1} af ${count}. Vis i fuld skærm`}
+            onPress={() => setFull(i)}
+            style={({ pressed }) => [{ width: w, height: h }, pressed && { opacity: 0.92 }]}
+          >
+            <Image source={imageSource(p)} style={{ width: w, height: h }} contentFit="cover" />
+          </Pressable>
         ))}
       </ScrollView>
+      <Modal visible={full !== null} transparent animationType="none" statusBarTranslucent onRequestClose={() => setFull(null)}>
+        {full !== null && (
+          <MediaViewer
+            paths={paths}
+            startAt={full}
+            label={title}
+            onClose={() => {
+              // Galleriet på annoncen følger med til det billede, man lukkede på
+              setFull(null);
+            }}
+          />
+        )}
+      </Modal>
       {count > 1 && (
         <>
           <View style={g.counter} accessibilityLiveRegion="polite">

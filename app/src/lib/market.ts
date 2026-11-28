@@ -1,3 +1,4 @@
+import AsyncStorage from '@react-native-async-storage/async-storage';
 import * as Location from 'expo-location';
 import { Platform } from 'react-native';
 import { supabase } from './supabase';
@@ -108,26 +109,87 @@ export async function saveMyLocation(userId: string, loc: MyLocation) {
   return { ...loc, lat: Math.round(loc.lat * 100) / 100, lng: Math.round(loc.lng * 100) / 100 };
 }
 
-/** Bruges, når man ikke har en placering endnu (prototypen viser altid en afstand fra en by) */
-export const defaultLocation: MyLocation = { city: 'København', lat: 55.68, lng: 12.57 };
+/* ---------- Din placering lige nu (Torvet) ---------- */
+
+/** Telefonens placering huskes et par minutter, så Torvet ikke spørger igen ved hvert skift */
+const FRESH_MS = 3 * 60 * 1000;
+let live: { loc: MyLocation; at: number } | null = null;
+/** By valgt med hånden i denne session (går forud for telefonens placering, indtil man vælger "Brug min placering") */
+let chosen: MyLocation | null = null;
+/** Sidst valgte by gemmes på telefonen og bruges kun, når placeringen ikke er tilgængelig */
+const CITY_KEY = 'ciircle.torvet.by';
+
+export type LocState =
+  | { status: 'live'; loc: MyLocation }
+  | { status: 'manual'; loc: MyLocation }
+  /** Man har sagt nej til placering (eller browseren blokerer den) */
+  | { status: 'denied' }
+  /** Telefonen kunne ikke finde placeringen */
+  | { status: 'unavailable' };
+
+const withTimeout = <T,>(p: Promise<T>, ms: number) => Promise.race([p, new Promise<never>((_, rej) => setTimeout(() => rej(new Error('timeout')), ms))]);
+
+async function storedCity(): Promise<MyLocation | null> {
+  try {
+    const v = await AsyncStorage.getItem(CITY_KEY);
+    const c = v ? cities.find((x) => x.name === v) : null;
+    return c ? { city: c.name, lat: c.lat, lng: c.lng } : null;
+  } catch {
+    return null;
+  }
+}
 
 /**
- * Din placering: den gemte, ellers telefonens (kun hvis du allerede har sagt ja – vi spørger ikke),
- * ellers København. Telefonens placering gemmes, så den bruges næste gang.
+ * Din placering, der hvor du er nu: telefonens (spørger om lov første gang), ellers den by,
+ * du selv har valgt. Aldrig en tilfældig standardby. Placeringen gemmes afrundet (ca. 1 km).
  */
-export async function locationOrDefault(userId: string): Promise<MyLocation> {
-  const saved = await getMyLocation(userId);
-  if (saved) return saved;
+export async function currentLocation(userId: string, opts: { force?: boolean } = {}): Promise<LocState> {
+  if (chosen) return { status: 'manual', loc: chosen };
+  if (!opts.force && live && Date.now() - live.at < FRESH_MS) return { status: 'live', loc: live.loc };
+  let denied = false;
   try {
-    const perm = await Location.getForegroundPermissionsAsync();
-    if (perm.status === 'granted') {
-      const dev = await deviceLocation();
-      if (dev) return await saveMyLocation(userId, dev);
+    const dev = await withTimeout(deviceLocation(), 15000);
+    if (dev) {
+      live = { loc: dev, at: Date.now() };
+      saveMyLocation(userId, dev).catch(() => {});
+      return { status: 'live', loc: dev };
     }
+    denied = true;
   } catch {
-    /* ingen placering – brug standardbyen */
+    /* ingen placering (timeout, slået fra, ingen GPS) */
   }
-  return defaultLocation;
+  const city = await storedCity();
+  if (city) return { status: 'manual', loc: city };
+  return { status: denied ? 'denied' : 'unavailable' };
+}
+
+/** Vælg en by med hånden (null = brug telefonens placering igen) */
+export async function chooseCity(name: string | null): Promise<MyLocation | null> {
+  const c = name ? cities.find((x) => x.name === name) : null;
+  chosen = c ? { city: c.name, lat: c.lat, lng: c.lng } : null;
+  try {
+    if (c) await AsyncStorage.setItem(CITY_KEY, c.name);
+  } catch {
+    /* ikke vigtigt */
+  }
+  return chosen;
+}
+
+/** Bruges kun som sidste udvej, når en annonce skal have en placering (Sælg) */
+export const defaultLocation: MyLocation = { city: 'København', lat: 55.68, lng: 12.57 };
+
+/** Placering til afstande på en annonce: lige nu, ellers den gemte. null, hvis vi ikke kender den. */
+export async function knownLocation(userId: string): Promise<MyLocation | null> {
+  if (chosen) return chosen;
+  if (live && Date.now() - live.at < FRESH_MS) return live.loc;
+  const st = await currentLocation(userId);
+  if (st.status === 'live' || st.status === 'manual') return st.loc;
+  return await getMyLocation(userId);
+}
+
+/** Sælg: din placering lige nu, ellers den gemte, ellers en by (kan rettes i feltet "Afhentning") */
+export async function locationOrDefault(userId: string): Promise<MyLocation> {
+  return (await knownLocation(userId)) ?? defaultLocation;
 }
 
 /** Find en by på listen ud fra en tekst ("Afhentning: Aarhus C" → Aarhus) */

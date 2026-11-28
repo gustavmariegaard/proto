@@ -11,8 +11,11 @@ import { SegmentedControl } from '@/components/SegmentedControl';
 import { T } from '@/components/T';
 import { TextField } from '@/components/TextField';
 import {
+  chooseCity,
+  currentLocation,
+  defaultLocation,
   listingsNear,
-  locationOrDefault,
+  type LocState,
   myListings,
   radiusText,
   recentCategories,
@@ -39,7 +42,8 @@ export default function Market() {
   const me = useMe();
   const params = useLocalSearchParams<{ vis?: string }>();
   const [view, setView] = useState<View_>(views.find((v) => v.value === params.vis)?.value ?? 'salg');
-  const [loc, setLoc] = useState<MyLocation | null>(null);
+  const [where, setWhere] = useState<LocState | null>(null);
+  const loc: MyLocation | null = where && (where.status === 'live' || where.status === 'manual') ? where.loc : null;
   const [km, setKm] = useState<number | null>(25);
   const [all, setAll] = useState<ListingRow[] | null>(null);
   const [recent, setRecent] = useState<Category[]>([]);
@@ -53,18 +57,43 @@ export default function Market() {
   // Husk den valgte afstand på telefonen
   useEffect(() => {
     AsyncStorage.getItem(RADIUS_KEY).then((v) => v !== null && setKm(v === 'alle' ? null : Number(v)));
-    locationOrDefault(me.id).then(setLoc);
-  }, [me.id]);
+  }, []);
+
+  // Din placering, der hvor du er nu: hentes hver gang Torvet åbnes (huskes et par minutter)
+  const locate = useCallback(
+    async (force = false) => {
+      setWhere((w) => (force ? null : w));
+      setWhere(await currentLocation(me.id, { force }));
+    },
+    [me.id],
+  );
+  useFocusEffect(
+    useCallback(() => {
+      locate();
+    }, [locate]),
+  );
+
+  const pickCity = async (name: string | null) => {
+    const l = await chooseCity(name);
+    if (l) setWhere({ status: 'manual', loc: l });
+    else locate(true);
+  };
 
   const load = useCallback(async () => {
     if (view === 'dine') return setAll(await myListings(me.id));
     if (view === 'gemte') return setAll(await savedListings(me.id));
-    if (!loc) return;
+    if (!where) return;
+    if (!loc) {
+      // Ingen placering: hele landet, uden afstande
+      const rows = await listingsNear(defaultLocation, null);
+      setAll(rows.filter((l) => l.seller_id !== me.id).map((l) => ({ ...l, distance_km: null })));
+      return;
+    }
     const [rows, cats] = await Promise.all([listingsNear(loc, km), recentCategories()]);
     // Dine egne annoncer ligger under "Dine annoncer"
     setAll(rows.filter((l) => l.seller_id !== me.id));
     setRecent(cats);
-  }, [view, loc, km, me.id]);
+  }, [view, where, loc, km, me.id]);
 
   useFocusEffect(
     useCallback(() => {
@@ -88,7 +117,11 @@ export default function Market() {
       ? 'Du har ingen annoncer endnu. Har du noget, du vil sælge?'
       : view === 'gemte'
         ? 'Du har ikke gemt nogen annoncer. Tryk på Gem på en annonce for at finde den her.'
-        : 'Ingen annoncer matcher din søgning.';
+        : q
+          ? 'Ingen annoncer matcher din søgning.'
+          : loc && km !== null
+            ? `Ingen annoncer inden for ${km} km fra ${city} endnu. Prøv en større afstand.`
+            : 'Der er ingen annoncer endnu.';
 
   return (
     <MarketEventsShell onRefresh={load}>
@@ -107,16 +140,52 @@ export default function Market() {
             <View style={{ alignSelf: 'stretch' }}>
               <TextField label="Søg på Torvet" showLabel={false} value={query} onChangeText={setQuery} />
             </View>
-            <Pressable
-              accessibilityRole="button"
-              accessibilityLabel={`Afstand: ${km === null ? 'hele landet' : `inden for ${km} km`} fra ${city}. Skift`}
-              onPress={() => setRadiusOpen(true)}
-              style={({ pressed }) => [s.radius, pressed && { transform: [{ scale: 0.97 }] }]}
-            >
-              <Icon name="pin" size={18} />
-              <T v="label">{radiusText(km)}</T>
-              <Icon name="chevron-down" size={16} color={color.textSecondary} />
-            </Pressable>
+            {loc ? (
+              <Pressable
+                accessibilityRole="button"
+                accessibilityLabel={`Afstand: ${km === null ? 'hele landet' : `inden for ${km} km`} fra ${city}. Skift`}
+                onPress={() => setRadiusOpen(true)}
+                style={({ pressed }) => [s.radius, pressed && { transform: [{ scale: 0.97 }] }]}
+              >
+                <Icon name="pin" size={18} />
+                <T v="label">
+                  {radiusText(km)}
+                  <T v="label" c={color.textSecondary}>
+                    {km === null ? '' : ` fra ${city}`}
+                  </T>
+                </T>
+                <Icon name="chevron-down" size={16} color={color.textSecondary} />
+              </Pressable>
+            ) : where === null ? (
+              <View style={[s.radius, { borderColor: color.borderDefault }]} accessibilityLabel="Finder din placering">
+                <Icon name="pin" size={18} color={color.textSecondary} />
+                <T v="label" c={color.textSecondary}>
+                  Finder din placering …
+                </T>
+              </View>
+            ) : null}
+          </View>
+        )}
+
+        {/* Ingen placering: forklar det venligt, og lad folk prøve igen eller vælge en by */}
+        {view === 'salg' && where && !loc && (
+          <View style={s.locCard}>
+            <View style={s.locTile}>
+              <Icon name="pin" size={20} color={color.green700} />
+            </View>
+            <View style={{ flex: 1, minWidth: 0, gap: 4 }}>
+              <T v="headingS">Slå placering til for at se annoncer i nærheden</T>
+              <T v="bodyS" c={color.textSecondary}>
+                {where.status === 'denied'
+                  ? 'Din placering er slået fra for ciircle. Slå den til i browserens eller telefonens indstillinger, eller vælg en by.'
+                  : 'Vi kunne ikke finde din placering lige nu. Prøv igen, eller vælg en by.'}{' '}
+                Indtil da ser du annoncer fra hele landet.
+              </T>
+              <View style={s.locActions}>
+                <Button title="Prøv igen" variant="secondary" onPress={() => locate(true)} style={s.locBtn} />
+                <Button title="Vælg by" variant="secondary" icon="pin" iconSize={16} gap={6} onPress={() => setRadiusOpen(true)} style={s.locBtn} />
+              </View>
+            </View>
           </View>
         )}
 
@@ -126,6 +195,7 @@ export default function Market() {
               {empty}
             </T>
             {view === 'dine' && <Button title="Sælg noget" variant="secondary" onPress={() => router.push('/torvet/saelg')} />}
+            {view === 'salg' && !q && loc && km !== null && <Button title="Vælg afstand" variant="secondary" icon="pin" iconSize={16} gap={6} onPress={() => setRadiusOpen(true)} />}
           </View>
         ) : forYou.length > 0 ? (
           <>
@@ -149,7 +219,15 @@ export default function Market() {
         )}
       </View>
 
-      <ListingRadiusSheet open={radiusOpen} value={km} city={city} onClose={() => setRadiusOpen(false)} onApply={applyKm} />
+      <ListingRadiusSheet
+        open={radiusOpen}
+        value={km}
+        city={city}
+        source={where?.status === 'live' ? 'live' : where?.status === 'manual' ? 'manual' : 'none'}
+        onClose={() => setRadiusOpen(false)}
+        onApply={applyKm}
+        onPickCity={pickCity}
+      />
     </MarketEventsShell>
   );
 }
@@ -172,5 +250,9 @@ const s = StyleSheet.create({
     backgroundColor: color.bgSurface,
   },
   section: { gap: 10 },
+  locCard: { flexDirection: 'row', gap: 12, padding: 14, borderWidth: 1, borderColor: color.borderDefault, borderRadius: radius.lg, backgroundColor: color.bgSurface },
+  locTile: { width: 40, height: 40, borderRadius: 12, alignItems: 'center', justifyContent: 'center', backgroundColor: color.noteBg, borderWidth: 1, borderColor: color.accentBg },
+  locActions: { flexDirection: 'row', flexWrap: 'wrap', gap: 8, marginTop: 6 },
+  locBtn: { minHeight: 40, paddingHorizontal: 14 },
   empty: { alignItems: 'flex-start', gap: 12, paddingTop: 8, paddingBottom: 24 },
 });
