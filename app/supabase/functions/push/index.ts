@@ -16,7 +16,19 @@ import webpush from 'npm:web-push@3.6.7';
 
 type Payload = { type: 'INSERT'; table: 'notifications' | 'messages' | 'ring'; record: Record<string, any> };
 
-const supabase = createClient(Deno.env.get('SUPABASE_URL')!, Deno.env.get('SUPABASE_SERVICE_ROLE_KEY')!, {
+// Nøglen sættes automatisk af Supabase (ældre projekter: SERVICE_ROLE_KEY, nyere: SECRET_KEYS)
+function serviceKey() {
+  const legacy = Deno.env.get('SUPABASE_SERVICE_ROLE_KEY');
+  if (legacy) return legacy;
+  try {
+    const keys = JSON.parse(Deno.env.get('SUPABASE_SECRET_KEYS') ?? '{}');
+    return (keys.default ?? Object.values(keys)[0]) as string;
+  } catch {
+    return '';
+  }
+}
+
+const supabase = createClient(Deno.env.get('SUPABASE_URL')!, serviceKey(), {
   auth: { persistSession: false },
 });
 
