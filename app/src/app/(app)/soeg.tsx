@@ -42,12 +42,38 @@ let recentStore: string[] = [];
 /** Fjerner tegn, der har betydning i PostgREST-filtre */
 const clean = (q: string) => q.replace(/^@/, '').replace(/[%_,()*]/g, '').trim();
 
+/**
+ * Brugere: navn eller brugernavn indeholder søgningen. Flere ord ("lund mette")
+ * matcher også navne, der indeholder alle ordene i vilkårlig rækkefølge.
+ */
+function peopleFilter(term: string) {
+  const words = term.split(/\s+/).filter(Boolean);
+  const parts = [`name.ilike.%${term}%`, `username.ilike.%${term.replace(/\s+/g, '')}%`];
+  if (words.length > 1) parts.push(`and(${words.map((w) => `name.ilike.%${w}%`).join(',')})`);
+  return parts.join(',');
+}
+
+/** Hvor godt passer en bruger til søgningen? Brugernavn vægter højest. */
+function rank(p: { name: string; username: string }, term: string) {
+  const t = term.toLowerCase();
+  const u = p.username.toLowerCase();
+  const n = p.name.toLowerCase();
+  if (u === t.replace(/\s+/g, '')) return 100;
+  if (u.startsWith(t)) return 80;
+  if (n === t) return 70;
+  if (n.startsWith(t)) return 60;
+  if (n.split(/\s+/).some((w) => w.startsWith(t))) return 50;
+  if (u.includes(t)) return 40;
+  if (n.includes(t)) return 30;
+  return 10;
+}
+
 async function search(me: string, q: string): Promise<Results> {
   const term = clean(q);
   const like = `%${term}%`;
   const [people, posts, groups, pages] = await Promise.all([
     term
-      ? supabase.from('profiles').select('id, username, name, avatar_path').or(`name.ilike.${like},username.ilike.${like}`).neq('id', me).limit(30)
+      ? supabase.from('profiles').select('id, username, name, avatar_path').or(peopleFilter(term)).neq('id', me).limit(50)
       : supabase
           .from('follows')
           .select('p:profiles!follows_followee_id_fkey(id, username, name, avatar_path)')
@@ -81,7 +107,10 @@ async function search(me: string, q: string): Promise<Results> {
     : [{ data: [] }, { data: [] }];
   const st = new Map(((mine ?? []) as { followee_id: string; status: string }[]).map((x) => [x.followee_id, x.status]));
   const fol = new Set(((theirs ?? []) as { follower_id: string }[]).map((x) => x.follower_id));
-  persons = persons.sort((a, b) => a.name.localeCompare(b.name, 'da'));
+  // Med søgning: bedste match først (brugernavn er mest præcist). Uden: alfabetisk.
+  persons = term
+    ? persons.sort((a, b) => rank(b, term) - rank(a, term) || a.name.localeCompare(b.name, 'da')).slice(0, 30)
+    : persons.sort((a, b) => a.name.localeCompare(b.name, 'da'));
 
   return {
     people: persons.map((p) => ({

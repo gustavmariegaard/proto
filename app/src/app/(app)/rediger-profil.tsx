@@ -84,9 +84,6 @@ export default function EditProfile() {
             </T>
             <Icon name="lock" size={16} color={color.textSecondary} />
           </View>
-          <T v="caption" c={color.textSecondary} style={s.label}>
-            Dit brugernavn kan ikke ændres.
-          </T>
         </View>
         <View style={s.group}>
           <T v="label" style={s.label}>
@@ -116,9 +113,7 @@ export default function EditProfile() {
             }}
           />
           <View style={s.bioFoot}>
-            <T v="caption" c={color.textSecondary}>
-              Skriv @ for at tagge en person eller en side.
-            </T>
+            <View />
             <T v="caption" c={color.textSecondary}>
               {bio.length}/{BIO_MAX}
             </T>

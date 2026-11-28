@@ -68,7 +68,7 @@ export default function Connections() {
 
   const list = lists[tab];
   const first = (name: string) => name.split(' ')[0] ?? name;
-  const title = own ? 'Dine forbindelser' : owner ? owner.name : 'Forbindelser';
+  const title = own ? 'Forbindelser' : owner ? owner.name : 'Forbindelser';
 
   return (
     <View style={s.root}>
