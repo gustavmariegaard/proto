@@ -153,15 +153,22 @@ export default function Conversation() {
     }
   };
 
+  const sendingRef = useRef(false);
+  const textRef = useRef('');
+  textRef.current = text;
   const send = async () => {
-    const body = text.trim();
-    if (!body || sending) return;
+    // Ref-vagt: Enter kan udløse flere hændelser, før tilstanden når at opdatere
+    const body = textRef.current.trim();
+    if (!body || sendingRef.current) return;
+    sendingRef.current = true;
+    textRef.current = '';
     setSending(true);
     setError('');
     setText('');
     setInputH(22);
     lastTyping.current = 0;
     const { data, error } = await supabase.from('messages').insert({ conversation_id: id, sender_id: me.id, body }).select().single();
+    sendingRef.current = false;
     setSending(false);
     if (error) {
       setText(body);
@@ -223,7 +230,9 @@ export default function Conversation() {
   const call = (video: boolean) => other && conv && startCall({ id: other.id, name: other.name, username: other.username, avatar_path: other.avatar_path }, conv.id, video);
   // Sidste besked, du sendte (til "Sendt"/"Set")
   const lastMine = [...list].reverse().find((m) => m.sender_id === me.id && m.kind !== 'call');
-  const seen = !!lastMine && !!theirRead && theirRead >= lastMine.created_at && list[list.length - 1]?.id === lastMine.id;
+  // Kun ved den allersidste besked i samtalen (som på Instagram)
+  const showStatus = !!lastMine && list[list.length - 1]?.id === lastMine.id;
+  const seen = showStatus && !!theirRead && theirRead >= lastMine!.created_at;
 
   return (
     <KeyboardAvoidingView style={s.screen} behavior={Platform.OS === 'ios' ? 'padding' : undefined}>
@@ -371,7 +380,7 @@ export default function Conversation() {
                       {!sameAsNext && (
                         <T v="micro" c={color.textSecondary} style={s.time}>
                           {clock(m.created_at)}
-                          {direct && lastMine?.id === m.id ? (seen ? ' · Set' : ' · Sendt') : ''}
+                          {direct && showStatus && lastMine?.id === m.id ? (seen ? ' · Set' : ' · Sendt') : ''}
                         </T>
                       )}
                     </View>
