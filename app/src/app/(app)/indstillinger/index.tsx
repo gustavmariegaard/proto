@@ -54,6 +54,10 @@ export default function Settings() {
         <SetRow icon="globe" title="Offentlig person" hint={publicFigureHint[status]} onPress={() => router.push('/indstillinger/offentlig-person')} />
       </Group>
 
+      <Group title="Notifikationer">
+        <SetRow icon="bell" title="Notifikationer" hint="Push på telefonen, og hvad du vil have besked om" onPress={() => router.push('/indstillinger/notifikationer')} />
+      </Group>
+
       <Group title="Indsigt">
         <SetRow icon="chart" title="Indsigt" hint="Hvem du når, visninger, interaktioner og følgere" onPress={() => router.push('/indsigt')} />
       </Group>

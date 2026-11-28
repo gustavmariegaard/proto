@@ -4,6 +4,9 @@ import { Pressable, RefreshControl, ScrollView, StyleSheet, View } from 'react-n
 import { Avatar } from '@/components/Avatar';
 import { Button } from '@/components/Button';
 import { PageHeader } from '@/components/PageHeader';
+import { MintTile } from '@/components/CreateFlow';
+import { Icon } from '@/components/Icon';
+import { usePush } from '@/lib/webPush';
 import { T } from '@/components/T';
 import { useMe } from '@/lib/session';
 import { supabase } from '@/lib/supabase';
@@ -180,6 +183,7 @@ export default function Notifications() {
           />
         }
       >
+        <PushPrompt />
         {rows && groups.length === 0 && (
           <T v="bodyS" c={color.textSecondary} style={{ textAlign: 'center' }}>
             Du har ingen notifikationer
@@ -199,6 +203,9 @@ export default function Notifications() {
 }
 
 const s = StyleSheet.create({
+  prompt: { flexDirection: 'row', alignItems: 'center', gap: 12, padding: 12, paddingRight: 8, borderWidth: 1, borderColor: color.accentBg, borderRadius: radius.xl, backgroundColor: color.bgSurface },
+  promptBtn: { minHeight: 36, paddingHorizontal: 14, justifyContent: 'center', borderRadius: radius.pill, backgroundColor: color.accent },
+  promptX: { width: 28, height: 28, alignItems: 'center', justifyContent: 'center' },
   root: { flex: 1, backgroundColor: color.bgApp },
   content: { gap: 14, paddingTop: 4, paddingHorizontal: 20, paddingBottom: 24 },
   list: { gap: 14 },
@@ -216,3 +223,52 @@ const s = StyleSheet.create({
   dotOn: { backgroundColor: color.accentHighlight },
   buttons: { flexDirection: 'row', flexWrap: 'wrap', gap: 8 },
 });
+
+/** Lille kort øverst: slå push til (eller læg appen på hjemmeskærmen). Kan lukkes. */
+function PushPrompt() {
+  const me = useMe();
+  const push = usePush(me.id);
+  const [hidden, setHidden] = useState(() => {
+    try {
+      return typeof localStorage !== 'undefined' && localStorage.getItem('ciircle.pushPrompt') === 'skjult';
+    } catch {
+      return false;
+    }
+  });
+  if (hidden || (push.state !== 'off' && push.state !== 'needs-install')) return null;
+  const hide = () => {
+    setHidden(true);
+    try {
+      localStorage.setItem('ciircle.pushPrompt', 'skjult');
+    } catch {}
+  };
+  const install = push.state === 'needs-install';
+  return (
+    <View style={s.prompt}>
+      <MintTile icon="bell" />
+      <View style={{ flex: 1, minWidth: 0, gap: 2 }}>
+        <T v="headingS">{install ? 'Få notifikationer på telefonen' : 'Få besked med det samme'}</T>
+        <T v="caption" c={color.textSecondary}>
+          {install ? 'Læg ciircle på hjemmeskærmen for at få push.' : 'Også når appen er lukket.'}
+        </T>
+        {!!push.error && (
+          <T v="caption" c={color.danger}>
+            {push.error}
+          </T>
+        )}
+      </View>
+      <Pressable
+        accessibilityRole="button"
+        onPress={install ? () => router.push('/indstillinger/notifikationer') : push.enable}
+        style={({ pressed }) => [s.promptBtn, pressed && { opacity: 0.85 }]}
+      >
+        <T v="label" c={color.textOnHighlight}>
+          {install ? 'Sådan' : 'Slå til'}
+        </T>
+      </Pressable>
+      <Pressable accessibilityRole="button" accessibilityLabel="Luk" onPress={hide} hitSlop={8} style={s.promptX}>
+        <Icon name="close" size={16} color={color.textSecondary} />
+      </Pressable>
+    </View>
+  );
+}

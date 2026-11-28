@@ -6,6 +6,7 @@ import { useEffect } from 'react';
 import { Platform } from 'react-native';
 import { useSession } from './session';
 import { supabase } from './supabase';
+import { useWebPushSync } from './webPush';
 
 /*
  * Push-notifikationer via Expos gratis push-tjeneste.
@@ -51,6 +52,8 @@ export async function registerForPush(userId: string): Promise<string | null> {
 export function usePushRegistration() {
   const { session } = useSession();
   const uid = session?.user.id;
+  // Browseren: hold push-abonnementet frisk og åbn det rigtige sted ved tryk
+  useWebPushSync(uid);
 
   useEffect(() => {
     if (uid) registerForPush(uid);
