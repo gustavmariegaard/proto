@@ -13,6 +13,9 @@ export type ConversationRow = {
   is_request: boolean;
   has_messages: boolean;
   members: Member[];
+  /** Seneste besked er et opkald (efter trin 5); mangler på ældre databaser */
+  last_kind?: 'text' | 'call' | null;
+  last_call?: { video?: boolean; status?: string; seconds?: number } | null;
 };
 
 export async function myConversations() {
