@@ -21,6 +21,8 @@ export function setupWebHead() {
   set('link[rel="manifest"]', link, { rel: 'manifest', href: `${base}manifest.webmanifest` });
   set('meta[name="apple-mobile-web-app-title"]', meta, { name: 'apple-mobile-web-app-title', content: 'ciircle' });
   set('meta[name="apple-mobile-web-app-capable"]', meta, { name: 'apple-mobile-web-app-capable', content: 'yes' });
+  // Statuslinjen øverst på iPhone (appen på hjemmeskærmen): lys som appen, med mørk tekst
+  set('meta[name="apple-mobile-web-app-status-bar-style"]', meta, { name: 'apple-mobile-web-app-status-bar-style', content: 'default' });
   set('meta[name="mobile-web-app-capable"]', meta, { name: 'mobile-web-app-capable', content: 'yes' });
   document.title = 'ciircle';
   set('meta[name="theme-color"]', meta, { name: 'theme-color', content: '#fafaf9' });
