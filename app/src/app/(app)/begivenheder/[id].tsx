@@ -116,7 +116,7 @@ export default function EventDetail() {
           </Pressable>
         )}
 
-        <Pressable accessibilityRole="link" onPress={() => router.push(mine ? '/profil' : `/bruger/${event.organizer_username}`)} style={s.organizer}>
+        <Pressable accessibilityRole="link" onPress={() => router.push(`/bruger/${event.organizer_username}`)} style={s.organizer}>
           <Avatar name={event.organizer_name} path={event.organizer_avatar_path} />
           <View style={s.infoText}>
             <T v="headingS">{event.organizer_name}</T>

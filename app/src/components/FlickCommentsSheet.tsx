@@ -92,7 +92,7 @@ export function FlickCommentsSheet({ postId, onClose, onCount }: Props) {
               accessibilityRole="link"
               onPress={() => {
                 onClose();
-                router.push(own ? '/profil' : `/bruger/${c.author_username}`);
+                router.push(`/bruger/${c.author_username}`);
               }}
             >
               {c.author_name}

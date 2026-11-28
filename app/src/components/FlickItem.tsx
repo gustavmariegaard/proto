@@ -157,7 +157,7 @@ export const FlickItem = memo(function FlickItem({ flick, height, bottomInset, t
             c="#fff"
             style={s.textShadow}
             accessibilityRole="link"
-            onPress={() => router.push(mine ? '/profil' : `/bruger/${flick.author_username}`)}
+            onPress={() => router.push(`/bruger/${flick.author_username}`)}
           >
             @{flick.author_username}
           </T>

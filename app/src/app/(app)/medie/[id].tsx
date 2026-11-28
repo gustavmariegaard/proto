@@ -158,7 +158,7 @@ export default function MediaViewer() {
           )}
           <Pressable
             accessibilityRole="link"
-            onPress={() => router.push(post.page_id ? `/sider/${post.page_handle}` : post.author_id === me.id ? '/profil' : `/bruger/${post.author_username}`)}
+            onPress={() => router.push(post.page_id ? `/sider/${post.page_handle}` : `/bruger/${post.author_username}`)}
             style={s.who}
           >
             <Avatar name={name} path={post.page_id ? post.page_avatar_path : post.author_avatar_path} size={32} />

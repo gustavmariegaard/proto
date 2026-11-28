@@ -1,3 +1,4 @@
+import { MyProfile } from '@/components/MyProfile';
 import { router, useFocusEffect, useLocalSearchParams } from 'expo-router';
 import { useCallback, useEffect, useState } from 'react';
 import { ActivityIndicator, Pressable, ScrollView, StyleSheet, View } from 'react-native';
@@ -23,7 +24,15 @@ const publicLabel = { person: 'Offentlig person', side: 'Side' } as const;
  * En andens profil (prototypens UserProfile): billede, navn, @brugernavn,
  * følg-knap og hele deres historik af opslag. Rute: /bruger/:username
  */
-export default function UserProfile() {
+export default function UserProfilePage() {
+  const { username } = useLocalSearchParams<{ username: string }>();
+  const me = useMe();
+  // Din egen profil, åbnet fra et opslag o.l.: med tilbage-pil til det, du kom fra
+  if (username === me.username) return <MyProfile back />;
+  return <UserProfile />;
+}
+
+function UserProfile() {
   const { username } = useLocalSearchParams<{ username: string }>();
   const me = useMe();
   const insets = useSafeAreaInsets();
@@ -41,10 +50,6 @@ export default function UserProfile() {
   }, [toast]);
 
   const load = useCallback(async () => {
-    if (username === me.username) {
-      router.replace('/profil');
-      return;
-    }
     const v = await profileView(username);
     setP(v);
     if (v) trackVisit(v.id, me.id);

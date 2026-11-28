@@ -148,7 +148,7 @@ export default function Share() {
     router.replace('/');
   };
 
-  const shareLabel = mode === 'besked' ? (selected.length > 1 ? `Send til ${selected.length}` : 'Send') : 'Del som opslag';
+  const shareLabel = mode === 'besked' ? (selected.length > 1 ? `Send til ${selected.length}` : 'Send') : 'Del opslag';
 
   const quote = (
     <View style={s.quote}>

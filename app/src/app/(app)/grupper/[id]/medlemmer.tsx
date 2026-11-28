@@ -95,7 +95,7 @@ export default function GroupMembers() {
             <Pressable
               key={m.id}
               accessibilityRole="link"
-              onPress={() => router.push(m.id === me.id ? '/profil' : `/bruger/${m.username}`)}
+              onPress={() => router.push(`/bruger/${m.username}`)}
               onLongPress={admin && m.id !== me.id ? () => setPicked(m) : undefined}
               style={({ pressed }) => [s.row, pressed && { opacity: 0.7 }]}
             >

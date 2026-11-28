@@ -318,7 +318,7 @@ function TextEditor({ value, onChange, onDone }: { value: { text: string; color:
   const { width } = useWindowDimensions();
   const k = Math.min(width, 600) / 390;
   const size = 28 * k;
-  const [m, setM] = useState({ w: 0, h: 0 });
+  const fg = value.box ? onBox(value.color) : value.color;
   const textStyle = { fontFamily: font.title, fontSize: size, lineHeight: size * 1.18, textAlign: 'center' as const };
   return (
     <View style={s.editor}>
@@ -341,21 +341,28 @@ function TextEditor({ value, onChange, onDone }: { value: { text: string; color:
         </Pressable>
       </View>
       <View style={s.edMid} pointerEvents="box-none">
-        {/* Usynlig kopi af teksten måler, hvor bred boksen skal være (som på det færdige moment) */}
-        <View style={[s.measure, { maxWidth: 330 * k }]} pointerEvents="none" onLayout={(e) => setM({ w: e.nativeEvent.layout.width, h: e.nativeEvent.layout.height })}>
-          <T style={[textStyle, { paddingHorizontal: 12 * k }]}>{value.text || 'Skriv noget'}</T>
-        </View>
-        <View style={[{ maxWidth: 330 * k, paddingHorizontal: 12 * k, paddingVertical: 6 * k, borderRadius: 12 * k }, value.box && { backgroundColor: value.color }]}>
+        {/*
+          Boksen får sin størrelse fra den synlige tekst, så den vokser roligt, mens man skriver.
+          Selve skrivefeltet ligger usynligt ovenpå (kun markøren ses), så intet hopper eller blinker.
+        */}
+        <View style={[{ maxWidth: 330 * k, minWidth: 40 * k, paddingHorizontal: 12 * k, paddingVertical: 6 * k, borderRadius: 12 * k }, value.box && { backgroundColor: value.color }]}>
+          <T style={[textStyle, { color: value.text ? fg : value.box ? 'rgba(0,0,0,0.35)' : 'rgba(255,255,255,0.6)' }]}>{value.text ? value.text + (value.text.endsWith('\n') ? ' ' : '') : 'Skriv noget'}</T>
           <TextInput
             autoFocus
             multiline
             maxLength={200}
             value={value.text}
             onChangeText={(text) => onChange({ text })}
-            placeholder="Skriv noget"
-            placeholderTextColor={value.box ? 'rgba(0,0,0,0.35)' : 'rgba(255,255,255,0.6)'}
             accessibilityLabel="Tekst på momentet"
-            style={[noOutline, textStyle, { width: m.w ? Math.min(m.w - 24 * k + 2, 306 * k) : undefined, height: m.h || undefined, color: value.box ? onBox(value.color) : value.color, padding: 0 }]}
+            selectionColor={fg}
+            cursorColor={fg}
+            scrollEnabled={false}
+            style={[
+              noOutline,
+              textStyle,
+              s.input,
+              { left: 12 * k, right: 12 * k, top: 6 * k, bottom: 6 * k, color: 'transparent', caretColor: fg, overflow: 'hidden', resize: 'none' } as object,
+            ]}
           />
         </View>
       </View>
@@ -380,6 +387,6 @@ const s = StyleSheet.create({
   dot: { width: 24, height: 24, borderRadius: 12, borderWidth: 2, borderColor: 'rgba(255,255,255,0.9)' },
   dotOn: { transform: [{ scale: 1.25 }], borderColor: color.white, borderWidth: 3 },
   done: { minHeight: 36, paddingHorizontal: 14, justifyContent: 'center', borderRadius: radius.pill, backgroundColor: color.white },
-  measure: { position: 'absolute', opacity: 0, left: 0, top: 0 },
+  input: { position: 'absolute', padding: 0, margin: 0, borderWidth: 0, backgroundColor: 'transparent' },
   edMid: { flex: 1, alignItems: 'center', justifyContent: 'center', paddingHorizontal: 16, paddingBottom: '30%' },
 });

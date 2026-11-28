@@ -128,7 +128,7 @@ export function MomentStory({ moments, startAtUnseen, onEnd, onBeforeStart, onCl
   const handle = isPage ? (current.page_handle ?? '') : current.author_username;
   const whoPath = isPage ? current.page_avatar_path : current.author_avatar_path;
   const firstName = who.split(' ')[0];
-  const openProfile = () => router.push(isPage ? `/sider/${current.page_handle}` : mine ? '/profil' : `/bruger/${current.author_username}`);
+  const openProfile = () => router.push(isPage ? `/sider/${current.page_handle}` : `/bruger/${current.author_username}`);
 
   const sendReply = async () => {
     const text = reply.trim();

@@ -141,7 +141,7 @@ export function CommentsSheet({ postId, postAuthorId, open, onClose, onCount }: 
               <Avatar name={c.author_name} path={c.author_avatar_path} />
               <View style={s.text}>
                 <View style={s.name}>
-                  <T v="headingS" numberOfLines={1} onPress={() => router.push(own ? '/profil' : `/bruger/${c.author_username}`)}>
+                  <T v="headingS" numberOfLines={1} onPress={() => router.push(`/bruger/${c.author_username}`)}>
                     {c.author_name}
                   </T>
                   {c.author_id === postAuthorId && (

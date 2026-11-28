@@ -68,7 +68,7 @@ export function PostCard({ post, onRemoved, onComments, feed = false }: Props) {
   // På selve opslagssiden åbner det bare kommentarerne.
   const openPost = onComments ?? (() => router.push({ pathname: '/opslag/[id]', params: { id: post.id, kommentarer: '1' } }));
   const openMedia = () => router.push(`/medie/${post.id}`);
-  const profile = () => router.push(mine ? '/profil' : `/bruger/${post.author_username}`);
+  const profile = () => router.push(`/bruger/${post.author_username}`);
 
   const why = mine
     ? 'Det er dit eget opslag.'
