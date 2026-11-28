@@ -15,54 +15,62 @@ import { T } from './T';
  * Valget gælder hele appen: Profil viser den valgte, og nye opslag laves som den.
  */
 export function AccountSwitcher({ open, onClose, stay = false }: { open: boolean; onClose: () => void; /** Bliv på skærmen efter skiftet (fx Hjem) i stedet for at gå til Profil */ stay?: boolean }) {
+  return (
+    <Sheet open={open} onClose={onClose} title="Skift profil" initialSize="auto" dim>
+      <View style={s.list}>
+        <AccountList
+          onPicked={() => {
+            onClose();
+            if (!stay) router.navigate('/profil');
+          }}
+          onCreate={onClose}
+        />
+      </View>
+    </Sheet>
+  );
+}
+
+/** Listen over din profil og dine sider (bruges i arket og direkte i Mere-menuen) */
+export function AccountList({ onPicked, onCreate }: { onPicked?: () => void; onCreate?: () => void }) {
   const me = useMe();
   const { acting, pages, switchTo } = useActingAs(me.id);
   const pick = async (p: MyPage | null) => {
     await switchTo(p);
-    onClose();
-    if (!stay) router.navigate('/profil');
+    onPicked?.();
   };
   return (
-    <Sheet open={open} onClose={onClose} title="Skift profil" initialSize="auto" dim>
-      <View style={s.list} accessibilityRole="radiogroup" accessibilityLabel="Brug ciircle som">
+    <View style={s.rows} accessibilityRole="radiogroup" accessibilityLabel="Brug ciircle som">
+      <Row on={acting.kind === 'person'} name={me.name} path={me.avatar_path} hint={`@${me.username} · Personlig profil`} onPress={() => pick(null)} />
+      {pages.map((p) => (
         <Row
-          on={acting.kind === 'person'}
-          name={me.name}
-          path={me.avatar_path}
-          hint={`@${me.username} · Personlig profil`}
-          onPress={() => pick(null)}
+          key={p.id}
+          on={acting.kind === 'side' && acting.id === p.id}
+          name={p.name}
+          path={p.avatar_path}
+          page
+          hint={`@${p.handle} · Side · ${fmtNumber(p.followers)} ${p.followers === 1 ? 'følger' : 'følgere'}`}
+          onPress={() => pick(p)}
         />
-        {pages.map((p) => (
-          <Row
-            key={p.id}
-            on={acting.kind === 'side' && acting.id === p.id}
-            name={p.name}
-            path={p.avatar_path}
-            page
-            hint={`@${p.handle} · Side · ${fmtNumber(p.followers)} ${p.followers === 1 ? 'følger' : 'følgere'}`}
-            onPress={() => pick(p)}
-          />
-        ))}
-        <Pressable
-          accessibilityRole="link"
-          onPress={() => {
-            onClose();
-            router.push('/sider/ny');
-          }}
-          style={({ pressed }) => [s.row, pressed && { opacity: 0.8 }]}
-        >
-          <View style={s.add}>
-            <Icon name="plus" size={20} color={color.green700} />
-          </View>
-          <View style={s.text}>
-            <T v="label">Opret en side</T>
-            <T v="caption" c={color.textSecondary}>
-              Til en forening, virksomhed eller et fællesskab
-            </T>
-          </View>
-        </Pressable>
-      </View>
-    </Sheet>
+      ))}
+      <Pressable
+        accessibilityRole="link"
+        onPress={() => {
+          onCreate?.();
+          router.push('/sider/ny');
+        }}
+        style={({ pressed }) => [s.row, pressed && { opacity: 0.8 }]}
+      >
+        <View style={s.add}>
+          <Icon name="plus" size={20} color={color.green700} />
+        </View>
+        <View style={s.text}>
+          <T v="label">Opret en side</T>
+          <T v="caption" c={color.textSecondary}>
+            Til en forening, virksomhed eller et fællesskab
+          </T>
+        </View>
+      </Pressable>
+    </View>
   );
 }
 
@@ -91,7 +99,8 @@ function Row({ on, name, path, hint, page, onPress }: { on: boolean; name: strin
 }
 
 const s = StyleSheet.create({
-  list: { gap: 8, paddingTop: 8, paddingHorizontal: 16, paddingBottom: 24 },
+  list: { paddingTop: 8, paddingHorizontal: 16, paddingBottom: 24 },
+  rows: { gap: 8 },
   row: { flexDirection: 'row', alignItems: 'center', gap: 12, minHeight: 64, paddingVertical: 10, paddingHorizontal: 12, borderRadius: radius.lg, borderWidth: 1, borderColor: color.borderDefault, backgroundColor: color.bgSurface },
   rowOn: { borderColor: color.textPrimary },
   text: { flex: 1, minWidth: 0, gap: 2 },

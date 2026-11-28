@@ -38,9 +38,12 @@ const appleHead = [
   `<meta name="apple-mobile-web-app-status-bar-style" content="default">`,
   `<meta name="apple-mobile-web-app-title" content="ciircle">`,
   `<meta name="theme-color" content="#fafaf9">`,
+  `<meta name="theme-color" media="(prefers-color-scheme: dark)" content="#fafaf9">`,
+  // Appen er lys: uden dette bliver toppen sort, når telefonen er i mørk tilstand
+  `<meta name="color-scheme" content="light only">`,
   `<link rel="manifest" href="${base}manifest.webmanifest">`,
   `<link rel="apple-touch-icon" href="${base}apple-touch-icon.png">`,
-  `<style>html,body{background-color:#fafaf9}</style>`,
+  `<style>:root{color-scheme:light only}html,body{background-color:#fafaf9}</style>`,
 ].join('');
 html = html.replace(/<meta name="theme-color"[^>]*>/g, '');
 html = html.replace('</head>', `${appleHead}${preload}</head>`);

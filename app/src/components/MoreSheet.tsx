@@ -4,7 +4,7 @@ import { Animated, BackHandler, Easing, PanResponder, Platform, Pressable, Scrol
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { useMe } from '@/lib/session';
 import { useActingAs } from '@/lib/actingAs';
-import { AccountSwitcher } from './AccountSwitcher';
+import { AccountList } from './AccountSwitcher';
 import { color, radius, tabbarBar } from '@/theme/tokens';
 import { Avatar } from './Avatar';
 import { Icon, type IconName } from './Icon';
@@ -69,6 +69,7 @@ export function MoreSheet({ open, onClose }: { open: boolean; onClose: () => voi
   useEffect(() => {
     if (!open) {
       setShown(false);
+      setSwitching(false);
       return;
     }
     const sub = BackHandler.addEventListener('hardwareBackPress', () => {
@@ -145,21 +146,29 @@ export function MoreSheet({ open, onClose }: { open: boolean; onClose: () => voi
               </T>
             </View>
             {asPage || pages.length > 0 ? (
-              <Pressable accessibilityRole="button" accessibilityLabel="Skift profil" onPress={() => setSwitching(true)} hitSlop={6} style={({ pressed }) => [s.switchBtn, pressed && s.pressed]}>
+              <Pressable
+                accessibilityRole="button"
+                accessibilityLabel="Skift profil"
+                accessibilityState={{ expanded: switching }}
+                onPress={() => setSwitching((v) => !v)}
+                hitSlop={6}
+                style={({ pressed }) => [s.switchBtn, switching && s.switchOn, pressed && s.pressed]}
+              >
                 <T v="captionStrong">Skift</T>
-                <Icon name="chevron-down" size={14} stroke={2.5} />
+                <View style={switching ? { transform: [{ rotate: '180deg' }] } : undefined}>
+                  <Icon name="chevron-down" size={14} stroke={2.5} />
+                </View>
               </Pressable>
             ) : (
               <Icon name="chevron-right" size={18} />
             )}
           </Pressable>
-          <AccountSwitcher
-            open={switching}
-            onClose={() => {
-              setSwitching(false);
-              onClose();
-            }}
-          />
+          {/* Skift profil direkte i menuen (ingen ekstra lag ovenpå) */}
+          {switching && (
+            <View style={s.accounts}>
+              <AccountList onPicked={() => setSwitching(false)} onCreate={onClose} />
+            </View>
+          )}
 
           <View style={s.tiles}>
             {tiles.map((t) => (
@@ -180,6 +189,8 @@ export function MoreSheet({ open, onClose }: { open: boolean; onClose: () => voi
 }
 
 const s = StyleSheet.create({
+  switchOn: { backgroundColor: color.gray200 },
+  accounts: { marginTop: -4 },
   switchBtn: { flexDirection: 'row', alignItems: 'center', gap: 4, minHeight: 32, paddingHorizontal: 12, borderRadius: radius.pill, backgroundColor: color.bgSubtle },
   /* Ligger over Hjem og topbaren, men under bundmenuen (z-index 20) */
   layer: { position: 'absolute', top: 0, left: 0, right: 0, bottom: 0, zIndex: 15 },
