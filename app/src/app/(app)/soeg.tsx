@@ -7,6 +7,11 @@ import { Avatar } from '@/components/Avatar';
 import { BackButton } from '@/components/BackButton';
 import { Button } from '@/components/Button';
 import { Chip } from '@/components/Chip';
+import { MintTile } from '@/components/CreateFlow';
+import { Choice, parts, RadioDot } from '@/components/CreateParts';
+import type { IconName } from '@/components/Icon';
+import { IconButton } from '@/components/IconButton';
+import { Sheet } from '@/components/Sheet';
 import { T } from '@/components/T';
 import { TextField } from '@/components/TextField';
 import { imageSource } from '@/lib/media';
@@ -16,12 +21,12 @@ import { color, layout, radius } from '@/theme/tokens';
 
 type Kind = 'alle' | 'brugere' | 'opslag' | 'grupper' | 'sider';
 
-const kinds: { value: Kind; label: string }[] = [
-  { value: 'alle', label: 'Alle' },
-  { value: 'brugere', label: 'Brugere' },
-  { value: 'opslag', label: 'Opslag' },
-  { value: 'grupper', label: 'Grupper' },
-  { value: 'sider', label: 'Sider' },
+const kinds: { value: Kind; label: string; icon: IconName }[] = [
+  { value: 'alle', label: 'Alle', icon: 'search' },
+  { value: 'brugere', label: 'Brugere', icon: 'user' },
+  { value: 'opslag', label: 'Opslag', icon: 'layout-grid' },
+  { value: 'grupper', label: 'Grupper', icon: 'circles' },
+  { value: 'sider', label: 'Sider', icon: 'building' },
 ];
 
 type Person = { id: string; username: string; name: string; avatar_path: string | null; relation: string };
@@ -113,6 +118,7 @@ export default function Search() {
   const insets = useSafeAreaInsets();
   const [query, setQuery] = useState('');
   const [kind, setKind] = useState<Kind>('alle');
+  const [filterOpen, setFilterOpen] = useState(false);
   const [recent, setRecentState] = useState(recentStore);
   const [res, setRes] = useState<Results>(empty);
   const [loaded, setLoaded] = useState(false);
@@ -229,25 +235,16 @@ export default function Search() {
             onSubmitEditing={remember}
           />
         </View>
+        {/* Filtrering gemt bag et ikon (som på Flicks). Prikken viser, at der er valgt noget. */}
+        <IconButton
+          icon="sliders"
+          label={kind === 'alle' ? 'Filtrér søgningen' : `Filtrér søgningen. Viser kun ${kinds.find((k) => k.value === kind)!.label.toLowerCase()}`}
+          dot={kind !== 'alle'}
+          onPress={() => setFilterOpen(true)}
+        />
       </View>
 
       <ScrollView contentContainerStyle={[s.content, { paddingBottom: 24 + insets.bottom }]} keyboardShouldPersistTaps="handled">
-        {/* Samme opbygning som filteret i Offentlig debat: én række, der kan swipes */}
-        <ScrollView
-          horizontal
-          showsHorizontalScrollIndicator={false}
-          style={s.rowWrap}
-          contentContainerStyle={s.row}
-          accessibilityRole="radiogroup"
-          accessibilityLabel="Søg efter"
-        >
-          {kinds.map((k) => (
-            <Chip key={k.value} selected={k.value === kind} onPress={() => setKind(k.value)}>
-              {k.label}
-            </Chip>
-          ))}
-        </ScrollView>
-
         {!q && recent.length > 0 && (
           <>
             <View style={s.between}>
@@ -306,6 +303,32 @@ export default function Search() {
           </>
         )}
       </ScrollView>
+
+      <Sheet open={filterOpen} onClose={() => setFilterOpen(false)} title="Vis" dim initialSize="auto">
+        <View style={[s.filter, { paddingBottom: 16 + insets.bottom }]} accessibilityRole="radiogroup" accessibilityLabel="Søg efter">
+          {kinds.map((k) => {
+            const on = k.value === kind;
+            return (
+              <Choice
+                key={k.value}
+                role="radio"
+                on={on}
+                label={k.label}
+                onPress={() => {
+                  setKind(k.value);
+                  setFilterOpen(false);
+                }}
+              >
+                <MintTile icon={k.icon} />
+                <View style={parts.choiceText}>
+                  <T v="label">{k.label}</T>
+                </View>
+                <RadioDot on={on} />
+              </Choice>
+            );
+          })}
+        </View>
+      </Sheet>
     </View>
   );
 }
@@ -323,8 +346,7 @@ const s = StyleSheet.create({
   root: { flex: 1, backgroundColor: color.bgApp },
   header: { flexDirection: 'row', alignItems: 'center', gap: 8, paddingHorizontal: 12, paddingBottom: 8, backgroundColor: color.bgApp },
   content: { gap: 14, paddingTop: 4, paddingHorizontal: 20 },
-  rowWrap: { marginHorizontal: -20, flexGrow: 0 },
-  row: { gap: 8, paddingHorizontal: 20 },
+  filter: { gap: 10, paddingTop: 12, paddingHorizontal: 20 },
   between: { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', gap: 8 },
   chips: { flexDirection: 'row', flexWrap: 'wrap', gap: 8 },
   section: { gap: 10 },

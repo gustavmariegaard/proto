@@ -1,7 +1,6 @@
 import { router, useFocusEffect, useLocalSearchParams } from 'expo-router';
 import { useCallback, useEffect, useRef, useState } from 'react';
 import { ActivityIndicator, Animated, FlatList, RefreshControl, ScrollView, StyleSheet, View, type NativeScrollEvent, type NativeSyntheticEvent } from 'react-native';
-import { Chip } from '@/components/Chip';
 import { MomentBubble } from '@/components/MomentBubble';
 import { PostCard } from '@/components/PostCard';
 import { SegmentedControl } from '@/components/SegmentedControl';
@@ -120,9 +119,6 @@ export default function Home() {
           <T v="caption" c={color.textSecondary}>
             Nyt fra de sider, du følger
           </T>
-          <Chip icon="layout-grid" style={s.edit} onPress={() => router.push('/sider')}>
-            Dine sider
-          </Chip>
         </View>
       )}
       {/* Brugere: personers moments med "Dig" først. Interesser: moments fra sider, man følger. */}
@@ -219,7 +215,6 @@ const s = StyleSheet.create({
   header: { gap: 12 },
   switch: { position: 'absolute', top: 0, left: 0, right: 0, paddingHorizontal: 20, paddingTop: 8, paddingBottom: 4, zIndex: 5 },
   pages: { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', gap: 12 },
-  edit: { gap: 6, paddingHorizontal: 14 },
   moments: { marginHorizontal: -20 },
   momentsContent: { gap: 6, paddingHorizontal: 16, paddingBottom: 2 },
   empty: { textAlign: 'center', paddingTop: 24 },

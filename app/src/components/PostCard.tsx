@@ -64,7 +64,9 @@ export function PostCard({ post, onRemoved, onComments, feed = false }: Props) {
     setLike(post.id, me.id, !liked);
   };
 
-  const open = () => router.push(`/opslag/${post.id}`);
+  // Tryk på kortet (uden for knapper, navn og medie): opslaget for sig med kommentarerne åbne.
+  // På selve opslagssiden åbner det bare kommentarerne.
+  const openPost = onComments ?? (() => router.push({ pathname: '/opslag/[id]', params: { id: post.id, kommentarer: '1' } }));
   const openMedia = () => router.push(`/medie/${post.id}`);
   const profile = () => router.push(mine ? '/profil' : `/bruger/${post.author_username}`);
 
@@ -85,7 +87,14 @@ export function PostCard({ post, onRemoved, onComments, feed = false }: Props) {
   );
 
   return (
-    <View style={s.post} accessibilityLabel={`Opslag fra ${post.author_name}`}>
+    <>
+    <Pressable
+      style={s.post}
+      accessibilityLabel={`Opslag fra ${post.author_name}`}
+      accessibilityHint="Åbner opslaget med kommentarer"
+      focusable={false}
+      onPress={openPost}
+    >
       {ctx ? (
         // Opslag i en gruppe eller begivenhed (som på Facebook): gruppen øverst, forfatteren under
         <View style={s.header}>
@@ -172,11 +181,7 @@ export function PostCard({ post, onRemoved, onComments, feed = false }: Props) {
         </Pressable>
       )}
 
-      {!!post.text && (
-        <Pressable onPress={open}>
-          <MentionText v="body">{post.text}</MentionText>
-        </Pressable>
-      )}
+      {!!post.text && <MentionText v="body">{post.text}</MentionText>}
 
       {post.shared_post_id && <SharedPost id={post.shared_post_id} />}
 
@@ -222,6 +227,7 @@ export function PostCard({ post, onRemoved, onComments, feed = false }: Props) {
 
       {/* Under stemmer og knapper, så noten står for sig selv */}
       {debate && <NoteBox postId={post.id} />}
+    </Pressable>
 
       <PostMenu
         open={menu}
@@ -249,7 +255,7 @@ export function PostCard({ post, onRemoved, onComments, feed = false }: Props) {
         }}
       />
       {!onComments && <CommentsSheet postId={post.id} postAuthorId={post.author_id} open={sheet} onClose={() => setSheet(false)} onCount={setComments} />}
-    </View>
+    </>
   );
 }
 
@@ -266,8 +272,9 @@ const s = StyleSheet.create({
     backgroundColor: color.bgSurface,
   },
   header: { flexDirection: 'row', alignItems: 'center', gap: 10 },
-  who: { flex: 1, minWidth: 0, flexDirection: 'row', alignItems: 'center', gap: 10, borderRadius: radius.sm },
-  meta: { flex: 1, minWidth: 0, gap: 2 },
+  // Kun billede og navn er et link til profilen; resten af rækken hører til kortet
+  who: { flexShrink: 1, minWidth: 0, flexDirection: 'row', alignItems: 'center', gap: 10, borderRadius: radius.sm },
+  meta: { flexShrink: 1, minWidth: 0, gap: 2 },
   name: { flexDirection: 'row', alignItems: 'center', gap: 6 },
   nameLink: { fontFamily: font.bodySemi, color: color.textSecondary },
   more: { width: 44, height: 44, borderRadius: 22, alignItems: 'center', justifyContent: 'center', marginVertical: -6, marginRight: -10, marginLeft: 'auto' },

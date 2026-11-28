@@ -30,7 +30,7 @@ const modes = [
 /**
  * Del et opslag på tre måder (prototypens Share):
  * - Besked: send det til folk, du følger, eller dine cirkler (én samlet liste)
- * - Opslag: videredel det som eget opslag på din profil
+ * - Opslag: videredel det som eget opslag på din profil (ikke flicks)
  * - Moment: videredel det som et moment i 24 timer (fuld skærm)
  * "Del" og "Kopiér link" står altid fast nederst.
  */
@@ -93,6 +93,10 @@ export default function Share() {
       </ModalScreen>
     );
   }
+
+  // Flicks deles kun som besked eller moment (aldrig som opslag i dit gitter)
+  const options = post.kind === 'flick' ? modes.filter((m) => m.value !== 'opslag') : modes;
+  if (post.kind === 'flick' && mode === 'opslag') setMode('besked');
 
   const q = query.trim().toLowerCase();
   const targets = [...circles.filter((c) => !q || c.name.toLowerCase().includes(q)), ...people];
@@ -183,7 +187,7 @@ export default function Share() {
           <View style={parts.full}>
             <SegmentedControl
               label="Del som"
-              options={modes}
+              options={options}
               value={mode}
               // Moment åbner i fuld skærm, ligesom at dele til en story
               onChange={(m) => (m === 'moment' ? router.push({ pathname: '/ny-moment', params: { opslag: post.id } }) : setMode(m))}

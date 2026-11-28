@@ -1,5 +1,7 @@
 import { router, useLocalSearchParams, type Href } from 'expo-router';
+import { useEffect, useState } from 'react';
 import { Pressable, StyleSheet, View } from 'react-native';
+import { supabase } from '@/lib/supabase';
 import type { PostCard as Post } from '@/lib/types';
 import { color, font, radius, TAP } from '@/theme/tokens';
 import { FlickGrid } from './FlickGrid';
@@ -37,11 +39,14 @@ export function ProfilePosts({ userId, posts, own = false, name, locked = false,
   const tab: Tab = fane === 'debat' || fane === 'flicks' || fane === 'opslag' ? fane : locked ? 'debat' : 'opslag';
 
   const personal = profilePosts(posts);
-  const feed = personal.filter((p) => p.kind === 'feed');
+  // Gitteret er kun almindelige opslag: delte debatindlæg og flicks hører ikke til her
+  const sharedIds = personal.filter((p) => p.kind === 'feed' && p.shared_post_id).map((p) => p.shared_post_id as string);
+  const hidden = useHiddenShares(sharedIds);
+  const feed = personal.filter((p) => p.kind === 'feed' && !(p.shared_post_id && hidden.has(p.shared_post_id)));
   const debate = personal.filter((p) => p.kind === 'debat');
   const flicks = personal.filter((p) => p.kind === 'flick');
   const tabs: { value: Tab; label: string; icon: IconName }[] = [
-    { value: 'opslag', label: 'Opslag', icon: 'layout-list' },
+    { value: 'opslag', label: 'Opslag', icon: 'layout-grid' },
     { value: 'debat', label: 'Debat', icon: 'compass' },
     { value: 'flicks', label: 'Flicks', icon: 'clip' },
   ];
@@ -60,14 +65,12 @@ export function ProfilePosts({ userId, posts, own = false, name, locked = false,
             <Pressable
               key={t.value}
               accessibilityRole="tab"
+              accessibilityLabel={t.label}
               accessibilityState={{ selected: on }}
               onPress={() => router.setParams({ fane: t.value === (locked ? 'debat' : 'opslag') ? undefined : t.value })}
               style={[s.tab, on && s.tabOn]}
             >
-              <Icon name={lockedTab ? 'lock' : t.icon} size={16} color={on ? color.textPrimary : color.textSecondary} />
-              <T v="label" c={on ? color.textPrimary : color.textSecondary} numberOfLines={1}>
-                {t.label}
-              </T>
+              <Icon name={lockedTab ? 'lock' : t.icon} size={20} color={on ? color.textPrimary : color.textSecondary} />
             </Pressable>
           );
         })}
@@ -117,6 +120,27 @@ export function ProfilePosts({ userId, posts, own = false, name, locked = false,
       </View>
     </>
   );
+}
+
+/** De delte opslag, der er debatindlæg eller flicks (de vises ikke i gitteret) */
+function useHiddenShares(ids: string[]) {
+  const [hidden, setHidden] = useState<Set<string>>(new Set());
+  const key = [...new Set(ids)].sort().join(',');
+  useEffect(() => {
+    if (!key) return setHidden(new Set());
+    let live = true;
+    supabase
+      .from('posts')
+      .select('id, kind')
+      .in('id', key.split(','))
+      .then(({ data }) => {
+        if (live) setHidden(new Set(((data ?? []) as { id: string; kind: string }[]).filter((r) => r.kind !== 'feed').map((r) => r.id)));
+      });
+    return () => {
+      live = false;
+    };
+  }, [key]);
+  return hidden;
 }
 
 function Empty({ text, action }: { text: string; action?: { label: string; to: Href } }) {

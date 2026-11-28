@@ -21,6 +21,8 @@ export type MomentCard = {
   seen: boolean;
   liked: boolean;
   views: number | null;
+  /** Udseendet af et delt opslag (Del som moment). Mangler på ældre moments. */
+  layout?: unknown;
 };
 
 export type Ring = {

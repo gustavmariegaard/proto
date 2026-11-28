@@ -21,6 +21,7 @@ import { MenuItem } from './MenuItem';
 import { Sheet } from './Sheet';
 import { T } from './T';
 import { VideoView } from './VideoView';
+import { MomentCanvas, readLayout } from './MomentCanvas';
 
 const IMAGE_MS = 5000; // 5 sekunder pr. moment
 const VIDEO_MS = 15000;
@@ -171,37 +172,19 @@ export function MomentStory({ moments, startAtUnseen, onEnd, onBeforeStart, onCl
           ) : (
             <Image source={imageSource(current.media_path)} style={[StyleSheet.absoluteFill, held && { opacity: 0.9 }]} contentFit="cover" transition={150} />
           )
-        ) : post && post.image_paths[0] && post.media_type !== 'video' ? (
-          // Delt opslag: opslagets billede sløret bagved (som "Del som moment")
-          <>
-            <Image source={imageSource(post.image_paths[0])} style={s.blur} contentFit="cover" blurRadius={28} />
-            <View style={[StyleSheet.absoluteFill, { backgroundColor: 'rgba(0,0,0,0.35)' }]} />
-          </>
         ) : null}
-        {/* Delt opslag eller kun tekst: midt på skærmen */}
-        {(post || (!current.media_path && !!current.text)) && (
+        {/* Delt opslag: med det udseende, det blev delt med (baggrund, placering og tekst) */}
+        {!current.media_path && post && (
+          <View style={StyleSheet.absoluteFill} pointerEvents="none">
+            <MomentCanvas layout={readLayout(current.layout)} post={post} playing={!paused} />
+          </View>
+        )}
+        {/* Kun tekst: midt på skærmen */}
+        {!current.media_path && !post && !!current.text && (
           <View style={s.center} pointerEvents="none">
-            {post ? (
-              <View style={s.quote}>
-                <View style={s.quoteHead}>
-                  <Avatar name={post.author_name} path={post.author_avatar_path} size="S" />
-                  <View style={{ flex: 1, minWidth: 0 }}>
-                    <T v="headingS" numberOfLines={1}>
-                      {post.author_name}
-                    </T>
-                    <T v="caption" c={color.textSecondary} numberOfLines={1}>
-                      @{post.author_username}
-                    </T>
-                  </View>
-                </View>
-                {!!post.text && <T v="bodyS">{post.text}</T>}
-                {!!post.image_paths[0] && post.media_type !== 'video' && <Image source={imageSource(post.image_paths[0])} style={s.quoteImg} contentFit="cover" />}
-              </View>
-            ) : (
-              <T v="titleXl" c={color.white} style={[s.bigText, shadow]}>
-                {current.text}
-              </T>
-            )}
+            <T v="titleXl" c={color.white} style={[s.bigText, shadow]}>
+              {current.text}
+            </T>
           </View>
         )}
         {/* Mørk toning øverst og nederst, så tekst og knapper kan læses */}
@@ -342,11 +325,7 @@ function Shade({ top, height }: { top?: boolean; height: number }) {
 const s = StyleSheet.create({
   root: { flex: 1, overflow: 'hidden', backgroundColor: color.ink900 },
   photo: { backgroundColor: '#3a3a3a' },
-  blur: { position: 'absolute', top: -40, left: -40, right: -40, bottom: -40 },
   center: { ...StyleSheet.absoluteFill, alignItems: 'center', justifyContent: 'center', padding: 24 },
-  quote: { width: '100%', maxWidth: 360, gap: 6, padding: 12, borderRadius: radius.lg, backgroundColor: color.bgSurface },
-  quoteHead: { flexDirection: 'row', alignItems: 'center', gap: 8 },
-  quoteImg: { width: '100%', height: 260, borderRadius: radius.md },
   bigText: { fontSize: 28, lineHeight: 34, textAlign: 'center', fontFamily: font.title },
   shade: { position: 'absolute', left: 0, right: 0 },
   taps: { flexDirection: 'row', zIndex: 2 },

@@ -25,7 +25,8 @@ type Props = {
   /** Mærker under brugernavnet (Privat, Følger dig …) */
   badges?: ReactNode;
   bio?: string | null;
-  stats: { n: number; label: string }[];
+  /** Tallene. onPress gør tallet trykbart (fx Følgere og Følger). */
+  stats: { n: number; label: string; onPress?: () => void }[];
   /** Øverst til højre på banneret (fx Indstillinger) */
   corner?: ReactNode;
   /** Til højre for billedet (fx Rediger profil) */
@@ -91,14 +92,30 @@ export function ProfileCard({ name, username, avatarPath, ring, onRing, ringLabe
         {!!bio?.trim() && <MentionText v="bodyS">{bio.trim()}</MentionText>}
 
         <View style={s.stats}>
-          {stats.map((st) => (
-            <T key={st.label} v="bodyS" c={color.textSecondary} accessibilityLabel={`${fmtNumber(st.n)} ${st.label}`}>
-              <T v="bodyS" style={s.num}>
-                {fmtNumber(st.n)}
-              </T>{' '}
-              {st.label.toLowerCase()}
-            </T>
-          ))}
+          {stats.map((st) => {
+            const text = (
+              <T v="bodyS" c={color.textSecondary} accessibilityLabel={st.onPress ? undefined : `${fmtNumber(st.n)} ${st.label}`}>
+                <T v="bodyS" style={s.num}>
+                  {fmtNumber(st.n)}
+                </T>{' '}
+                {st.label.toLowerCase()}
+              </T>
+            );
+            return st.onPress ? (
+              <Pressable
+                key={st.label}
+                accessibilityRole="link"
+                accessibilityLabel={`${fmtNumber(st.n)} ${st.label}. Se listen`}
+                onPress={st.onPress}
+                hitSlop={8}
+                style={({ pressed }) => pressed && { opacity: 0.6 }}
+              >
+                {text}
+              </Pressable>
+            ) : (
+              <View key={st.label}>{text}</View>
+            );
+          })}
         </View>
 
         {children}

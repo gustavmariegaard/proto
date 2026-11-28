@@ -10,6 +10,21 @@ import { color, font } from '@/theme/tokens';
 import { Icon } from './Icon';
 import { T } from './T';
 import { VideoView } from './VideoView';
+import { MomentCanvas, readLayout } from './MomentCanvas';
+import { getPost } from '@/lib/posts';
+import type { PostCard } from '@/lib/types';
+
+function SharedPostMoment({ postId, layout, playing }: { postId: string; layout: unknown; playing: boolean }) {
+  const [post, setPost] = useState<PostCard | null>(null);
+  useEffect(() => {
+    getPost(postId).then(setPost);
+  }, [postId]);
+  return post ? (
+    <View style={StyleSheet.absoluteFill} pointerEvents="none">
+      <MomentCanvas layout={readLayout(layout)} post={post} playing={playing} />
+    </View>
+  ) : null;
+}
 
 const IMAGE_MS = 5000;
 const VIDEO_MS = 15000;
@@ -80,6 +95,9 @@ export function HighlightStory({ items, title, startAt = 0, onClose, actions }: 
           ) : (
             <Image source={imageSource(current.media_path)} style={[StyleSheet.absoluteFill, held && { opacity: 0.9 }]} contentFit="cover" transition={150} />
           )
+        ) : current.post_id ? (
+          // Delt opslag (eller flick) med det udseende, det blev delt med
+          <SharedPostMoment key={current.id} postId={current.post_id} layout={current.layout} playing={!held} />
         ) : (
           <View style={[StyleSheet.absoluteFill, s.textOnly]}>
             <T style={s.bigText} c={color.white}>

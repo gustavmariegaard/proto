@@ -15,7 +15,11 @@ export function ListingToggle({ on }: { on: boolean }) {
   );
 }
 
-/** Torvet · Afstand: træk i linjen (1–100 km) eller vælg "Hele landet" (prototypens RadiusSheet) */
+/** Afstand ↔ position på linjen: kvadratisk, så de korte afstande er nemme at ramme præcist */
+const toKm = (p: number) => { const k = 1 + p * p * (MAX_KM - 1); return k < 50 ? Math.round(k) : Math.round(k / 5) * 5; };
+const toPct = (km: number) => Math.sqrt((km - 1) / (MAX_KM - 1));
+
+/** Torvet · Afstand: træk i linjen (1–500 km) eller vælg "Hele landet" (prototypens RadiusSheet) */
 export function ListingRadiusSheet({ open, value, city, onClose, onApply }: { open: boolean; value: number | null; city: string; onClose: () => void; onApply: (km: number | null) => void }) {
   const [draft, setDraft] = useState<number | null>(value);
   const [width, setWidth] = useState(300);
@@ -24,7 +28,7 @@ export function ListingRadiusSheet({ open, value, city, onClose, onApply }: { op
   }, [open, value]);
 
   const km = draft ?? MAX_KM;
-  const pct = (km - 1) / (MAX_KM - 1);
+  const pct = toPct(km);
   const startPct = useRef(0);
   const ref = useRef({ draft, width });
   ref.current = { draft, width };
@@ -37,11 +41,11 @@ export function ListingRadiusSheet({ open, value, city, onClose, onApply }: { op
           // Tryk et sted på linjen hopper dertil
           const p = Math.min(1, Math.max(0, e.nativeEvent.locationX / ref.current.width));
           startPct.current = p;
-          setDraft(Math.round(1 + p * (MAX_KM - 1)));
+          setDraft(toKm(p));
         },
         onPanResponderMove: (_e, g) => {
           const p = Math.min(1, Math.max(0, startPct.current + g.dx / ref.current.width));
-          setDraft(Math.round(1 + p * (MAX_KM - 1)));
+          setDraft(toKm(p));
         },
       }),
     [],
@@ -81,7 +85,7 @@ export function ListingRadiusSheet({ open, value, city, onClose, onApply }: { op
           accessibilityLabel={`Afstand fra ${city} i km`}
           accessibilityValue={{ min: 1, max: MAX_KM, now: km }}
           accessibilityActions={[{ name: 'increment' }, { name: 'decrement' }]}
-          onAccessibilityAction={(e) => !all && setDraft(Math.min(MAX_KM, Math.max(1, km + (e.nativeEvent.actionName === 'increment' ? 5 : -5))))}
+          onAccessibilityAction={(e) => !all && setDraft(Math.min(MAX_KM, Math.max(1, km + (e.nativeEvent.actionName === 'increment' ? 1 : -1) * (km < 50 ? 5 : 25))))}
         >
           <View style={s.track} pointerEvents="none">
             <View style={[s.fill, { width: `${pct * 100}%` }]} />

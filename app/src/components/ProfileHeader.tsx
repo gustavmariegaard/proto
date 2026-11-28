@@ -36,8 +36,8 @@ export function ProfileHeader({ me, hasMoment, onRing, posts, followers, followi
       bio={me.bio}
       stats={[
         { n: posts, label: 'Opslag' },
-        { n: followers, label: 'Følgere' },
-        { n: following, label: 'Følger' },
+        { n: followers, label: 'Følgere', onPress: () => router.push({ pathname: '/forbindelser', params: { bruger: me.username } }) },
+        { n: following, label: 'Følger', onPress: () => router.push({ pathname: '/forbindelser', params: { bruger: me.username, fane: 'foelger' } }) },
       ]}
       corner={
         <Glass style={{ borderRadius: 999 }}>

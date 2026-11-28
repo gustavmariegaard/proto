@@ -14,7 +14,7 @@ export const conditions = ['Ny', 'Som ny', 'God', 'Brugt'] as const;
 export type Condition = (typeof conditions)[number];
 
 export const MAX_PHOTOS = 10;
-export const MAX_KM = 100;
+export const MAX_KM = 500;
 
 export function guessCategory(text: string): Category {
   const t = text.toLowerCase();

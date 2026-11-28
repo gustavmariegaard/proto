@@ -152,8 +152,10 @@ export default function UserProfile() {
               ? []
               : [
                   { n: postCount, label: 'Opslag' },
-                  { n: p.followers, label: 'Følgere' },
-                  ...(p.public_kind !== 'side' ? [{ n: p.following, label: 'Følger' }] : []),
+                  { n: p.followers, label: 'Følgere', onPress: p.can_see ? () => router.push({ pathname: '/forbindelser', params: { bruger: p.username } }) : undefined },
+                  ...(p.public_kind !== 'side'
+                    ? [{ n: p.following, label: 'Følger', onPress: p.can_see ? () => router.push({ pathname: '/forbindelser', params: { bruger: p.username, fane: 'foelger' } }) : undefined }]
+                    : []),
                 ]
           }
         >
