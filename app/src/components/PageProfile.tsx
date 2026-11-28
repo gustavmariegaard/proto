@@ -3,7 +3,7 @@ import { useCallback, useState } from 'react';
 import { StyleSheet, View } from 'react-native';
 import { postsWhere, setFollowPage, type PageCard } from '@/lib/community';
 import { markSeen } from '@/lib/moreActivity';
-import { useActingAs } from '@/lib/actingAs';
+import { canPost, roleLabel, useActingAs } from '@/lib/actingAs';
 import { useMe } from '@/lib/session';
 import { supabase } from '@/lib/supabase';
 import type { PostCard as Post } from '@/lib/types';
@@ -69,6 +69,10 @@ export function PageProfile({ page, acting = false, onChanged }: Props) {
 
   const postCount = posts.filter((p) => !p.group_id && !p.event_id).length;
   const edit = () => router.push({ pathname: '/sider/rediger', params: { id: page.id } });
+  const roles = () => router.push({ pathname: '/sider/roller', params: { id: page.id } });
+  // Din rolle: Admin og Redaktør skriver og retter, Moderator kan kun se
+  const role = page.my_role ?? (page.i_admin ? 'admin' : null);
+  const writer = canPost(role);
 
   return (
     <>
@@ -99,18 +103,28 @@ export function PageProfile({ page, acting = false, onChanged }: Props) {
         }
         action={
           acting ? (
-            <Button variant="secondary" icon="edit" onPress={edit} style={{ minHeight: 40, paddingHorizontal: 16 }}>
-              Rediger side
-            </Button>
+            writer ? (
+              <Button variant="secondary" icon="edit" onPress={edit} style={{ minHeight: 40, paddingHorizontal: 16 }}>
+                Rediger side
+              </Button>
+            ) : (
+              <ProfileBadge icon="lock">{roleLabel(role)}</ProfileBadge>
+            )
           ) : undefined
         }
       >
         <View style={s.actions}>
           {acting ? (
             <>
-              <Button block icon="plus" style={{ flex: 1 }} onPress={() => router.push({ pathname: '/opret', params: { side: page.id } })}>
-                Nyt opslag
-              </Button>
+              {writer ? (
+                <Button block icon="plus" style={{ flex: 1 }} onPress={() => router.push({ pathname: '/opret', params: { side: page.id } })}>
+                  Nyt opslag
+                </Button>
+              ) : (
+                <Button block icon="user" style={{ flex: 1 }} onPress={roles}>
+                  Roller
+                </Button>
+              )}
               <Button variant="secondary" block style={{ flex: 1 }} onPress={() => switchTo(null)}>
                 Skift til dig
               </Button>
@@ -120,8 +134,8 @@ export function PageProfile({ page, acting = false, onChanged }: Props) {
               <Button block style={{ flex: 1 }} onPress={becomePage}>
                 Skift til siden
               </Button>
-              <Button variant="secondary" block style={{ flex: 1 }} onPress={edit}>
-                Rediger side
+              <Button variant="secondary" block style={{ flex: 1 }} onPress={writer ? edit : roles}>
+                {writer ? 'Rediger side' : 'Roller'}
               </Button>
             </>
           ) : (
@@ -137,7 +151,7 @@ export function PageProfile({ page, acting = false, onChanged }: Props) {
         </View>
       </ProfileCard>
 
-      <ProfilePosts page userId={page.id} posts={posts} own={page.i_admin} name={page.name} onChanged={load} />
+      <ProfilePosts page userId={page.id} posts={posts} own={writer} name={page.name} onChanged={load} />
       {acting && <AccountSwitcher open={switching} onClose={() => setSwitching(false)} />}
     </>
   );
