@@ -4,7 +4,7 @@ import { useCallback, useState } from 'react';
 import { Pressable, ScrollView, StyleSheet, View } from 'react-native';
 import { imageSource } from '@/lib/media';
 import { highlightsFor, type Highlight } from '@/lib/moments';
-import { color } from '@/theme/tokens';
+import { color, momentRing } from '@/theme/tokens';
 import { Icon } from './Icon';
 import { T } from './T';
 
@@ -42,9 +42,9 @@ export function HighlightsRow({ userId, own }: { userId: string; own?: boolean }
         const cover = h.cover?.media_path && h.cover.media_type === 'image' ? h.cover.media_path : null;
         return (
           <Pressable key={h.id} accessibilityRole="link" accessibilityLabel={`Afspil ${h.title}`} onPress={() => router.push(`/highlight/${h.id}`)} style={s.item}>
-            {/* 64 px boble med 2 px lys kant og en 1,5 px grå ring udenom */}
-            <View style={s.outer}>
-              <View style={s.ring}>{cover ? <Image source={imageSource(cover)} style={s.img} contentFit="cover" /> : <Icon name="clip" />}</View>
+            {/* Samme størrelse og ring som stories på Hjem (78 px), grå ring */}
+            <View style={s.ring}>
+              <View style={s.pic}>{cover ? <Image source={imageSource(cover)} style={s.img} contentFit="cover" /> : <Icon name="clip" />}</View>
             </View>
             <T v="caption" numberOfLines={1} style={s.title}>
               {h.title}
@@ -56,23 +56,26 @@ export function HighlightsRow({ userId, own }: { userId: string; own?: boolean }
   );
 }
 
+/** Som MomentBubble på Hjem */
+const SIZE = 78;
+const PIC = SIZE - 2 * (momentRing.width + momentRing.gap);
+
 const s = StyleSheet.create({
   scroll: { marginHorizontal: -20, flexGrow: 0 },
-  row: { gap: 14, paddingTop: 2, paddingBottom: 4, paddingHorizontal: 20 },
-  item: { width: 68, alignItems: 'center', gap: 6 },
-  outer: { width: 67, height: 67, margin: -1.5, borderRadius: 34, borderWidth: 1.5, borderColor: color.borderStrong },
+  row: { gap: 6, paddingTop: 2, paddingBottom: 4, paddingHorizontal: 16 },
+  item: { width: SIZE + 10, alignItems: 'center', gap: 4 },
   ring: {
-    width: 64,
-    height: 64,
-    borderRadius: 32,
-    overflow: 'hidden',
-    borderWidth: 2,
-    borderColor: color.bgApp,
-    backgroundColor: color.bgSubtle,
+    width: SIZE,
+    height: SIZE,
+    borderRadius: SIZE / 2,
+    borderWidth: momentRing.width,
+    borderColor: color.borderStrong,
+    backgroundColor: color.bgSurface,
     alignItems: 'center',
     justifyContent: 'center',
   },
-  ringNew: { borderStyle: 'dashed', borderColor: color.borderStrong, backgroundColor: color.bgSurface },
+  pic: { width: PIC, height: PIC, borderRadius: PIC / 2, overflow: 'hidden', backgroundColor: color.bgSubtle, alignItems: 'center', justifyContent: 'center' },
+  ringNew: { borderStyle: 'dashed', borderWidth: 2, borderColor: color.textSecondary },
   img: { width: '100%', height: '100%' },
-  title: { maxWidth: 68 },
+  title: { width: SIZE + 10, textAlign: 'center' },
 });
