@@ -4,7 +4,6 @@ import { Animated, BackHandler, Easing, PanResponder, Platform, Pressable, Scrol
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { useMe } from '@/lib/session';
 import { useActingAs } from '@/lib/actingAs';
-import { AccountList } from './AccountSwitcher';
 import { color, radius, tabbarBar } from '@/theme/tokens';
 import { Avatar } from './Avatar';
 import { Icon, type IconName } from './Icon';
@@ -27,8 +26,7 @@ const tiles: { label: string; icon: IconName; to: string }[] = [
  */
 export function MoreSheet({ open, onClose }: { open: boolean; onClose: () => void }) {
   const me = useMe();
-  const { acting, pages } = useActingAs(me.id);
-  const [switching, setSwitching] = useState(false);
+  const { acting, pages, switchTo } = useActingAs(me.id);
   const insets = useSafeAreaInsets();
   const slide = useRef(new Animated.Value(1)).current;
   const drag = useRef(new Animated.Value(0)).current;
@@ -69,7 +67,6 @@ export function MoreSheet({ open, onClose }: { open: boolean; onClose: () => voi
   useEffect(() => {
     if (!open) {
       setShown(false);
-      setSwitching(false);
       return;
     }
     const sub = BackHandler.addEventListener('hardwareBackPress', () => {
@@ -135,40 +132,39 @@ export function MoreSheet({ open, onClose }: { open: boolean; onClose: () => voi
             <View style={s.bar} />
           </View>
 
-          <Pressable accessibilityRole="link" onPress={() => go('/profil')} style={({ pressed }) => [s.profile, pressed && s.pressed]}>
-            <Avatar name={name} path={asPage ? asPage.avatar_path : me.avatar_path} size="M" tone="blue" />
-            <View style={s.profileText}>
-              <T v="headingS" numberOfLines={2}>
-                {name}
-              </T>
-              <T v="caption" c={color.textSecondary} numberOfLines={1}>
-                {asPage ? 'Du bruger ciircle som siden' : 'Se din profil'}
-              </T>
-            </View>
-            {asPage || pages.length > 0 ? (
-              <Pressable
-                accessibilityRole="button"
-                accessibilityLabel="Skift profil"
-                accessibilityState={{ expanded: switching }}
-                onPress={() => setSwitching((v) => !v)}
-                hitSlop={6}
-                style={({ pressed }) => [s.switchBtn, switching && s.switchOn, pressed && s.pressed]}
-              >
-                <T v="captionStrong">Skift</T>
-                <View style={switching ? { transform: [{ rotate: '180deg' }] } : undefined}>
-                  <Icon name="chevron-down" size={14} stroke={2.5} />
-                </View>
-              </Pressable>
-            ) : (
+          {/*
+            Profilkortet. Har du sider, står de som små valg i bunden af kortet (fast højde),
+            så man skifter med ét tryk uden at menuen hopper eller får et lag ovenpå.
+          */}
+          <View style={s.profileCard}>
+            <Pressable accessibilityRole="link" onPress={() => go('/profil')} style={({ pressed }) => [s.profileRow, pressed && s.pressed]}>
+              <Avatar name={name} path={asPage ? asPage.avatar_path : me.avatar_path} size="M" tone="blue" />
+              <View style={s.profileText}>
+                <T v="headingS" numberOfLines={1}>
+                  {name}
+                </T>
+                <T v="caption" c={color.textSecondary} numberOfLines={1}>
+                  {asPage ? 'Se sidens profil' : 'Se din profil'}
+                </T>
+              </View>
               <Icon name="chevron-right" size={18} />
+            </Pressable>
+            {pages.length > 0 && (
+              <ScrollView
+                horizontal
+                showsHorizontalScrollIndicator={false}
+                style={s.ids}
+                contentContainerStyle={s.idsIn}
+                accessibilityRole="radiogroup"
+                accessibilityLabel="Brug ciircle som"
+              >
+                <IdChip on={!asPage} name={me.name.split(' ')[0] || me.name} path={me.avatar_path} onPress={() => switchTo(null)} />
+                {pages.map((p) => (
+                  <IdChip key={p.id} on={asPage?.id === p.id} name={p.name} path={p.avatar_path} page onPress={() => switchTo(p)} />
+                ))}
+              </ScrollView>
             )}
-          </Pressable>
-          {/* Skift profil direkte i menuen (ingen ekstra lag ovenpå) */}
-          {switching && (
-            <View style={s.accounts}>
-              <AccountList onPicked={() => setSwitching(false)} onCreate={onClose} />
-            </View>
-          )}
+          </View>
 
           <View style={s.tiles}>
             {tiles.map((t) => (
@@ -189,9 +185,12 @@ export function MoreSheet({ open, onClose }: { open: boolean; onClose: () => voi
 }
 
 const s = StyleSheet.create({
-  switchOn: { backgroundColor: color.gray200 },
-  accounts: { marginTop: -4 },
-  switchBtn: { flexDirection: 'row', alignItems: 'center', gap: 4, minHeight: 32, paddingHorizontal: 12, borderRadius: radius.pill, backgroundColor: color.bgSubtle },
+  profileCard: { borderWidth: 1, borderColor: color.borderDefault, borderRadius: radius.lg, backgroundColor: color.bgSurface, overflow: 'hidden' },
+  profileRow: { flexDirection: 'row', alignItems: 'center', gap: 12, padding: 14 },
+  ids: { flexGrow: 0, borderTopWidth: 1, borderTopColor: color.borderDefault },
+  idsIn: { gap: 8, paddingVertical: 10, paddingHorizontal: 12 },
+  chip: { flexDirection: 'row', alignItems: 'center', gap: 6, height: 36, maxWidth: 180, paddingLeft: 6, paddingRight: 12, borderRadius: radius.pill, backgroundColor: color.bgSubtle },
+  chipOn: { backgroundColor: color.ink900 },
   /* Ligger over Hjem og topbaren, men under bundmenuen (z-index 20) */
   layer: { position: 'absolute', top: 0, left: 0, right: 0, bottom: 0, zIndex: 15 },
   scrim: { backgroundColor: 'rgba(10,10,10,0.5)' },
@@ -236,3 +235,22 @@ const s = StyleSheet.create({
   tileIcon: { width: 36, height: 36, borderRadius: radius.sm, backgroundColor: color.avatarBlueBg, alignItems: 'center', justifyContent: 'center' },
   pressed: { transform: [{ scale: 0.98 }] },
 });
+
+/** Et lille valg i profilkortet: dig selv eller en af dine sider */
+function IdChip({ on, name, path, page, onPress }: { on: boolean; name: string; path: string | null; page?: boolean; onPress: () => void }) {
+  return (
+    <Pressable
+      accessibilityRole="radio"
+      accessibilityState={{ checked: on }}
+      accessibilityLabel={page ? `Siden ${name}` : name}
+      onPress={onPress}
+      style={({ pressed }) => [s.chip, on && s.chipOn, pressed && s.pressed]}
+    >
+      <Avatar name={name} path={path} size={24} />
+      <T v="captionStrong" numberOfLines={1} style={{ flexShrink: 1 }} c={on ? color.textOnAction : color.textPrimary}>
+        {name}
+      </T>
+      {on && <Icon name="check" size={13} color={color.accent} stroke={3} />}
+    </Pressable>
+  );
+}

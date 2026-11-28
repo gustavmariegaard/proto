@@ -6,12 +6,8 @@ import { PostCard } from '@/components/PostCard';
 import { SegmentedControl } from '@/components/SegmentedControl';
 import { T } from '@/components/T';
 import { TopBar } from '@/components/TopBar';
-import { AccountSwitcher } from '@/components/AccountSwitcher';
-import { Avatar } from '@/components/Avatar';
 import { Glass } from '@/components/Glass';
-import { Icon } from '@/components/Icon';
 import { useActingAs } from '@/lib/actingAs';
-import { Pressable } from 'react-native';
 import { personRings, type Ring } from '@/lib/moments';
 import { normalize } from '@/lib/posts';
 import { readCache, readCacheSync, writeCache } from '@/lib/cache';
@@ -100,7 +96,6 @@ export default function Home() {
   // Som side: Hjem viser Interesser (sidens verden), og sidens eget moment står først
   const { acting } = useActingAs(me.id);
   const asPage = acting.kind === 'side' ? acting : null;
-  const [switching, setSwitching] = useState(false);
   useEffect(() => {
     if (asPage && feed !== 'interesser') switchFeed('interesser');
     // eslint-disable-next-line react-hooks/exhaustive-deps
@@ -213,15 +208,11 @@ export default function Home() {
           ]}
         >
           {asPage ? (
-            // Som side: ingen Brugere/Interesser-valg, men et tydeligt mærke med, hvem man ser appen som
+            // Som side er der kun Interesser
             <Glass style={s.asPage}>
-              <Pressable accessibilityRole="button" accessibilityLabel={`Du ser Interesser som ${asPage.name}. Skift profil`} onPress={() => setSwitching(true)} style={s.asPageIn}>
-                <Avatar name={asPage.name} path={asPage.avatar_path} size={26} />
-                <T v="label" numberOfLines={1} style={{ flexShrink: 1 }}>
-                  Interesser som {asPage.name}
-                </T>
-                <Icon name="chevron-down" size={14} stroke={2.5} />
-              </Pressable>
+              <View style={s.asPageIn} accessibilityRole="header">
+                <T v="label">Interesser</T>
+              </View>
             </Glass>
           ) : (
             <SegmentedControl
@@ -237,7 +228,6 @@ export default function Home() {
           )}
         </Animated.View>
       </View>
-      <AccountSwitcher stay open={switching} onClose={() => setSwitching(false)} />
     </View>
   );
 }
