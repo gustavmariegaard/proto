@@ -16,6 +16,8 @@ import {
   defaultLocation,
   listingsNear,
   type LocState,
+  matchesListing,
+  searchListings,
   myListings,
   radiusText,
   recentCategories,
@@ -48,6 +50,9 @@ export default function Market() {
   const [all, setAll] = useState<ListingRow[] | null>(null);
   const [recent, setRecent] = useState<Category[]>([]);
   const [query, setQuery] = useState('');
+  // Søgeresultater fra hele landet (Til salg). null = ingen søgning endnu
+  const [hits, setHits] = useState<{ q: string; rows: ListingRow[] } | null>(null);
+  const [searching, setSearching] = useState(false);
   const [radiusOpen, setRadiusOpen] = useState(false);
 
   useEffect(() => {
@@ -107,7 +112,30 @@ export default function Market() {
   };
 
   const q = query.trim().toLowerCase();
-  const shown = (all ?? []).filter((l) => view !== 'salg' || !q || l.title.toLowerCase().includes(q) || l.description.toLowerCase().includes(q) || l.category.toLowerCase().includes(q));
+
+  // Til salg: søg i databasen (hele landet, også dine egne), lidt efter man er holdt op med at skrive
+  useEffect(() => {
+    if (view !== 'salg' || !q) {
+      setHits(null);
+      setSearching(false);
+      return;
+    }
+    setSearching(true);
+    let live = true;
+    const t = setTimeout(async () => {
+      const rows = await searchListings(q, loc);
+      if (!live) return;
+      setHits({ q, rows });
+      setSearching(false);
+    }, 250);
+    return () => {
+      live = false;
+      clearTimeout(t);
+    };
+  }, [q, view, loc]);
+
+  const searchMode = view === 'salg' && !!q;
+  const shown = searchMode ? (hits?.q === q ? hits.rows : []) : (all ?? []).filter((l) => !q || matchesListing(l, q));
   // Uden søgning: annoncer i det, du senest har kigget på, først
   const { forYou, rest } = view === 'salg' && !q ? relatedFirst(shown, recent) : { forYou: [] as ListingRow[], rest: shown };
   const city = loc?.city ?? '';
@@ -118,7 +146,7 @@ export default function Market() {
       : view === 'gemte'
         ? 'Du har ikke gemt nogen annoncer. Tryk på Gem på en annonce for at finde den her.'
         : q
-          ? 'Ingen annoncer matcher din søgning.'
+          ? `Ingen annoncer matcher “${query.trim()}”. Prøv et andet ord, fx mærket eller en kategori som “bil” eller “cykel”.`
           : loc && km !== null
             ? `Ingen annoncer inden for ${km} km fra ${city} endnu. Prøv en større afstand.`
             : 'Der er ingen annoncer endnu.';
@@ -135,12 +163,18 @@ export default function Market() {
 
         <SegmentedControl label="Vis annoncer" options={views} value={view} onChange={(v) => (setAll(null), setView(v))} />
 
-        {view === 'salg' && (
-          <View style={s.filters}>
-            <View style={{ alignSelf: 'stretch' }}>
-              <TextField label="Søg på Torvet" showLabel={false} value={query} onChangeText={setQuery} />
-            </View>
-            {loc ? (
+        <View style={s.filters}>
+          <View style={{ alignSelf: 'stretch' }}>
+            <TextField
+              label={view === 'salg' ? 'Søg på hele Torvet' : view === 'dine' ? 'Søg i dine annoncer' : 'Søg i gemte'}
+              showLabel={false}
+              value={query}
+              onChangeText={setQuery}
+              autoCorrect={false}
+              returnKeyType="search"
+            />
+          </View>
+          {view === 'salg' && !searchMode && loc ? (
               <Pressable
                 accessibilityRole="button"
                 accessibilityLabel={`Afstand: ${km === null ? 'hele landet' : `inden for ${km} km`} fra ${city}. Skift`}
@@ -156,7 +190,7 @@ export default function Market() {
                 </T>
                 <Icon name="chevron-down" size={16} color={color.textSecondary} />
               </Pressable>
-            ) : where === null ? (
+            ) : view === 'salg' && !searchMode && where === null ? (
               <View style={[s.radius, { borderColor: color.borderDefault }]} accessibilityLabel="Finder din placering">
                 <Icon name="pin" size={18} color={color.textSecondary} />
                 <T v="label" c={color.textSecondary}>
@@ -164,11 +198,19 @@ export default function Market() {
                 </T>
               </View>
             ) : null}
-          </View>
+        </View>
+
+        {/* Søgning: hele landet, sorteret efter hvor godt det passer */}
+        {searchMode && (searching || hits?.q !== q || shown.length > 0) && (
+          <T v="caption" c={color.textSecondary} accessibilityLiveRegion="polite">
+            {searching || hits?.q !== q
+              ? 'Søger …'
+              : `${shown.length} ${shown.length === 1 ? 'annonce' : 'annoncer'} i hele landet${loc ? ', nærmeste først ved lige godt match' : ''}`}
+          </T>
         )}
 
         {/* Ingen placering: forklar det venligt, og lad folk prøve igen eller vælge en by */}
-        {view === 'salg' && where && !loc && (
+        {view === 'salg' && !searchMode && where && !loc && (
           <View style={s.locCard}>
             <View style={s.locTile}>
               <Icon name="pin" size={20} color={color.green700} />
@@ -189,7 +231,7 @@ export default function Market() {
           </View>
         )}
 
-        {all === null ? null : shown.length === 0 ? (
+        {(searchMode ? searching || hits?.q !== q : all === null) ? null : shown.length === 0 ? (
           <View style={s.empty}>
             <T v="bodyS" c={color.textSecondary}>
               {empty}
@@ -215,7 +257,7 @@ export default function Market() {
             )}
           </>
         ) : (
-          <ListingGrid items={rest} mine={view === 'dine'} />
+          <ListingGrid items={rest} mine={view === 'dine'} meId={searchMode ? me.id : undefined} />
         )}
       </View>
 

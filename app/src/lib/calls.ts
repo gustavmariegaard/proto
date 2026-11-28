@@ -294,6 +294,8 @@ export async function startCall(peer: Peer, conversationId: string, video: boole
     if (s === 'SUBSCRIBED') ring();
   });
   ringRepeat = setInterval(ring, 3000);
+  // Push til modtagerens telefon, så de kan tage den, selv om appen er lukket (ignoreres, hvis push ikke er sat op)
+  supabase.rpc('ring_push', { callee: peer.id, conversation: conversationId, video }).then(() => {}, () => {});
   ringTimer = setTimeout(() => {
     send('hangup');
     finish('no-answer');

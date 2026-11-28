@@ -16,7 +16,8 @@ self.addEventListener('push', (event) => {
     (async () => {
       // Er appen åben og synlig på samme side, viser vi ikke en ekstra notifikation
       const wins = await self.clients.matchAll({ type: 'window', includeUncontrolled: true });
-      const visible = wins.some((w) => w.visibilityState === 'visible' && d.url && new URL(w.url).pathname.endsWith(d.url));
+      // Opkald: er appen åben, ringer den selv inde i appen
+      const visible = wins.some((w) => w.visibilityState === 'visible' && (d.hiddenOnly || (d.url && new URL(w.url).pathname.endsWith(d.url))));
       if (visible) return;
       await self.registration.showNotification(title, {
         body: d.body || '',
@@ -24,6 +25,8 @@ self.addEventListener('push', (event) => {
         badge: BASE + '/icon-192.png',
         tag: d.tag || undefined,
         renotify: !!d.tag,
+        requireInteraction: !!d.hiddenOnly,
+        vibrate: d.hiddenOnly ? [300, 200, 300, 200, 300] : undefined,
         data: { url: d.url || '/' },
         lang: 'da',
       });

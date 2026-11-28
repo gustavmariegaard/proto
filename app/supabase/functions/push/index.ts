@@ -14,7 +14,7 @@
 import { createClient } from 'npm:@supabase/supabase-js@2';
 import webpush from 'npm:web-push@3.6.7';
 
-type Payload = { type: 'INSERT'; table: 'notifications' | 'messages'; record: Record<string, any> };
+type Payload = { type: 'INSERT'; table: 'notifications' | 'messages' | 'ring'; record: Record<string, any> };
 
 const supabase = createClient(Deno.env.get('SUPABASE_URL')!, Deno.env.get('SUPABASE_SERVICE_ROLE_KEY')!, {
   auth: { persistSession: false },
@@ -87,7 +87,7 @@ async function wanting(userIds: string[], cat: string) {
 
 /* ---------- Afsendelse ---------- */
 
-async function sendWeb(cfg: Config, userIds: string[], msg: { title: string; body: string; url: string; tag: string }) {
+async function sendWeb(cfg: Config, userIds: string[], msg: { title: string; body: string; url: string; tag: string; hiddenOnly?: boolean }, ttl = 60 * 60 * 24) {
   const { data: subs } = await supabase.from('web_push_subscriptions').select('endpoint, p256dh, auth').in('user_id', userIds);
   if (!subs?.length || !cfg.vapid_public || !cfg.vapid_private) return 0;
   webpush.setVapidDetails('https://gustavmariegaard.github.io/proto/app/', cfg.vapid_public, cfg.vapid_private);
@@ -95,7 +95,7 @@ async function sendWeb(cfg: Config, userIds: string[], msg: { title: string; bod
   await Promise.all(
     subs.map(async (s) => {
       try {
-        await webpush.sendNotification({ endpoint: s.endpoint, keys: { p256dh: s.p256dh, auth: s.auth } }, JSON.stringify(msg), { TTL: 60 * 60 * 24, urgency: 'high' });
+        await webpush.sendNotification({ endpoint: s.endpoint, keys: { p256dh: s.p256dh, auth: s.auth } }, JSON.stringify(msg), { TTL: ttl, urgency: 'high' });
         sent++;
       } catch (e: any) {
         // Browseren har afmeldt push (fx data ryddet): fjern abonnementet
@@ -163,9 +163,29 @@ Deno.serve(async (req) => {
     else return json({ ignored: true });
     url = n.post_id ? `/opslag/${n.post_id}` : n.type.startsWith('follow') || n.type === 'mention_bio' ? (actor ? `/bruger/${actor.username}` : '/notifikationer') : '/notifikationer';
     tag = `n-${n.type}-${n.post_id ?? n.actor_id ?? ''}`;
+  } else if (p.table === 'ring') {
+    // Nogen ringer: kort levetid (et opkald, der er slut, skal ikke dukke op senere)
+    const r = p.record;
+    const caller = await nameOf(r.caller);
+    const ok = await wanting([r.callee], 'opkald');
+    if (!ok.length) return json({ sent: 0 });
+    const web = await sendWeb(
+      cfg,
+      ok,
+      { title: caller?.name ?? 'Opkald', body: r.video ? 'Videoopkald … tryk for at svare' : 'Ringer til dig … tryk for at svare', url: `/samtale/${r.conversation_id}`, tag: `ring-${r.caller}`, hiddenOnly: true },
+      30,
+    );
+    const expo = await sendExpo(ok, { title: caller?.name ?? 'Opkald', body: r.video ? 'Videoopkald' : 'Ringer til dig', url: `/samtale/${r.conversation_id}` });
+    return json({ web, expo });
   } else if (p.table === 'messages') {
     const m = p.record;
     cat = 'beskeder';
+    // Opkald i samtalen: kun ubesvarede giver besked (afsluttede og afviste kender begge allerede)
+    if (m.kind === 'call') {
+      const status = m.call?.status;
+      if (status !== 'missed' && status !== 'busy') return json({ ignored: true });
+      cat = 'opkald';
+    }
     const { data: members } = await supabase.from('conversation_members').select('user_id').eq('conversation_id', m.conversation_id).neq('user_id', m.sender_id);
     to = (members ?? []).map((r) => r.user_id as string);
     const { data: conv } = await supabase.from('conversations').select('name, is_group').eq('id', m.conversation_id).maybeSingle();
@@ -174,7 +194,8 @@ Deno.serve(async (req) => {
     const text = String(m.body ?? '').trim();
     body = 'Har sendt dig en besked';
     // Web Push er krypteret helt frem til browseren, så her må teksten gerne stå
-    preview = m.post_id ? 'Delte et opslag med dig' : text ? (text.length > 90 ? text.slice(0, 88) + '…' : text) : body;
+    preview = m.kind === 'call' ? (m.call?.video ? 'Ubesvaret videoopkald' : 'Ubesvaret opkald') : m.post_id ? 'Delte et opslag med dig' : text ? (text.length > 90 ? text.slice(0, 88) + '…' : text) : body;
+    if (m.kind === 'call') body = preview;
     url = `/samtale/${m.conversation_id}`;
     tag = `m-${m.conversation_id}`;
   }

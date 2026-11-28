@@ -8,7 +8,7 @@ import { supabase } from './supabase';
  * Kategorien vælges ikke af sælgeren – den gættes ud fra titel og beskrivelse.
  */
 
-export const categories = ['Møbler', 'Cykler', 'Børn', 'Elektronik', 'Fritid'] as const;
+export const categories = ['Møbler', 'Cykler', 'Børn', 'Elektronik', 'Biler', 'Tøj', 'Fritid'] as const;
 export type Category = (typeof categories)[number];
 
 export const conditions = ['Ny', 'Som ny', 'God', 'Brugt'] as const;
@@ -17,12 +17,18 @@ export type Condition = (typeof conditions)[number];
 export const MAX_PHOTOS = 10;
 export const MAX_KM = 500;
 
+/** Biler: ord og de mest almindelige mærker */
+const CAR =
+  /\b(bil|biler|elbil|stationcar|varebil|hybridbil|personbil|polestar|tesla|volvo|vw|volkswagen|toyota|skoda|škoda|audi|bmw|mercedes|ford|peugeot|kia|hyundai|renault|citroën|citroen|opel|nissan|mazda|fiat|seat|cupra|mg|byd|honda|suzuki|dacia|lexus|jaguar|porsche|subaru|mitsubishi|jeep|xpeng|nio|lynk)\b/;
+
 export function guessCategory(text: string): Category {
   const t = text.toLowerCase();
+  if (CAR.test(t)) return 'Biler';
   if (/cykel|ladcykel|racer|mtb/.test(t)) return 'Cykler';
   if (/barne|børne|klapvogn|legetøj|autostol|baby/.test(t)) return 'Børn';
   if (/telefon|iphone|computer|tv|højttaler|skærm|kamera|playstation|tablet/.test(t)) return 'Elektronik';
   if (/bord|stol|sofa|seng|skab|reol|lampe|kommode/.test(t)) return 'Møbler';
+  if (/\b(jakke|frakke|kjole|bukser|jeans|trøje|sweater|skjorte|t-shirt|nederdel|sko|støvler|sneakers|hættetrøje|habit|blazer)/.test(t)) return 'Tøj';
   return 'Fritid';
 }
 
@@ -242,6 +248,28 @@ export type ListingRow = {
 export async function listingsNear(loc: MyLocation, km: number | null) {
   const { data } = await supabase.rpc('listings_near', { lat: loc.lat, lng: loc.lng, km, category: null, before: new Date().toISOString(), max_rows: 120 });
   return (data ?? []) as ListingRow[];
+}
+
+/**
+ * Søg på Torvet: hele landet, også dine egne annoncer. Bedste match først (titel, kategori,
+ * beskrivelse, begyndelsen af ord og små stavefejl), derefter nærmeste.
+ */
+export async function searchListings(q: string, loc: MyLocation | null) {
+  const { data, error } = await supabase.rpc('search_listings', { q, lat: loc?.lat ?? null, lng: loc?.lng ?? null, max_rows: 60 });
+  if (error) {
+    // Databasen er ikke opdateret endnu: søg i det, vi kan hente (hele landet, uden dine egne)
+    const rows = await listingsNear(loc ?? defaultLocation, null);
+    return rows.filter((l) => matchesListing(l, q)).map((l) => (loc ? l : { ...l, distance_km: null }));
+  }
+  return (data ?? []) as ListingRow[];
+}
+
+/** Lokal søgning (Dine annoncer, Gemte): store/små bogstaver og accenter er ligegyldige */
+const fold = (t: string) => t.toLocaleLowerCase('da').normalize('NFD').replace(/[\u0300-\u036f]/g, '');
+export function matchesListing(l: Pick<ListingRow, 'title' | 'description' | 'category'>, q: string) {
+  const words = fold(q).split(/\s+/).filter(Boolean);
+  const hay = fold(`${l.title} ${l.description} ${l.category} ${l.category === 'Biler' ? 'bil biler' : ''}`);
+  return words.every((w) => hay.includes(w));
 }
 
 /** Kategorier, du senest har kigget på */

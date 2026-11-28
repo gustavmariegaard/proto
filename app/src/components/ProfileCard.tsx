@@ -35,13 +35,15 @@ type Props = {
   children?: ReactNode;
   /** Allernederst i kortet, under en streg (fx Indsigt) */
   footer?: ReactNode;
+  /** Din egen profil: tryk på navnet for at skifte mellem din profil og dine sider */
+  onSwitch?: () => void;
 };
 
 /**
  * Toppen af en profil (din egen og andres): ét kort med et blødt grønt banner,
  * billedet der stikker op i banneret, navn i fuld bredde, bio og tallene i én rolig linje.
  */
-export function ProfileCard({ name, username, avatarPath, ring, onRing, ringLabel, plus, badges, bio, stats, corner, action, children, footer }: Props) {
+export function ProfileCard({ name, username, avatarPath, ring, onRing, ringLabel, plus, badges, bio, stats, corner, action, children, footer, onSwitch }: Props) {
   const pic = (
     <View style={[s.ring, ring === 'new' && s.ringNew, ring === 'seen' && s.ringSeen]}>
       <Avatar name={name} path={avatarPath} size={RING - 2 * (momentRing.width + momentRing.gap)} tone="blue" />
@@ -80,9 +82,20 @@ export function ProfileCard({ name, username, avatarPath, ring, onRing, ringLabe
         </View>
 
         <View style={s.name}>
-          <T v="titleL" accessibilityRole="header">
-            {name}
-          </T>
+          {onSwitch ? (
+            <Pressable accessibilityRole="button" accessibilityLabel={`${name}. Skift profil`} onPress={onSwitch} hitSlop={6} style={({ pressed }) => [s.switch, pressed && { opacity: 0.7 }]}>
+              <T v="titleL" accessibilityRole="header" style={{ flexShrink: 1 }}>
+                {name}
+              </T>
+              <View style={s.chev}>
+                <Icon name="chevron-down" size={16} stroke={2.5} />
+              </View>
+            </Pressable>
+          ) : (
+            <T v="titleL" accessibilityRole="header">
+              {name}
+            </T>
+          )}
           <T v="caption" c={color.textSecondary}>
             @{username}
           </T>
@@ -176,6 +189,8 @@ const s = StyleSheet.create({
     justifyContent: 'center',
   },
   name: { gap: 2 },
+  switch: { flexDirection: 'row', alignItems: 'center', alignSelf: 'flex-start', gap: 6, maxWidth: '100%' },
+  chev: { width: 24, height: 24, borderRadius: 12, alignItems: 'center', justifyContent: 'center', backgroundColor: color.bgSubtle },
   badges: { flexDirection: 'row', flexWrap: 'wrap', gap: 6, marginTop: 6 },
   badge: { flexDirection: 'row', alignItems: 'center', gap: 4, paddingVertical: 3, paddingHorizontal: 10, borderRadius: radius.pill, backgroundColor: color.bgSubtle },
   badgeNote: { backgroundColor: color.accentNoteBg },

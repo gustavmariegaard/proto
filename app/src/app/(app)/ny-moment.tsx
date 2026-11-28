@@ -16,6 +16,7 @@ import { noOutline } from '@/components/TextField';
 import { pickMedia, uploadImage, uploadVideo } from '@/lib/media';
 import { getPost } from '@/lib/posts';
 import { useMe } from '@/lib/session';
+import { useActingAs } from '@/lib/actingAs';
 import { supabase } from '@/lib/supabase';
 import type { PostCard } from '@/lib/types';
 import { useBlackChrome } from '@/lib/useDarkChrome';
@@ -37,7 +38,10 @@ const close = () => (router.canGoBack() ? router.back() : router.replace('/'));
 
 function useShare() {
   const me = useMe();
-  const { side } = useLocalSearchParams<{ side?: string }>();
+  const { side: sideParam } = useLocalSearchParams<{ side?: string }>();
+  // Bruger du appen som en side, deles momentet som siden
+  const { acting } = useActingAs(me.id);
+  const side = sideParam ?? (acting.kind === 'side' ? acting.id : undefined);
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState('');
   const share = async (media: Captured | null, postId: string | null, layout?: MomentLayout) => {

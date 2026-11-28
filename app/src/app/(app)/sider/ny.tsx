@@ -7,6 +7,7 @@ import { T } from '@/components/T';
 import { TextField } from '@/components/TextField';
 import { uploadImage } from '@/lib/media';
 import { useMe } from '@/lib/session';
+import { loadMyPages, switchTo } from '@/lib/actingAs';
 import { supabase } from '@/lib/supabase';
 import { color } from '@/theme/tokens';
 
@@ -43,10 +44,18 @@ export default function NewPage() {
       // Er adressen taget, prøves med et tal bagefter
       for (let i = 0; i < 6; i++) {
         const handle = i === 0 ? base : `${base}${Math.floor(Math.random() * 9000) + 100}`;
-        const { error } = await supabase
+        const { data, error } = await supabase
           .from('pages')
-          .insert({ handle, name: n, category: category.trim(), bio: description.trim(), avatar_path, created_by: me.id });
-        if (!error) return router.replace('/sider');
+          .insert({ handle, name: n, category: category.trim(), bio: description.trim(), avatar_path, created_by: me.id })
+          .select('id')
+          .single();
+        if (!error && data) {
+          // Du skifter med det samme til den nye side (kan altid skiftes tilbage ved navnet på profilen)
+          const pages = await loadMyPages(me.id);
+          const page = pages.find((p) => p.id === data.id);
+          if (page) await switchTo(me.id, page);
+          return router.replace('/profil');
+        }
         if (error.code !== '23505') throw error;
       }
       throw new Error('taget');

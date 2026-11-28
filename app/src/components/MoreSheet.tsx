@@ -3,6 +3,8 @@ import { useCallback, useEffect, useLayoutEffect, useRef, useState } from 'react
 import { Animated, BackHandler, Easing, PanResponder, Platform, Pressable, ScrollView, StyleSheet, View } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { useMe } from '@/lib/session';
+import { useActingAs } from '@/lib/actingAs';
+import { AccountSwitcher } from './AccountSwitcher';
 import { color, radius, tabbarBar } from '@/theme/tokens';
 import { Avatar } from './Avatar';
 import { Icon, type IconName } from './Icon';
@@ -104,7 +106,10 @@ export function MoreSheet({ open, onClose }: { open: boolean; onClose: () => voi
     onClose();
     router.push(to as never);
   };
-  const name = me.name.trim() || 'Dit navn';
+  const { acting, pages } = useActingAs(me.id);
+  const [switching, setSwitching] = useState(false);
+  const asPage = acting.kind === 'side' ? acting : null;
+  const name = asPage ? asPage.name : me.name.trim() || 'Dit navn';
   const translateY = Animated.add(drag, slide.interpolate({ inputRange: [0, 1], outputRange: [0, 700] }));
 
   return (
@@ -129,17 +134,31 @@ export function MoreSheet({ open, onClose }: { open: boolean; onClose: () => voi
           </View>
 
           <Pressable accessibilityRole="link" onPress={() => go('/profil')} style={({ pressed }) => [s.profile, pressed && s.pressed]}>
-            <Avatar name={name} path={me.avatar_path} size="M" tone="blue" />
+            <Avatar name={name} path={asPage ? asPage.avatar_path : me.avatar_path} size="M" tone="blue" />
             <View style={s.profileText}>
               <T v="headingS" numberOfLines={2}>
                 {name}
               </T>
               <T v="caption" c={color.textSecondary} numberOfLines={1}>
-                Se din profil
+                {asPage ? 'Du bruger ciircle som siden' : 'Se din profil'}
               </T>
             </View>
-            <Icon name="chevron-right" size={18} />
+            {asPage || pages.length > 0 ? (
+              <Pressable accessibilityRole="button" accessibilityLabel="Skift profil" onPress={() => setSwitching(true)} hitSlop={6} style={({ pressed }) => [s.switchBtn, pressed && s.pressed]}>
+                <T v="captionStrong">Skift</T>
+                <Icon name="chevron-down" size={14} stroke={2.5} />
+              </Pressable>
+            ) : (
+              <Icon name="chevron-right" size={18} />
+            )}
           </Pressable>
+          <AccountSwitcher
+            open={switching}
+            onClose={() => {
+              setSwitching(false);
+              onClose();
+            }}
+          />
 
           <View style={s.tiles}>
             {tiles.map((t) => (
@@ -160,6 +179,7 @@ export function MoreSheet({ open, onClose }: { open: boolean; onClose: () => voi
 }
 
 const s = StyleSheet.create({
+  switchBtn: { flexDirection: 'row', alignItems: 'center', gap: 4, minHeight: 32, paddingHorizontal: 12, borderRadius: radius.pill, backgroundColor: color.bgSubtle },
   /* Ligger over Hjem og topbaren, men under bundmenuen (z-index 20) */
   layer: { position: 'absolute', top: 0, left: 0, right: 0, bottom: 0, zIndex: 15 },
   scrim: { backgroundColor: 'rgba(10,10,10,0.5)' },

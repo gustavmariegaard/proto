@@ -14,6 +14,7 @@ import { noOutline, TextField } from '@/components/TextField';
 import { listEvents, listGroups } from '@/lib/community';
 import { imageSource, pickMedia, uploadImage, uploadVideo } from '@/lib/media';
 import { useMe } from '@/lib/session';
+import { useActingAs } from '@/lib/actingAs';
 import { supabase } from '@/lib/supabase';
 import { color, radius } from '@/theme/tokens';
 
@@ -39,8 +40,15 @@ export default function Create() {
   const me = useMe();
   const params = useLocalSearchParams<{ gruppe?: string; begivenhed?: string; side?: string; deler?: string; sted?: string }>();
   const sharing = params.deler ?? null;
-  const placeKind: PlaceKind | null = params.gruppe ? 'gruppe' : params.begivenhed ? 'begivenhed' : params.side ? 'side' : null;
-  const [placeId, setPlaceId] = useState<string | null>(params.gruppe ?? params.begivenhed ?? params.side ?? null);
+  // Bruger du appen som en side, skrives opslaget som siden (vises under Interesser)
+  const { acting } = useActingAs(me.id);
+  const sideId = params.side ?? (acting.kind === 'side' && !params.gruppe && !params.begivenhed ? acting.id : undefined);
+  const placeKind: PlaceKind | null = params.gruppe ? 'gruppe' : params.begivenhed ? 'begivenhed' : sideId ? 'side' : null;
+  const [placeId, setPlaceId] = useState<string | null>(params.gruppe ?? params.begivenhed ?? sideId ?? null);
+  useEffect(() => {
+    if (placeKind === 'side' && sideId && placeId !== sideId) setPlaceId(sideId);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [sideId]);
   const [places, setPlaces] = useState<Place[]>([]);
   const [text, setText] = useState('');
   const [audience, setAudience] = useState<Audience>(params.sted === 'debat' ? 'debat' : 'offentlig');
@@ -72,7 +80,7 @@ export default function Create() {
         .then(({ data }) => data && setPlaces([{ id: data.id, name: data.name, path: data.avatar_path, meta: '' }]));
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [placeKind]);
+  }, [placeKind, placeId]);
   const place = places.find((p) => p.id === placeId) ?? null;
 
   const close = closeTo('/');
@@ -235,7 +243,7 @@ function PlacePicker({ kind, places, place, onPlace }: { kind: PlaceKind; places
   const query = q.trim().toLowerCase();
   const hits = query ? places.filter((p) => p.name.toLowerCase().includes(query)).slice(0, 6) : [];
   const title = kind === 'gruppe' ? 'Deles i gruppen' : kind === 'begivenhed' ? 'Deles i begivenheden' : 'Deles som siden';
-  const hint = kind === 'gruppe' ? 'Kun gruppens medlemmer kan se det.' : kind === 'begivenhed' ? 'Kun dem, der er med i begivenheden, kan se det.' : 'Vises på siden.';
+  const hint = kind === 'gruppe' ? 'Kun gruppens medlemmer kan se det.' : kind === 'begivenhed' ? 'Kun dem, der er med i begivenheden, kan se det.' : 'Vises på siden og under Interesser hos dem, der følger den.';
 
   return (
     <View style={s.audience}>

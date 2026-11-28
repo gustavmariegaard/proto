@@ -8,7 +8,7 @@ import { Icon } from './Icon';
 import { T } from './T';
 
 /** Kort i Torvets gitter (prototypens .listing): forsidebillede, pris, titel og afstand (eller "Sat til salg …" for dine egne) */
-export function ListingCard({ listing, mine }: { listing: ListingRow; mine?: boolean }) {
+export function ListingCard({ listing, mine, own }: { listing: ListingRow; mine?: boolean; own?: boolean }) {
   const count = listing.image_paths.length;
   const sub = mine ? `Sat til salg ${listedText(listing.created_at).toLowerCase()}` : listing.distance_km !== null ? fmtKm(listing.distance_km) : listing.city;
   return (
@@ -20,6 +20,14 @@ export function ListingCard({ listing, mine }: { listing: ListingRow; mine?: boo
     >
       <View style={s.media}>
         <Image source={imageSource(listing.image_paths[0])} style={StyleSheet.absoluteFill} contentFit="cover" transition={150} />
+        {/* Din egen annonce (fx i søgeresultater) */}
+        {own && !mine && (
+          <View style={s.own}>
+            <T v="micro" c={color.ink900}>
+              Din annonce
+            </T>
+          </View>
+        )}
         {count > 1 && (
           <View style={s.count}>
             <Icon name="image" size={12} color={color.white} />
@@ -43,7 +51,7 @@ export function ListingCard({ listing, mine }: { listing: ListingRow; mine?: boo
 }
 
 /** Gitter med to kolonner (14 px mellem rækker, 12 px mellem kolonner). Kort i samme række er lige høje. */
-export function ListingGrid({ items, mine }: { items: ListingRow[]; mine?: boolean }) {
+export function ListingGrid({ items, mine, meId }: { items: ListingRow[]; mine?: boolean; meId?: string }) {
   const rows: ListingRow[][] = [];
   for (let i = 0; i < items.length; i += 2) rows.push(items.slice(i, i + 2));
   return (
@@ -52,7 +60,7 @@ export function ListingGrid({ items, mine }: { items: ListingRow[]; mine?: boole
         <View key={r[0]!.id} style={s.row}>
           {r.map((l) => (
             <View key={l.id} style={s.cell}>
-              <ListingCard listing={l} mine={mine} />
+              <ListingCard listing={l} mine={mine} own={!!meId && l.seller_id === meId} />
             </View>
           ))}
           {r.length === 1 && <View style={s.cell} />}
@@ -65,6 +73,7 @@ export function ListingGrid({ items, mine }: { items: ListingRow[]; mine?: boole
 const s = StyleSheet.create({
   card: { flex: 1, overflow: 'hidden', borderWidth: 1, borderColor: color.borderDefault, borderRadius: radius.lg, backgroundColor: color.bgSurface },
   media: { width: '100%', aspectRatio: 1, backgroundColor: color.bgSubtle },
+  own: { position: 'absolute', top: 8, left: 8, paddingHorizontal: 8, paddingVertical: 3, borderRadius: radius.pill, backgroundColor: color.accentBg },
   count: {
     position: 'absolute',
     top: 8,

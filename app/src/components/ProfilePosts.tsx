@@ -27,6 +27,8 @@ type Props = {
   /** Privat profil, du ikke følger: kun Debat er åben */
   locked?: boolean;
   onChanged?: () => void;
+  /** En side: kun Opslag og Flicks (sider deltager ikke i debatten), ingen highlights. `userId` er sidens id. */
+  page?: boolean;
 };
 
 /**
@@ -34,11 +36,12 @@ type Props = {
  * 1. Highlights (runde bobler)
  * 2. Faner: Opslag · Debat · Flicks (huskes i adressen, ?fane=)
  */
-export function ProfilePosts({ userId, posts, own = false, name, locked = false, onChanged }: Props) {
+export function ProfilePosts({ userId, posts, own = false, name, locked = false, onChanged, page = false }: Props) {
   const { fane } = useLocalSearchParams<{ fane?: string }>();
   const tab: Tab = fane === 'debat' || fane === 'flicks' || fane === 'opslag' ? fane : locked ? 'debat' : 'opslag';
 
-  const personal = profilePosts(posts);
+  // En sides opslag har page_id; på en personlig profil hører de til siden og vises ikke
+  const personal = page ? posts.filter((p) => !p.group_id && !p.event_id) : profilePosts(posts);
   // Gitteret er kun almindelige opslag: delte debatindlæg og flicks hører ikke til her
   const sharedIds = personal.filter((p) => p.kind === 'feed' && p.shared_post_id).map((p) => p.shared_post_id as string);
   const hidden = useHiddenShares(sharedIds);
@@ -47,14 +50,14 @@ export function ProfilePosts({ userId, posts, own = false, name, locked = false,
   const flicks = personal.filter((p) => p.kind === 'flick');
   const tabs: { value: Tab; label: string; icon: IconName }[] = [
     { value: 'opslag', label: 'Opslag', icon: 'layout-grid' },
-    { value: 'debat', label: 'Debat', icon: 'compass' },
+    ...(page ? [] : [{ value: 'debat' as Tab, label: 'Debat', icon: 'compass' as IconName }]),
     { value: 'flicks', label: 'Flicks', icon: 'clip' },
   ];
   const card = (p: Post) => <PostCard key={p.id} post={p} onRemoved={onChanged} />;
 
   return (
     <>
-      {!locked && <HighlightsRow userId={userId} own={own} />}
+      {!locked && !page && <HighlightsRow userId={userId} own={own} />}
 
       <View style={s.tabsRow}>
       <View style={s.tabs} accessibilityRole="tablist" accessibilityLabel="Vis på profilen">
@@ -95,12 +98,15 @@ export function ProfilePosts({ userId, posts, own = false, name, locked = false,
         {!locked &&
           tab === 'opslag' &&
           (feed.length === 0 ? (
-            <Empty text={own ? 'Du har ikke delt noget endnu.' : `${name} har ikke delt noget endnu.`} action={own ? { label: 'Skriv et opslag', to: '/opret' } : undefined} />
+            <Empty
+              text={page ? (own ? 'Siden har ikke delt noget endnu. Opslag fra siden vises under Interesser hos dem, der følger den.' : `${name} har ikke delt noget endnu.`) : own ? 'Du har ikke delt noget endnu.' : `${name} har ikke delt noget endnu.`}
+              action={own ? { label: 'Skriv et opslag', to: page ? `/opret?side=${userId}` : '/opret' } : undefined}
+            />
           ) : (
             <PostGrid posts={feed} />
           ))}
 
-        {tab === 'debat' &&
+        {tab === 'debat' && !page &&
           (debate.length === 0 ? (
             <Empty
               text={own ? 'Du har ikke deltaget i debatten endnu.' : `${name} har ikke deltaget i debatten endnu.`}
@@ -113,7 +119,7 @@ export function ProfilePosts({ userId, posts, own = false, name, locked = false,
         {!locked &&
           tab === 'flicks' &&
           (flicks.length === 0 ? (
-            <Empty text={own ? 'Du har ikke lavet nogen flicks endnu.' : `${name} har ingen flicks endnu.`} action={own ? { label: 'Lav en flick', to: '/flicks/ny' } : undefined} />
+            <Empty text={own ? 'Du har ikke lavet nogen flicks endnu.' : `${name} har ingen flicks endnu.`} action={own && !page ? { label: 'Lav en flick', to: '/flicks/ny' } : undefined} />
           ) : (
             <FlickGrid flicks={flicks} />
           ))}

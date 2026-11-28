@@ -13,10 +13,12 @@ type Props = {
   posts: number;
   followers: number;
   following: number;
+  /** Tryk på navnet: skift mellem din profil og dine sider */
+  onSwitch?: () => void;
 };
 
 /** Toppen af din egen profil: profilkortet med Indstillinger på banneret og "Rediger profil" ved billedet */
-export function ProfileHeader({ me, hasMoment, onRing, posts, followers, following }: Props) {
+export function ProfileHeader({ me, hasMoment, onRing, posts, followers, following, onSwitch }: Props) {
   return (
     <ProfileCard
       name={me.name}
@@ -26,6 +28,7 @@ export function ProfileHeader({ me, hasMoment, onRing, posts, followers, followi
       plus={!hasMoment}
       onRing={onRing}
       ringLabel={hasMoment ? 'Se dit moment' : 'Del et moment'}
+      onSwitch={onSwitch}
       badges={
         me.is_private ? (
           <ProfileBadge icon="lock" onPress={() => router.push('/indstillinger/privatliv')}>
