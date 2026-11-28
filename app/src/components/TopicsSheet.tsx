@@ -1,11 +1,12 @@
 import { useCallback, useEffect, useState } from 'react';
-import { Pressable, StyleSheet, View } from 'react-native';
+import { StyleSheet, View } from 'react-native';
 import { useMe } from '@/lib/session';
 import { supabase } from '@/lib/supabase';
 import { allTopics } from '@/lib/topics';
-import { color, radius } from '@/theme/tokens';
-import { Chip } from './Chip';
-import { Icon } from './Icon';
+import { color } from '@/theme/tokens';
+import { CheckBox } from './CheckBox';
+import { MintTile } from './CreateFlow';
+import { Choice, parts } from './CreateParts';
 import { Sheet } from './Sheet';
 import { T } from './T';
 import { TextField } from './TextField';
@@ -68,16 +69,29 @@ export function TopicsEditor() {
   const newTopic = query.trim().replace(/^./, (c) => c.toUpperCase()).slice(0, 40);
   const suggestions = suggestedInterests.filter((i) => !has(i));
 
-  const chip = (i: string) => (
-    <Chip key={i} selected={has(i)} trailing={has(i) ? 'close' : 'plus'} style={s.chip} onPress={() => toggle(i)}>
-      {i}
-    </Chip>
-  );
+  const row = (name: string, note?: string) => {
+    const on = has(name);
+    return (
+      <Choice key={name} on={on} label={name} onPress={() => toggle(name)}>
+        <MintTile icon="compass" />
+        <View style={parts.choiceText}>
+          <T v="label">{name}</T>
+          {!!note && (
+            <T v="caption" c={color.textSecondary}>
+              {note}
+            </T>
+          )}
+        </View>
+        <CheckBox on={on} />
+      </Choice>
+    );
+  };
+  const trendNames = new Set(trending.map((t) => t.name));
 
   return (
     <View style={s.root}>
       <TextField
-        label="Søg efter interesser"
+        label="Søg efter eller tilføj en interesse"
         showLabel={false}
         value={query}
         onChangeText={setQuery}
@@ -88,25 +102,24 @@ export function TopicsEditor() {
 
       {q ? (
         <View style={s.section} accessibilityLabel="Søgeresultater">
-          <View style={s.chips}>
-            {hits.map(chip)}
-            {!exact && (
-              <Chip
-                trailing="plus"
-                style={s.chip}
-                onPress={() => {
-                  toggle(newTopic);
-                  setQuery('');
-                }}
-              >
-                {`Følg “${newTopic}”`}
-              </Chip>
-            )}
-          </View>
-          {hits.length === 0 && (
-            <T v="caption" c={color.textSecondary}>
-              Ingen interesser hedder sådan endnu. Du kan selv følge den.
-            </T>
+          {hits.map((h) => row(h))}
+          {!exact && newTopic.length >= 2 && (
+            <Choice
+              on={false}
+              label={`Tilføj ${newTopic}`}
+              onPress={() => {
+                toggle(newTopic);
+                setQuery('');
+              }}
+            >
+              <MintTile icon="plus" />
+              <View style={parts.choiceText}>
+                <T v="label">{`Tilføj “${newTopic}”`}</T>
+                <T v="caption" c={color.textSecondary}>
+                  Ny interesse
+                </T>
+              </View>
+            </Choice>
           )}
         </View>
       ) : (
@@ -116,7 +129,7 @@ export function TopicsEditor() {
               Dine interesser
             </T>
             {mine.length ? (
-              <View style={s.chips}>{mine.map(chip)}</View>
+              mine.map((m) => row(m))
             ) : (
               <T v="caption" c={color.textSecondary}>
                 Du følger ingen interesser endnu. Søg, eller vælg nedenfor.
@@ -124,50 +137,21 @@ export function TopicsEditor() {
             )}
           </View>
 
-          {trending.length > 0 && (
+          {trending.some((t) => !has(t.name)) && (
             <View style={s.section}>
               <T v="headingS" accessibilityRole="header">
-                Trender lige nu
+                Populært lige nu
               </T>
-              <View>
-                {trending.map((t, n) => {
-                  const on = has(t.name);
-                  return (
-                    <Pressable
-                      key={t.name}
-                      accessibilityRole="button"
-                      accessibilityState={{ selected: on }}
-                      onPress={() => toggle(t.name)}
-                      style={[s.trend, n === trending.length - 1 && { borderBottomWidth: 0 }]}
-                    >
-                      <T v="headingS" c={color.textSecondary} style={s.rank} aria-hidden>
-                        {n + 1}
-                      </T>
-                      <View style={s.trendText}>
-                        <T v="label">{t.name}</T>
-                        <T v="caption" c={color.textSecondary}>
-                          {t.note}
-                        </T>
-                      </View>
-                      <View style={[s.follow, on && s.followOn]}>
-                        <Icon name={on ? 'check' : 'plus'} size={14} color={on ? color.textOnAction : color.textPrimary} />
-                        <T v="captionStrong" c={on ? color.textOnAction : color.textPrimary}>
-                          {on ? 'Følger' : 'Følg'}
-                        </T>
-                      </View>
-                    </Pressable>
-                  );
-                })}
-              </View>
+              {trending.filter((t) => !has(t.name)).map((t) => row(t.name, t.note))}
             </View>
           )}
 
-          {suggestions.length > 0 && (
+          {suggestions.some((i) => !trendNames.has(i)) && (
             <View style={s.section}>
               <T v="headingS" accessibilityRole="header">
-                Forslag til dig
+                Forslag
               </T>
-              <View style={s.chips}>{suggestions.map(chip)}</View>
+              {suggestions.filter((i) => !trendNames.has(i)).map((i) => row(i))}
             </View>
           )}
         </>
@@ -186,30 +170,6 @@ export function TopicsSheet({ open, onClose }: { open: boolean; onClose: () => v
 }
 
 const s = StyleSheet.create({
-  root: { gap: 20, paddingTop: 16, paddingHorizontal: 20, paddingBottom: 32 },
+  root: { gap: 22, paddingTop: 12, paddingHorizontal: 16, paddingBottom: 32 },
   section: { gap: 10 },
-  chips: { flexDirection: 'row', flexWrap: 'wrap', gap: 8 },
-  chip: { paddingLeft: 16, paddingRight: 12 },
-  trend: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: 14,
-    minHeight: 60,
-    paddingVertical: 8,
-    borderBottomWidth: 1,
-    borderBottomColor: color.borderDefault,
-  },
-  rank: { width: 20, textAlign: 'center' },
-  trendText: { flex: 1, minWidth: 0 },
-  follow: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: 4,
-    minHeight: 32,
-    paddingHorizontal: 12,
-    borderWidth: 1,
-    borderColor: color.borderStrong,
-    borderRadius: radius.pill,
-  },
-  followOn: { borderColor: color.actionPrimary, backgroundColor: color.actionPrimary },
 });

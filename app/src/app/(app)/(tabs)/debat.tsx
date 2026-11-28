@@ -4,11 +4,10 @@ import { ActivityIndicator, FlatList, Pressable, RefreshControl, StyleSheet, Vie
 import { Button } from '@/components/Button';
 import { Choice, parts } from '@/components/CreateParts';
 import { MintTile } from '@/components/CreateFlow';
-import { Icon } from '@/components/Icon';
+import { CheckBox } from '@/components/CheckBox';
 import { IconButton } from '@/components/IconButton';
 import { PageOnlyNotice } from '@/components/PageOnlyNotice';
 import { Sheet } from '@/components/Sheet';
-import { TextField } from '@/components/TextField';
 import { useActingAs } from '@/lib/actingAs';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { PostCard } from '@/components/PostCard';
@@ -55,7 +54,6 @@ export default function Debate() {
 function PersonDebate() {
   const me = useMe();
   const insets = useSafeAreaInsets();
-  const [query, setQuery] = useState('');
   const [filterOpen, setFilterOpen] = useState(false);
   const [interests, setInterests] = useState<Interest[]>([]);
   const [posts, setPosts] = useState<Post[] | null>(null);
@@ -101,21 +99,14 @@ function PersonDebate() {
   };
 
   const off = interests.filter((t) => !t.active);
-  const q = query.trim().toLowerCase();
-  const shown = (posts ?? []).filter(
-    (p) => !q || p.text.toLowerCase().includes(q) || p.author_name.toLowerCase().includes(q) || p.author_username.toLowerCase().includes(q) || p.tags.some((t) => t.toLowerCase().includes(q)),
-  );
 
   const header = (
     <View style={s.head}>
-      <T v="titleXl" accessibilityRole="header">
-        Offentlig debat
-      </T>
-      {/* Søg og filtrér (samme udtryk som Søg og Beskeder) */}
-      <View style={s.searchRow}>
-        <View style={{ flex: 1 }}>
-          <TextField label="Søg i debatten" showLabel={false} autoCapitalize="none" autoCorrect={false} inputMode="search" value={query} onChangeText={setQuery} />
-        </View>
+      {/* Titel med filter-ikon til højre (samme filter-udtryk som Søg) */}
+      <View style={s.titleRow}>
+        <T v="titleXl" accessibilityRole="header" style={{ flex: 1 }}>
+          Offentlig debat
+        </T>
         <IconButton
           icon="sliders"
           label={off.length ? `Filtrér debatten. ${off.length} interesser er skjult` : 'Filtrér debatten'}
@@ -154,7 +145,7 @@ function PersonDebate() {
     <Screen edges={[]} scroll={false}>
       <TopBar />
       <FlatList
-        data={posts === null ? [] : shown}
+        data={posts ?? []}
         keyExtractor={(p) => `${p.id}-${tick}`}
         contentContainerStyle={s.list}
         ListHeaderComponent={header}
@@ -165,7 +156,7 @@ function PersonDebate() {
             <ActivityIndicator color={color.textPrimary} style={{ marginTop: 24 }} />
           ) : (
             <T v="bodyS" c={color.textSecondary}>
-              {q ? `Ingen opslag i debatten matcher “${query.trim()}”.` : 'Ingen opslag om dine interesser lige nu. Prøv at følge flere.'}
+              Ingen opslag om dine interesser lige nu. Prøv at følge flere.
             </T>
           )
         }
@@ -204,7 +195,7 @@ function PersonDebate() {
               <View style={parts.choiceText}>
                 <T v="label">{t.topic}</T>
               </View>
-              <View style={[s.check, t.active && s.checkOn]}>{t.active && <Icon name="check" size={14} color={color.white} stroke={3} />}</View>
+              <CheckBox on={t.active} />
             </Choice>
           ))}
           <Button
@@ -235,11 +226,9 @@ const s = StyleSheet.create({
   list: { paddingHorizontal: 20, paddingBottom: TAB_SPACE },
   head: { gap: 14 },
   pageOnly: { gap: 14, paddingHorizontal: 20 },
-  searchRow: { flexDirection: 'row', alignItems: 'center', gap: 6, marginRight: -6 },
+  titleRow: { flexDirection: 'row', alignItems: 'center', gap: 8, marginRight: -10 },
   filtered: { flexDirection: 'row', alignItems: 'center', gap: 12, marginTop: -6, paddingHorizontal: 4 },
   filter: { gap: 10, paddingTop: 8, paddingHorizontal: 16 },
-  check: { width: 24, height: 24, borderRadius: 8, borderWidth: 1.5, borderColor: color.borderStrong, alignItems: 'center', justifyContent: 'center' },
-  checkOn: { backgroundColor: color.textPrimary, borderColor: color.textPrimary },
   notice: {
     flexDirection: 'row',
     alignItems: 'center',

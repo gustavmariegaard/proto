@@ -177,6 +177,17 @@ export function FlickCommentsSheet({ postId, onClose, onCount }: Props) {
             enterKeyHint="send"
             maxLength={1000}
           />
+          {/* Send-knap (samme som i beskeder): aktiv, når der er skrevet noget */}
+          <Pressable
+            accessibilityRole="button"
+            accessibilityLabel="Send kommentar"
+            accessibilityState={{ disabled: !text.trim() }}
+            disabled={!text.trim()}
+            onPress={send}
+            style={({ pressed }) => [s.send, !text.trim() && s.sendOff, pressed && { transform: [{ scale: 0.94 }] }]}
+          >
+            <Icon name="send" size={20} color={text.trim() ? color.ink900 : color.textSecondary} />
+          </Pressable>
         </View>
       }
     >
@@ -207,7 +218,9 @@ const s = StyleSheet.create({
   text: { flex: 1, minWidth: 0, gap: 4 },
   actions: { flexDirection: 'row', gap: 16 },
   like: { alignItems: 'center', gap: 2, minWidth: TAP, minHeight: TAP, marginTop: -2, marginRight: -12 },
-  composer: { flexDirection: 'row', alignItems: 'center', gap: 10 },
+  composer: { flexDirection: 'row', alignItems: 'center', gap: 8 },
+  send: { width: 44, height: 44, borderRadius: 22, alignItems: 'center', justifyContent: 'center', backgroundColor: color.accent },
+  sendOff: { backgroundColor: color.bgSubtle },
   field: {
     flex: 1,
     minWidth: 0,
