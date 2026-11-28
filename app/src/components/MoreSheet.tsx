@@ -27,6 +27,8 @@ const tiles: { label: string; icon: IconName; to: string }[] = [
  */
 export function MoreSheet({ open, onClose }: { open: boolean; onClose: () => void }) {
   const me = useMe();
+  const { acting, pages } = useActingAs(me.id);
+  const [switching, setSwitching] = useState(false);
   const insets = useSafeAreaInsets();
   const slide = useRef(new Animated.Value(1)).current;
   const drag = useRef(new Animated.Value(0)).current;
@@ -100,14 +102,13 @@ export function MoreSheet({ open, onClose }: { open: boolean; onClose: () => voi
     }),
   ).current;
 
+  // Hooks skal kaldes før den tidlige return herunder
   if (!open && !shown) return null;
 
   const go = (to: string) => {
     onClose();
     router.push(to as never);
   };
-  const { acting, pages } = useActingAs(me.id);
-  const [switching, setSwitching] = useState(false);
   const asPage = acting.kind === 'side' ? acting : null;
   const name = asPage ? asPage.name : me.name.trim() || 'Dit navn';
   const translateY = Animated.add(drag, slide.interpolate({ inputRange: [0, 1], outputRange: [0, 700] }));

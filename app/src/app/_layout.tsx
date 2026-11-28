@@ -8,8 +8,10 @@ import { SafeAreaProvider } from 'react-native-safe-area-context';
 import { MobileOnly } from '@/components/MobileOnly';
 import { SessionProvider, useSession } from '@/lib/session';
 import { setupWebHead } from '@/lib/webHead';
+import { setupAutoUpdate } from '@/lib/webUpdate';
 
 setupWebHead();
+setupAutoUpdate();
 import { color } from '@/theme/tokens';
 
 /** Hele appen: fonte, login og hvilke skærme man må se */
