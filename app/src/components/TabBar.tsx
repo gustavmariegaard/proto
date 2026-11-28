@@ -1,3 +1,5 @@
+import { useActingAs } from '@/lib/actingAs';
+import { useMe } from '@/lib/session';
 import { useEffect, useRef, useState } from 'react';
 import { Animated, Easing, Platform, Pressable, StyleSheet, View, type NativeScrollEvent, type NativeSyntheticEvent } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
@@ -25,7 +27,10 @@ export function TabBar({ current, onPress }: { current?: string; onPress: (name:
   const bottom = tabbarBottom(insets.bottom);
   // På Flicks står menuen altid fast
   const { hidden: down } = useHideOnScroll(current);
-  const dark = current === 'flicks';
+  // Som side er Flicks en lys forklaringsside, så menuen er lys
+  const me = useMe();
+  const { acting } = useActingAs(me.id);
+  const dark = current === 'flicks' && acting.kind !== 'side';
   const hidden = down && !dark;
   // Flicks: mørkt glas. Ruller man ned, glider menuen blødt ind og bliver mindre;
   // ruller man op, bliver den straks stor igen (som Instagram Reels)

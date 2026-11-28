@@ -12,7 +12,7 @@ import { Glass } from '@/components/Glass';
 import { Icon } from '@/components/Icon';
 import { useActingAs } from '@/lib/actingAs';
 import { Pressable } from 'react-native';
-import { pageRings, personRings, type Ring } from '@/lib/moments';
+import { personRings, type Ring } from '@/lib/moments';
 import { normalize } from '@/lib/posts';
 import { readCache, readCacheSync, writeCache } from '@/lib/cache';
 import { useMe } from '@/lib/session';
@@ -62,7 +62,8 @@ export default function Home() {
   const load = useCallback(async () => {
     const [{ data }, r] = await Promise.all([
       supabase.rpc(rpc, { before: new Date().toISOString(), max_rows: PAGE }),
-      feed === 'interesser' ? pageRings() : personRings(),
+      // Interesser er kun opslag fra sider (sider deler ikke moments)
+      feed === 'interesser' ? Promise.resolve([] as Ring[]) : personRings(),
     ]);
     const list = ((data ?? []) as Post[]).map(normalize);
     setPosts(list);
@@ -122,7 +123,7 @@ export default function Home() {
   };
 
   // Nye moments først, sete bagefter
-  const isMine = (r: Ring) => (asPage && feed === 'interesser' ? r.kind === 'side' && r.id === asPage.id : !!r.mine);
+  const isMine = (r: Ring) => !!r.mine;
   const myRing = rings.find(isMine);
   const others = rings.filter((r) => !isMine(r)).sort((a, b) => Number(!a.unseen) - Number(!b.unseen));
   const queue = (myRing ? [myRing, ...others] : others).map((r) => `${r.kind}:${r.id}`).join(',');
@@ -137,25 +138,15 @@ export default function Home() {
           </T>
         </View>
       )}
-      {/* Brugere: personers moments med "Dig" først. Interesser: moments fra sider, man følger. */}
+      {/* Brugere: personers moments med "Dig" først. Interesser har ingen moments (sider deler kun opslag). */}
+      {feed === 'venner' && (
       <ScrollView
         horizontal
         showsHorizontalScrollIndicator={false}
         style={s.moments}
         contentContainerStyle={s.momentsContent}
-        accessibilityLabel={feed === 'interesser' ? 'Moments fra sider' : 'Moments'}
+        accessibilityLabel="Moments"
       >
-        {asPage && feed === 'interesser' && (
-          <MomentBubble
-            name="Siden"
-            fullName={asPage.name}
-            state={myRing ? 'new' : 'add'}
-            plus
-            path={asPage.avatar_path}
-            onPress={() => (myRing ? open(myRing) : router.push({ pathname: '/ny-moment', params: { side: asPage.id } }))}
-            onPlus={() => router.push({ pathname: '/ny-moment', params: { side: asPage.id } })}
-          />
-        )}
         {feed === 'venner' && (
           <MomentBubble
             name="Dig"
@@ -179,6 +170,7 @@ export default function Home() {
           />
         ))}
       </ScrollView>
+      )}
     </View>
   );
 

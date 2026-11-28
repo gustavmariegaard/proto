@@ -2,7 +2,6 @@ import { router, useFocusEffect } from 'expo-router';
 import { useCallback, useState } from 'react';
 import { StyleSheet, View } from 'react-native';
 import { postsWhere, setFollowPage, type PageCard } from '@/lib/community';
-import { activeMoments } from '@/lib/moments';
 import { markSeen } from '@/lib/moreActivity';
 import { useActingAs } from '@/lib/actingAs';
 import { useMe } from '@/lib/session';
@@ -24,7 +23,7 @@ type Props = {
 
 /**
  * En side vist med samme profilkort som personer, men tilpasset:
- * "Side"-mærke og kategori, tallene Opslag og Følgere, og fanerne Opslag og Flicks (ingen debat).
+ * "Side"-mærke og kategori, tallene Opslag og Følgere, og sidens opslag (sider deler kun opslag, ingen moments, flicks eller debat).
  * - Besøgende: Følg og Besked.
  * - Admin, der bruger appen som sig selv: "Skift til siden" og "Rediger side".
  * - Som siden: navnet skifter profil, og knapperne laver nyt opslag og moment som siden.
@@ -33,16 +32,14 @@ export function PageProfile({ page, acting = false, onChanged }: Props) {
   const me = useMe();
   const { pages, switchTo } = useActingAs(me.id);
   const [posts, setPosts] = useState<Post[]>([]);
-  const [moments, setMoments] = useState({ any: false, seen: true });
   const [followers, setFollowers] = useState(page.followers);
   const [following, setFollowing] = useState(page.i_follow);
   const [switching, setSwitching] = useState(false);
 
   const load = useCallback(async () => {
     markSeen(page.id);
-    const [list, ms] = await Promise.all([postsWhere('page_id', page.id), activeMoments(page.id, 'side')]);
-    setPosts(list);
-    setMoments({ any: ms.length > 0, seen: ms.every((m) => m.seen) });
+    // Sider deler kun opslag (ingen moments eller flicks)
+    setPosts((await postsWhere('page_id', page.id)).filter((p) => p.kind === 'feed'));
   }, [page.id]);
   useFocusEffect(
     useCallback(() => {
@@ -79,16 +76,7 @@ export function PageProfile({ page, acting = false, onChanged }: Props) {
         name={page.name}
         username={page.handle}
         avatarPath={page.avatar_path}
-        ring={moments.any ? (acting || !moments.seen ? 'new' : 'seen') : 'none'}
-        onRing={
-          moments.any
-            ? () => router.push({ pathname: '/moment/[id]', params: { id: page.id, type: 'side' } })
-            : acting
-              ? () => router.push({ pathname: '/ny-moment', params: { side: page.id } })
-              : undefined
-        }
-        plus={acting && !moments.any}
-        ringLabel={moments.any ? `Se moments fra ${page.name}` : 'Del et moment som siden'}
+        ring="none"
         onSwitch={acting ? () => setSwitching(true) : undefined}
         badges={
           <>

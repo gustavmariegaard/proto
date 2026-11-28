@@ -51,7 +51,7 @@ export function ProfilePosts({ userId, posts, own = false, name, locked = false,
   const tabs: { value: Tab; label: string; icon: IconName }[] = [
     { value: 'opslag', label: 'Opslag', icon: 'layout-grid' },
     ...(page ? [] : [{ value: 'debat' as Tab, label: 'Debat', icon: 'compass' as IconName }]),
-    { value: 'flicks', label: 'Flicks', icon: 'clip' },
+    ...(page ? [] : [{ value: 'flicks' as Tab, label: 'Flicks', icon: 'clip' as IconName }]),
   ];
   const card = (p: Post) => <PostCard key={p.id} post={p} onRemoved={onChanged} />;
 
@@ -59,6 +59,7 @@ export function ProfilePosts({ userId, posts, own = false, name, locked = false,
     <>
       {!locked && !page && <HighlightsRow userId={userId} own={own} />}
 
+      {tabs.length > 1 && (
       <View style={s.tabsRow}>
       <View style={s.tabs} accessibilityRole="tablist" accessibilityLabel="Vis på profilen">
         {tabs.map((t) => {
@@ -79,6 +80,7 @@ export function ProfilePosts({ userId, posts, own = false, name, locked = false,
         })}
       </View>
       </View>
+      )}
 
       <View style={s.panel}>
         {locked && tab !== 'debat' && (
@@ -96,7 +98,7 @@ export function ProfilePosts({ userId, posts, own = false, name, locked = false,
         )}
 
         {!locked &&
-          tab === 'opslag' &&
+          (tab === 'opslag' || page) &&
           (feed.length === 0 ? (
             <Empty
               text={page ? (own ? 'Siden har ikke delt noget endnu. Opslag fra siden vises under Interesser hos dem, der følger den.' : `${name} har ikke delt noget endnu.`) : own ? 'Du har ikke delt noget endnu.' : `${name} har ikke delt noget endnu.`}
@@ -117,6 +119,7 @@ export function ProfilePosts({ userId, posts, own = false, name, locked = false,
           ))}
 
         {!locked &&
+          !page &&
           tab === 'flicks' &&
           (flicks.length === 0 ? (
             <Empty text={own ? 'Du har ikke lavet nogen flicks endnu.' : `${name} har ingen flicks endnu.`} action={own && !page ? { label: 'Lav en flick', to: '/flicks/ny' } : undefined} />

@@ -10,6 +10,7 @@ import Svg, { Defs, LinearGradient, Rect, Stop } from 'react-native-svg';
 import { Button } from '@/components/Button';
 import { CreateButton, CreateShell, MediaFrame, OptionRow } from '@/components/CreateFlow';
 import { Icon } from '@/components/Icon';
+import { PageOnlyNotice } from '@/components/PageOnlyNotice';
 import { backdrops, BackdropSwatch, CanvasButton, cardStyles, defaultLayout, Guides, MomentCanvas, onBox, textColors, TrashTarget, type MomentLayout } from '@/components/MomentCanvas';
 import { T } from '@/components/T';
 import { noOutline } from '@/components/TextField';
@@ -31,6 +32,19 @@ type Captured = { uri: string; mime: string; video: boolean };
  */
 export default function NewMoment() {
   const { opslag } = useLocalSearchParams<{ opslag?: string; side?: string }>();
+  const me = useMe();
+  const { acting } = useActingAs(me.id);
+  // Moments er personlige: som side vises en forklaring
+  if (acting.kind === 'side') {
+    return (
+      <View style={s.pageOnly}>
+        <PageOnlyNotice icon="camera" title="Moments er for personer" text="Sider deler ikke moments. Som side deler du opslag, der vises under Interesser hos dem, der følger siden." />
+        <Button variant="secondary" block onPress={close}>
+          Tilbage
+        </Button>
+      </View>
+    );
+  }
   return opslag ? <ShareMoment postId={opslag} /> : <Camera />;
 }
 
@@ -38,10 +52,7 @@ const close = () => (router.canGoBack() ? router.back() : router.replace('/'));
 
 function useShare() {
   const me = useMe();
-  const { side: sideParam } = useLocalSearchParams<{ side?: string }>();
-  // Bruger du appen som en side, deles momentet som siden
-  const { acting } = useActingAs(me.id);
-  const side = sideParam ?? (acting.kind === 'side' ? acting.id : undefined);
+  const { side } = useLocalSearchParams<{ side?: string }>();
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState('');
   const share = async (media: Captured | null, postId: string | null, layout?: MomentLayout) => {
@@ -376,6 +387,7 @@ function TextEditor({ value, onChange, onDone }: { value: { text: string; color:
 
 const s = StyleSheet.create({
   list: { gap: 10 },
+  pageOnly: { flex: 1, justifyContent: 'center', gap: 12, padding: 20, backgroundColor: color.bgApp },
   /* Del som moment */
   smoment: { flex: 1, backgroundColor: color.ink900, overflow: 'hidden' },
   center: { alignItems: 'center', justifyContent: 'center' },

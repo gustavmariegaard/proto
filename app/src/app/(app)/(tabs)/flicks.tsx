@@ -1,3 +1,6 @@
+import { PageOnlyNotice } from '@/components/PageOnlyNotice';
+import { TopBar } from '@/components/TopBar';
+import { useActingAs } from '@/lib/actingAs';
 import { useFocusEffect, useLocalSearchParams } from 'expo-router';
 import { StatusBar } from 'expo-status-bar';
 import { useCallback, useEffect, useRef, useState } from 'react';
@@ -14,7 +17,7 @@ import { supabase } from '@/lib/supabase';
 import type { PostCard } from '@/lib/types';
 import { useBlackChrome } from '@/lib/useDarkChrome';
 import { reportTabScroll } from '@/components/TabBar';
-import { font, layout, tabbarBar, TAP } from '@/theme/tokens';
+import { color, font, layout, tabbarBar, TAP } from '@/theme/tokens';
 
 type Mode = 'interesser' | 'foelger';
 const PAGE = 10;
@@ -24,7 +27,27 @@ const PAGE = 10;
  * Interesser = flicks om dine interesser, Følger = flicks fra dem, du følger. Skift er hårdt (som Reels).
  * ?vis=<id> åbner en bestemt flick først (fx fra en profil).
  */
+/** Sider laver ikke flicks: som side vises en forklaring i stedet */
 export default function Flicks() {
+  const me = useMe();
+  const { acting } = useActingAs(me.id);
+  if (acting.kind === 'side') {
+    return (
+      <View style={{ flex: 1, backgroundColor: color.bgApp }}>
+        <TopBar />
+        <View style={{ gap: 14, paddingHorizontal: 20 }}>
+          <T v="titleXl" accessibilityRole="header">
+            Flicks
+          </T>
+          <PageOnlyNotice icon="clip" title="Flicks er for personer" text="Sider laver ikke flicks. Som side deler du opslag, der vises under Interesser hos dem, der følger siden." />
+        </View>
+      </View>
+    );
+  }
+  return <FlicksFeed />;
+}
+
+function FlicksFeed() {
   useBlackChrome();
   const me = useMe();
   const insets = useSafeAreaInsets();
