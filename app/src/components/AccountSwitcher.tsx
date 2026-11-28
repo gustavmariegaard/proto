@@ -14,13 +14,13 @@ import { T } from './T';
  * "Skift profil" (som at skifte konto på Instagram): din personlige profil og dine sider.
  * Valget gælder hele appen: Profil viser den valgte, og nye opslag laves som den.
  */
-export function AccountSwitcher({ open, onClose }: { open: boolean; onClose: () => void }) {
+export function AccountSwitcher({ open, onClose, stay = false }: { open: boolean; onClose: () => void; /** Bliv på skærmen efter skiftet (fx Hjem) i stedet for at gå til Profil */ stay?: boolean }) {
   const me = useMe();
   const { acting, pages, switchTo } = useActingAs(me.id);
   const pick = async (p: MyPage | null) => {
     await switchTo(p);
     onClose();
-    router.navigate('/profil');
+    if (!stay) router.navigate('/profil');
   };
   return (
     <Sheet open={open} onClose={onClose} title="Skift profil" initialSize="auto" dim>

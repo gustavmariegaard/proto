@@ -6,6 +6,12 @@ import { PostCard } from '@/components/PostCard';
 import { SegmentedControl } from '@/components/SegmentedControl';
 import { T } from '@/components/T';
 import { TopBar } from '@/components/TopBar';
+import { AccountSwitcher } from '@/components/AccountSwitcher';
+import { Avatar } from '@/components/Avatar';
+import { Glass } from '@/components/Glass';
+import { Icon } from '@/components/Icon';
+import { useActingAs } from '@/lib/actingAs';
+import { Pressable } from 'react-native';
 import { pageRings, personRings, type Ring } from '@/lib/moments';
 import { normalize } from '@/lib/posts';
 import { readCache, readCacheSync, writeCache } from '@/lib/cache';
@@ -90,6 +96,15 @@ export default function Home() {
     router.setParams({ feed: f === 'interesser' ? 'interesser' : undefined });
   };
 
+  // Som side: Hjem viser Interesser (sidens verden), og sidens eget moment står først
+  const { acting } = useActingAs(me.id);
+  const asPage = acting.kind === 'side' ? acting : null;
+  const [switching, setSwitching] = useState(false);
+  useEffect(() => {
+    if (asPage && feed !== 'interesser') switchFeed('interesser');
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [asPage?.id]);
+
   const loadMore = async () => {
     if (!posts?.length || !more || loadingMore.current) return;
     loadingMore.current = true;
@@ -107,8 +122,9 @@ export default function Home() {
   };
 
   // Nye moments først, sete bagefter
-  const myRing = rings.find((r) => r.mine);
-  const others = rings.filter((r) => !r.mine).sort((a, b) => Number(!a.unseen) - Number(!b.unseen));
+  const isMine = (r: Ring) => (asPage && feed === 'interesser' ? r.kind === 'side' && r.id === asPage.id : !!r.mine);
+  const myRing = rings.find(isMine);
+  const others = rings.filter((r) => !isMine(r)).sort((a, b) => Number(!a.unseen) - Number(!b.unseen));
   const queue = (myRing ? [myRing, ...others] : others).map((r) => `${r.kind}:${r.id}`).join(',');
   const open = (r: Ring) => router.push({ pathname: '/moment/[id]', params: { id: r.id, type: r.kind, raekke: queue } });
 
@@ -117,7 +133,7 @@ export default function Home() {
       {feed === 'interesser' && (
         <View style={s.pages}>
           <T v="caption" c={color.textSecondary}>
-            Nyt fra de sider, du følger
+            {asPage ? `Nyt fra ${asPage.name} og de sider, du følger` : 'Nyt fra de sider, du følger'}
           </T>
         </View>
       )}
@@ -129,6 +145,17 @@ export default function Home() {
         contentContainerStyle={s.momentsContent}
         accessibilityLabel={feed === 'interesser' ? 'Moments fra sider' : 'Moments'}
       >
+        {asPage && feed === 'interesser' && (
+          <MomentBubble
+            name="Siden"
+            fullName={asPage.name}
+            state={myRing ? 'new' : 'add'}
+            plus
+            path={asPage.avatar_path}
+            onPress={() => (myRing ? open(myRing) : router.push({ pathname: '/ny-moment', params: { side: asPage.id } }))}
+            onPlus={() => router.push({ pathname: '/ny-moment', params: { side: asPage.id } })}
+          />
+        )}
         {feed === 'venner' && (
           <MomentBubble
             name="Dig"
@@ -193,23 +220,39 @@ export default function Home() {
             },
           ]}
         >
-          <SegmentedControl
-            glass
-            label="Vis opslag fra"
-            value={feed}
-            onChange={switchFeed}
-            options={[
-              { value: 'venner', label: 'Brugere' },
-              { value: 'interesser', label: 'Interesser' },
-            ]}
-          />
+          {asPage ? (
+            // Som side: ingen Brugere/Interesser-valg, men et tydeligt mærke med, hvem man ser appen som
+            <Glass style={s.asPage}>
+              <Pressable accessibilityRole="button" accessibilityLabel={`Du ser Interesser som ${asPage.name}. Skift profil`} onPress={() => setSwitching(true)} style={s.asPageIn}>
+                <Avatar name={asPage.name} path={asPage.avatar_path} size={26} />
+                <T v="label" numberOfLines={1} style={{ flexShrink: 1 }}>
+                  Interesser som {asPage.name}
+                </T>
+                <Icon name="chevron-down" size={14} stroke={2.5} />
+              </Pressable>
+            </Glass>
+          ) : (
+            <SegmentedControl
+              glass
+              label="Vis opslag fra"
+              value={feed}
+              onChange={switchFeed}
+              options={[
+                { value: 'venner', label: 'Brugere' },
+                { value: 'interesser', label: 'Interesser' },
+              ]}
+            />
+          )}
         </Animated.View>
       </View>
+      <AccountSwitcher stay open={switching} onClose={() => setSwitching(false)} />
     </View>
   );
 }
 
 const s = StyleSheet.create({
+  asPage: { height: 40, borderRadius: 999 },
+  asPageIn: { height: '100%', flexDirection: 'row', alignItems: 'center', justifyContent: 'center', gap: 8, paddingHorizontal: 14 },
   root: { flex: 1, backgroundColor: color.bgApp },
   list: { paddingHorizontal: 20, paddingTop: SWITCH_H + 8, paddingBottom: TAB_SPACE },
   header: { gap: 12 },

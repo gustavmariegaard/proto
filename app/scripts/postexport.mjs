@@ -30,7 +30,20 @@ const splash = `<div id="ciircle-splash" style="position:fixed;inset:0;display:f
 <svg width="72" height="72" viewBox="0 0 72 72" fill="none" aria-label="ciircle"><rect width="72" height="72" rx="20" fill="#171717"/><circle cx="27" cy="36" r="12" stroke="#21F1A8" stroke-width="6"/><circle cx="45" cy="36" r="12" stroke="white" stroke-width="6"/></svg></div>
 <script>(function(){var done=false;function hide(){if(done)return;done=true;var s=document.getElementById('ciircle-splash');if(!s)return;s.style.transition='opacity .25s ease';s.style.opacity='0';setTimeout(function(){s.remove();},260);}window.__ciircleReady=hide;setTimeout(hide,10000);})();</script>`;
 
-html = html.replace('</head>', `${preload}</head>`);
+// iPhone læser disse, før appens kode starter (når appen åbnes fra hjemmeskærmen),
+// så de skal stå direkte i HTML'en. Uden dem bliver statuslinjen øverst sort.
+const appleHead = [
+  `<meta name="apple-mobile-web-app-capable" content="yes">`,
+  `<meta name="mobile-web-app-capable" content="yes">`,
+  `<meta name="apple-mobile-web-app-status-bar-style" content="default">`,
+  `<meta name="apple-mobile-web-app-title" content="ciircle">`,
+  `<meta name="theme-color" content="#fafaf9">`,
+  `<link rel="manifest" href="${base}manifest.webmanifest">`,
+  `<link rel="apple-touch-icon" href="${base}apple-touch-icon.png">`,
+  `<style>html,body{background-color:#fafaf9}</style>`,
+].join('');
+html = html.replace(/<meta name="theme-color"[^>]*>/g, '');
+html = html.replace('</head>', `${appleHead}${preload}</head>`);
 html = html.replace(/<body([^>]*)>/, `<body$1>${splash}`);
 fs.writeFileSync(htmlPath, html);
 console.log(`postexport: ${fonts.length} skrifttyper forudindlæses, startskærm tilføjet`);
