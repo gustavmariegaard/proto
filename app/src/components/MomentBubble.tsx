@@ -23,7 +23,7 @@ type Props = {
 };
 
 /**
- * Moment som bobbel (68 px). Grøn ring = nyt, grå ring = set.
+ * Moment som bobbel (78 px). Grøn ring = nyt, grå ring = set.
  * "Tilføj" viser dit eget profilbillede med et plus nederst til højre.
  */
 export function MomentBubble({ name, fullName, state = 'new', tone, path, uri, plus, onPress, onPlus }: Props) {
@@ -51,8 +51,8 @@ export function MomentBubble({ name, fullName, state = 'new', tone, path, uri, p
   );
 }
 
-/** Boblens størrelse på Hjem (lidt mindre end på profilen, så første opslag kommer højere op) */
-const SIZE = 68;
+/** Boblens størrelse på Hjem (som Instagrams stories), så brugernavnet kan stå under */
+const SIZE = 78;
 
 const s = StyleSheet.create({
   moment: { alignItems: 'center', gap: 4, flexShrink: 0, borderRadius: radius.md },
@@ -85,5 +85,5 @@ const s = StyleSheet.create({
     alignItems: 'center',
     justifyContent: 'center',
   },
-  name: { maxWidth: SIZE + 4, textAlign: 'center' },
+  name: { width: SIZE + 10, textAlign: 'center' },
 });

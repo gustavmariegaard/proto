@@ -217,6 +217,6 @@ const s = StyleSheet.create({
   pages: { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', gap: 12 },
   edit: { gap: 6, paddingHorizontal: 14 },
   moments: { marginHorizontal: -20 },
-  momentsContent: { gap: 12, paddingHorizontal: 20, paddingBottom: 2 },
+  momentsContent: { gap: 6, paddingHorizontal: 16, paddingBottom: 2 },
   empty: { textAlign: 'center', paddingTop: 24 },
 });

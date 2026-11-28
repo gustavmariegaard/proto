@@ -49,6 +49,12 @@ export function StanceBar({ postId, userId, initial }: { postId: string; userId:
         <Side label="Enig" on={mine === 'enig'} pct={open ? (counts ? pct : null) : undefined} onPress={() => vote('enig')} />
         <Side label="Uenig" down on={mine === 'uenig'} pct={open ? (counts ? (total ? 100 - pct : 0) : null) : undefined} onPress={() => vote('uenig')} />
       </View>
+      {/* Barometeret: fordelingen mellem enig og uenig */}
+      {open && (
+        <View style={s.track} accessibilityLabel={counts ? `${pct} procent enig, ${total ? 100 - pct : 0} procent uenig` : 'Henter stemmer'}>
+          {total > 0 && <View style={[s.trackFill, { width: `${pct}%` }]} />}
+        </View>
+      )}
       <View style={s.foot}>
         <T v="caption" c={color.textSecondary}>
           {open ? `${fmtNumber(total)} ${total === 1 ? 'stemme' : 'stemmer'} i alt` : 'Hvad mener du?'}
@@ -67,7 +73,7 @@ export function StanceBar({ postId, userId, initial }: { postId: string; userId:
 
 /**
  * Enig eller Uenig som et kort (samme udtryk som oprettelsen): mint ikonfelt og titel.
- * Når stemmerne vises, fyldes kortet svagt op efter andelen, og procenten står til højre.
+ * Når stemmerne vises, står procenten til højre, og barometeret under kortene viser fordelingen.
  */
 function Side({ label, down, on, pct, onPress }: { label: string; down?: boolean; on: boolean; pct?: number | null; onPress: () => void }) {
   const shown = pct !== undefined;
@@ -79,7 +85,6 @@ function Side({ label, down, on, pct, onPress }: { label: string; down?: boolean
       onPress={onPress}
       style={({ pressed }) => [s.side, on && s.sideOn, pressed && { transform: [{ scale: 0.98 }] }]}
     >
-      {shown && pct !== null && <View style={[s.fill, { width: `${pct}%` }]} />}
       <View style={[s.tile, on && s.tileOn]}>
         {on ? (
           <Icon name="check" size={16} color={color.ink900} stroke={2.5} />
@@ -118,7 +123,8 @@ const s = StyleSheet.create({
     backgroundColor: color.bgSurface,
   },
   sideOn: { borderColor: color.accent, borderWidth: 1.5, paddingHorizontal: 9.5 },
-  fill: { position: 'absolute', left: 0, top: 0, bottom: 0, backgroundColor: color.noteBg },
+  track: { height: 8, borderRadius: 999, backgroundColor: color.gray200, overflow: 'hidden' },
+  trackFill: { height: '100%', borderRadius: 999, backgroundColor: color.accent },
   tile: { width: 32, height: 32, borderRadius: 10, alignItems: 'center', justifyContent: 'center', backgroundColor: color.noteBg, borderWidth: 1, borderColor: color.accentBg },
   tileOn: { backgroundColor: color.accent, borderColor: color.accent },
   foot: { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', paddingHorizontal: 4 },
