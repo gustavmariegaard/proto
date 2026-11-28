@@ -18,7 +18,10 @@ import { color, TAB_SPACE } from '@/theme/tokens';
 const PAGE = 20;
 type Feed = 'venner' | 'interesser';
 /** Brugere/Interesser-vælgeren: 52 høj + 8 luft under (prototypens .home__switch) */
-/** Brugere/Interesser: 8 px luft over (så skyggen ikke skæres af), 40 px kontakt, 4 px under */
+/**
+ * Brugere/Interesser: 8 px luft over, 40 px kontakt, 4 px under.
+ * Indholdet ligger over topbaren, så skyggen aldrig skæres af. Ved rul toner kontakten ud med et lille løft.
+ */
 const SWITCH_H = 52;
 
 /** Hjem: feed fra dem, du følger, eller fra dine interesser (prototypens Home). */
@@ -159,7 +162,8 @@ export default function Home() {
   return (
     <View style={s.root}>
       <TopBar />
-      <View style={{ flex: 1 }}>
+      {/* Over topbaren (z-index), så skyggen om Brugere/Interesser aldrig skæres af */}
+      <View style={{ flex: 1, zIndex: 11 }}>
         <FlatList
           data={posts ?? []}
           keyExtractor={(p) => p.id}
@@ -189,7 +193,7 @@ export default function Home() {
             s.switch,
             {
               opacity: hide.interpolate({ inputRange: [0, 1], outputRange: [1, 0] }),
-              transform: [{ translateY: hide.interpolate({ inputRange: [0, 1], outputRange: [0, -SWITCH_H * 1.1] }) }],
+              transform: [{ translateY: hide.interpolate({ inputRange: [0, 1], outputRange: [0, -10] }) }],
             },
           ]}
         >

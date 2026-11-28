@@ -48,7 +48,8 @@ const s = StyleSheet.create({
   glass: { height: 40, borderRadius: radius.pill, ...shadow.tabbar, shadowOffset: { width: 0, height: 0 }, shadowRadius: 12 },
   inner: { flex: 1, flexDirection: 'row', gap: 4, padding: 4 },
   innerGlass: { padding: 3 },
-  itemGlass: { height: 34, borderRadius: radius.pill },
+  /* Fylder højden præcist (glassets kant + 3 px luft hele vejen rundt), så den valgte står centreret */
+  itemGlass: { height: '100%', borderRadius: radius.pill },
   item: { flex: 1, minWidth: 0, height: 44, borderRadius: radius.sm, alignItems: 'center', justifyContent: 'center' },
   on: { backgroundColor: color.bgSurface },
   /* På glas: lille skygge, så den valgte ligger oven på (tydelig, også før man ruller) */
