@@ -21,10 +21,86 @@ export const SUPABASE_URL = url;
 export const openedFromRecoveryLink =
   Platform.OS === 'web' && typeof window !== 'undefined' && /(^|[#&?])type=recovery(&|$)/.test(window.location.hash + window.location.search);
 
+/*
+ * "Husk mig": huskes man, gemmes login på enheden (man forbliver logget ind, også når appen lukkes).
+ * Ellers gemmes det kun, mens appen er åben (web: sessionStorage, telefon: i hukommelsen).
+ */
+const REMEMBER = 'ciircle.remember';
+const memory = new Map<string, string>();
+const hasWebStorage = Platform.OS === 'web' && typeof window !== 'undefined' && !!window.localStorage;
+let remember = true;
+if (hasWebStorage) {
+  try {
+    remember = window.localStorage.getItem(REMEMBER) !== '0';
+  } catch {}
+} else {
+  AsyncStorage.getItem(REMEMBER).then((v) => (remember = v !== '0'));
+}
+
+/** Vælg, om login skal huskes. Kaldes lige før man logger ind. */
+export function setRememberMe(on: boolean) {
+  remember = on;
+  if (hasWebStorage) {
+    try {
+      window.localStorage.setItem(REMEMBER, on ? '1' : '0');
+    } catch {}
+  } else AsyncStorage.setItem(REMEMBER, on ? '1' : '0');
+}
+
+export function getRememberMe() {
+  return remember;
+}
+
+const webStorage = {
+  getItem: (k: string) => {
+    try {
+      return window.localStorage.getItem(k) ?? window.sessionStorage.getItem(k);
+    } catch {
+      return memory.get(k) ?? null;
+    }
+  },
+  setItem: (k: string, v: string) => {
+    try {
+      if (remember) {
+        window.localStorage.setItem(k, v);
+        window.sessionStorage.removeItem(k);
+      } else {
+        window.sessionStorage.setItem(k, v);
+        window.localStorage.removeItem(k);
+      }
+    } catch {
+      memory.set(k, v);
+    }
+  },
+  removeItem: (k: string) => {
+    try {
+      window.localStorage.removeItem(k);
+      window.sessionStorage.removeItem(k);
+    } catch {}
+    memory.delete(k);
+  },
+};
+
+const nativeStorage = {
+  getItem: async (k: string) => memory.get(k) ?? (await AsyncStorage.getItem(k)),
+  setItem: async (k: string, v: string) => {
+    if (remember) {
+      memory.delete(k);
+      await AsyncStorage.setItem(k, v);
+    } else {
+      memory.set(k, v);
+      await AsyncStorage.removeItem(k);
+    }
+  },
+  removeItem: async (k: string) => {
+    memory.delete(k);
+    await AsyncStorage.removeItem(k);
+  },
+};
+
 export const supabase = createClient(url, key, {
   auth: {
-    // På web bruges browserens egen lagring; på telefonen AsyncStorage
-    storage: Platform.OS === 'web' ? undefined : AsyncStorage,
+    storage: Platform.OS === 'web' ? (hasWebStorage ? webStorage : undefined) : nativeStorage,
     autoRefreshToken: true,
     persistSession: true,
     // Web: linket i bekræftelsesmailen logger ind via adressen (#access_token=…)

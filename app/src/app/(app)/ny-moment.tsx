@@ -123,8 +123,8 @@ function Camera() {
   return (
     <CreateShell kind="moment" switchable={!side} kicker="Trin 1 af 2" title="Nyt moment" lead="Et moment forsvinder igen efter 24 timer." onClose={close}>
       <View style={s.list}>
-        <OptionRow icon="camera" title="Tag et foto eller en video" text="Brug telefonens kamera" onPress={camera} />
-        <OptionRow icon="image" title="Vælg fra kamerarullen" text="Et billede eller en video" onPress={gallery} />
+        <OptionRow icon="camera" title="Tag et foto eller en video" onPress={camera} />
+        <OptionRow icon="image" title="Vælg fra kamerarullen" onPress={gallery} />
       </View>
     </CreateShell>
   );

@@ -22,9 +22,9 @@ type Media = { uri: string; mime: string; type: 'image' | 'video' };
 type PlaceKind = 'gruppe' | 'begivenhed' | 'side';
 type Place = { id: string; name: string; path: string | null; meta: string };
 
-const audiences: { value: Audience; label: string; hint: string; icon: IconName }[] = [
-  { value: 'offentlig', label: 'Din profil', icon: 'user', hint: 'Til dem, der følger dig.' },
-  { value: 'debat', label: 'Offentlig debat', icon: 'compass', hint: 'Til alle' },
+const audiences: { value: Audience; label: string; icon: IconName }[] = [
+  { value: 'offentlig', label: 'Din profil', icon: 'user' },
+  { value: 'debat', label: 'Offentlig debat', icon: 'compass' },
 ];
 
 const colOf = { gruppe: 'group_id', begivenhed: 'event_id', side: 'page_id' } as const;
@@ -166,9 +166,6 @@ export default function Create() {
           setCursor(t.length);
         }}
       />
-      <T v="caption" c={color.textSecondary} style={s.tip}>
-        Skriv @ for at tagge en person eller en side.
-      </T>
 
       {sharing && (
         <View style={{ alignSelf: 'stretch' }}>
@@ -200,7 +197,7 @@ export default function Create() {
           <CreateLabel>Hvor skal det deles?</CreateLabel>
           <View style={s.list} accessibilityRole="radiogroup">
             {audiences.map((a) => (
-              <OptionRow key={a.value} role="radio" icon={a.icon} title={a.label} text={a.hint} on={audience === a.value} onPress={() => setAudience(a.value)} />
+              <OptionRow key={a.value} role="radio" icon={a.icon} title={a.label} on={audience === a.value} onPress={() => setAudience(a.value)} />
             ))}
           </View>
           {!!hint && (
@@ -335,7 +332,6 @@ function LocalVideo({ uri }: { uri: string }) {
 
 const s = StyleSheet.create({
   add: { flexDirection: 'row', gap: 10, alignSelf: 'stretch' },
-  tip: { marginTop: -8, paddingLeft: 4 },
   list: { gap: 10, alignSelf: 'stretch' },
   audience: { gap: 10, alignSelf: 'stretch' },
   destText: { flex: 1, minWidth: 0 },

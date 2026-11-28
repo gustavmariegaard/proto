@@ -28,7 +28,7 @@ export function SegmentedControl<V extends string>({ options, value, onChange, l
             accessibilityRole="tab"
             accessibilityState={{ selected: on }}
             onPress={() => onChange(o.value)}
-            style={[s.item, glass && s.itemGlass, on && s.on]}
+            style={[s.item, glass && s.itemGlass, on && s.on, on && glass && s.onGlass]}
           >
             <T v="captionStrong" c={on ? color.textPrimary : color.textSecondary} numberOfLines={1}>
               {o.label}
@@ -51,4 +51,6 @@ const s = StyleSheet.create({
   itemGlass: { height: 34, borderRadius: radius.pill },
   item: { flex: 1, minWidth: 0, height: 44, borderRadius: radius.sm, alignItems: 'center', justifyContent: 'center' },
   on: { backgroundColor: color.bgSurface },
+  /* På glas: lille skygge, så den valgte ligger oven på (tydelig, også før man ruller) */
+  onGlass: { shadowColor: '#000', shadowOpacity: 0.12, shadowRadius: 4, shadowOffset: { width: 0, height: 1 }, elevation: 2 },
 });

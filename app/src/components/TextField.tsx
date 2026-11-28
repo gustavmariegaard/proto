@@ -43,11 +43,13 @@ export function TextField({ label, showLabel = true, hint, error, multiline, dar
 }
 
 /** Browserens egen fokusramme passer ikke til de runde felter; vi viser en mørk kant i stedet */
-export const noOutline = Platform.OS === 'web' ? ({ outlineStyle: 'none' } as object) : null;
+// iPhone/Safari tegner ellers sin egen skygge øverst i feltet (ser ud, som om hjørnet bliver skåret af)
+export const noOutline =
+  Platform.OS === 'web' ? ({ outlineStyle: 'none', WebkitAppearance: 'none', appearance: 'none', backgroundClip: 'padding-box', boxShadow: 'none' } as object) : null;
 
 /** Felter på login-skærmene: hvide med grøn kant ved fokus */
 export const darkField = { backgroundColor: color.bgSurface, borderColor: color.borderDefault, color: color.textPrimary };
-export const darkFocus = { borderColor: color.accent, borderWidth: 1.5 };
+export const darkFocus = { borderColor: color.accent, borderWidth: 2, paddingHorizontal: 17 };
 
 const s = StyleSheet.create({
   group: { gap: 6, alignSelf: 'stretch' },

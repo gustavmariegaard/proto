@@ -146,10 +146,10 @@ export default function NewFlick() {
 
   /* Trin 1: optag eller vælg en video */
   return (
-    <CreateShell kind="flick" switchable kicker="Trin 1 af 2" title="Ny flick" lead="Flicks er lodrette videoer på op til 60 sekunder." onClose={close}>
+    <CreateShell kind="flick" switchable kicker="Trin 1 af 2" title="Ny flick" lead="Flicks er videoer på op til 60 sekunder." onClose={close}>
       <View style={s.list}>
-        <OptionRow icon="camera" title="Optag en video" text="Brug telefonens kamera" onPress={camera} />
-        <OptionRow icon="image" title="Vælg en video" text="Fra dit kamerarul" onPress={gallery} />
+        <OptionRow icon="camera" title="Optag en video" onPress={camera} />
+        <OptionRow icon="image" title="Vælg en video" onPress={gallery} />
       </View>
       {videoOnly && (
         <T v="bodyS" c={color.danger} accessibilityLiveRegion="polite">

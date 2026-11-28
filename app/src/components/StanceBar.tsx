@@ -3,7 +3,7 @@ import { Pressable, StyleSheet, View } from 'react-native';
 import { setStance, stanceCounts } from '@/lib/posts';
 import { fmtNumber } from '@/lib/time';
 import type { Stance } from '@/lib/types';
-import { color, radius, TAP } from '@/theme/tokens';
+import { color } from '@/theme/tokens';
 import { Icon } from './Icon';
 import { T } from './T';
 
@@ -40,103 +40,87 @@ export function StanceBar({ postId, userId, initial }: { postId: string; userId:
     stanceCounts(postId).then(setCounts);
   };
 
-  if (!open) {
-    return (
-      <View style={s.row} accessibilityLabel="Er du enig?">
-        <Choice label="Enig" onPress={() => vote('enig')} />
-        <Choice label="Uenig" down onPress={() => vote('uenig')} />
-        <Pressable accessibilityRole="button" onPress={() => setPeek(true)} style={s.peek}>
-          <T v="captionStrong" c={color.textSecondary} style={s.underline}>
-            Vis stemmer
-          </T>
-        </Pressable>
-      </View>
-    );
-  }
-
   const total = counts ? counts.agree + counts.disagree : 0;
-  const pct = total ? Math.round(((counts?.agree ?? 0) / total) * 100) : 50;
-  const side = (st: Stance, label: string, p: number) => {
-    const on = mine === st;
-    return (
-      <Pressable
-        accessibilityRole="button"
-        accessibilityState={{ selected: on }}
-        accessibilityLabel={`${label}, ${p} procent`}
-        onPress={() => vote(st)}
-        style={[s.side, on && s.sideOn]}
-      >
-        {on && <Icon name="check" size={16} color={color.textOnAction} />}
-        <T v="label" c={on ? color.textOnAction : color.textPrimary}>
-          {label}
-        </T>
-        <T v="label" c={on ? color.textOnAction : color.textSecondary}>
-          {counts ? `${p} %` : '…'}
-        </T>
-      </Pressable>
-    );
-  };
+  const pct = total ? Math.round(((counts?.agree ?? 0) / total) * 100) : 0;
 
   return (
-    <View style={{ gap: 4 }}>
-      <View style={s.row}>
-        {side('enig', 'Enig', pct)}
-        {side('uenig', 'Uenig', 100 - pct)}
+    <View style={s.wrap}>
+      <View style={s.row} accessibilityLabel="Er du enig?">
+        <Side label="Enig" on={mine === 'enig'} pct={open ? (counts ? pct : null) : undefined} onPress={() => vote('enig')} />
+        <Side label="Uenig" down on={mine === 'uenig'} pct={open ? (counts ? (total ? 100 - pct : 0) : null) : undefined} onPress={() => vote('uenig')} />
+      </View>
+      <View style={s.foot}>
+        <T v="caption" c={color.textSecondary}>
+          {open ? `${fmtNumber(total)} ${total === 1 ? 'stemme' : 'stemmer'} i alt` : 'Hvad mener du?'}
+        </T>
         {!mine && (
-          <Pressable accessibilityRole="button" onPress={() => setPeek(false)} style={s.peek}>
+          <Pressable accessibilityRole="button" onPress={() => setPeek(!peek)} hitSlop={8}>
             <T v="captionStrong" c={color.textSecondary} style={s.underline}>
-              Skjul stemmer
+              {peek ? 'Skjul stemmer' : 'Vis stemmer'}
             </T>
           </Pressable>
         )}
       </View>
-      <View style={s.track}>
-        <View style={[s.fill, { width: `${pct}%` }]} />
-      </View>
-      <T v="caption" c={color.textSecondary} style={{ marginTop: 4 }}>
-        {fmtNumber(total)} {total === 1 ? 'stemme' : 'stemmer'} i alt
-      </T>
     </View>
   );
 }
 
-function Choice({ label, down, onPress }: { label: string; down?: boolean; onPress: () => void }) {
+/**
+ * Enig eller Uenig som et kort (samme udtryk som oprettelsen): mint ikonfelt og titel.
+ * Når stemmerne vises, fyldes kortet svagt op efter andelen, og procenten står til højre.
+ */
+function Side({ label, down, on, pct, onPress }: { label: string; down?: boolean; on: boolean; pct?: number | null; onPress: () => void }) {
+  const shown = pct !== undefined;
   return (
-    <Pressable accessibilityRole="button" onPress={onPress} style={({ pressed }) => [s.choice, pressed && { opacity: 0.6 }]}>
-      <View style={down ? { transform: [{ scaleY: -1 }] } : undefined}>
-        <Icon name="thumb" size={20} />
+    <Pressable
+      accessibilityRole="button"
+      accessibilityState={{ selected: on }}
+      accessibilityLabel={shown && pct !== null ? `${label}, ${pct} procent` : label}
+      onPress={onPress}
+      style={({ pressed }) => [s.side, on && s.sideOn, pressed && { transform: [{ scale: 0.98 }] }]}
+    >
+      {shown && pct !== null && <View style={[s.fill, { width: `${pct}%` }]} />}
+      <View style={[s.tile, on && s.tileOn]}>
+        {on ? (
+          <Icon name="check" size={16} color={color.ink900} stroke={2.5} />
+        ) : (
+          <View style={down ? { transform: [{ scaleY: -1 }] } : undefined}>
+            <Icon name="thumb" size={16} color={color.green700} />
+          </View>
+        )}
       </View>
-      <T v="label">{label}</T>
+      <T v="headingS" style={{ flex: 1 }} numberOfLines={1}>
+        {label}
+      </T>
+      {shown && (
+        <T v="label" c={on ? color.textPrimary : color.textSecondary} style={{ fontVariant: ['tabular-nums'] }}>
+          {pct === null ? '…' : `${pct} %`}
+        </T>
+      )}
     </Pressable>
   );
 }
 
 const s = StyleSheet.create({
-  row: { flexDirection: 'row', alignItems: 'center', gap: 8 },
-  choice: {
-    height: TAP,
-    paddingHorizontal: 18,
-    borderRadius: radius.pill,
-    borderWidth: 1,
-    borderColor: color.borderStrong,
-    backgroundColor: color.bgSurface,
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: 6,
-  },
-  peek: { marginLeft: 'auto', minHeight: TAP, justifyContent: 'center', paddingHorizontal: 4 },
-  underline: { textDecorationLine: 'underline' },
+  wrap: { gap: 8 },
+  row: { flexDirection: 'row', gap: 10 },
   side: {
-    height: TAP,
-    paddingHorizontal: 14,
-    borderRadius: radius.pill,
-    borderWidth: 1,
-    borderColor: color.borderStrong,
+    flex: 1,
     flexDirection: 'row',
     alignItems: 'center',
-    gap: 6,
+    gap: 10,
+    minHeight: 52,
+    paddingHorizontal: 10,
+    overflow: 'hidden',
+    borderRadius: 18,
+    borderWidth: 1,
+    borderColor: color.borderDefault,
+    backgroundColor: color.bgSurface,
   },
-  sideOn: { backgroundColor: color.actionPrimary, borderColor: color.actionPrimary },
-  track: { height: 8, borderRadius: radius.pill, backgroundColor: color.gray200, overflow: 'hidden', marginTop: 6 },
-  fill: { height: '100%', borderRadius: radius.pill, backgroundColor: color.accent },
+  sideOn: { borderColor: color.accent, borderWidth: 1.5, paddingHorizontal: 9.5 },
+  fill: { position: 'absolute', left: 0, top: 0, bottom: 0, backgroundColor: color.noteBg },
+  tile: { width: 32, height: 32, borderRadius: 10, alignItems: 'center', justifyContent: 'center', backgroundColor: color.noteBg, borderWidth: 1, borderColor: color.accentBg },
+  tileOn: { backgroundColor: color.accent, borderColor: color.accent },
+  foot: { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', paddingHorizontal: 4 },
+  underline: { textDecorationLine: 'underline' },
 });

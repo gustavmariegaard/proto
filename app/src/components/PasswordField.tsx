@@ -38,7 +38,7 @@ export function PasswordField({ label = 'Adgangskode', hint, error, isNew, dark,
       <T v="label" c={color.textPrimary} style={{ paddingLeft: 4 }}>
         {label}
       </T>
-      <View style={[s.wrap, dark && { backgroundColor: darkField.backgroundColor, borderColor: darkField.borderColor }, focus && (dark ? darkFocus : s.focus)]}>
+      <View style={[s.wrap, dark && { backgroundColor: darkField.backgroundColor, borderColor: darkField.borderColor }, focus && (dark ? s.darkFocus : s.focus)]}>
         <TextInput
           accessibilityLabel={label}
           secureTextEntry={!show}
@@ -82,6 +82,8 @@ const s = StyleSheet.create({
     paddingLeft: 18,
   },
   focus: { borderColor: color.textPrimary, borderWidth: 1.5 },
+  // Grøn kant ved fokus (2 px; luften til venstre justeres, så teksten står stille)
+  darkFocus: { borderColor: darkFocus.borderColor, borderWidth: 2, paddingLeft: 17 },
   input: { flex: 1, minHeight: 50, color: color.textPrimary, fontFamily: font.body, fontSize: 16 },
   toggle: { minWidth: TAP, minHeight: TAP, alignItems: 'center', justifyContent: 'center', paddingHorizontal: 12 },
 });
